@@ -4,19 +4,16 @@ import { db, User } from "../models/types";
 
 const router = Router();
 
-// GET all users
 router.get("/", (_req: Request, res: Response) => {
   res.json(db.users);
 });
 
-// GET single user
 router.get("/:id", (req: Request, res: Response) => {
   const user = db.users.find((u) => u.id === req.params.id);
   if (!user) return res.status(404).json({ error: "Usuario no encontrado" });
   res.json(user);
 });
 
-// POST create user
 router.post("/", (req: Request, res: Response) => {
   const { name, email, role, city, preferences } = req.body;
   if (!name || !email || !role || !city) {
@@ -38,7 +35,6 @@ router.post("/", (req: Request, res: Response) => {
   res.status(201).json(user);
 });
 
-// PUT update user
 router.put("/:id", (req: Request, res: Response) => {
   const index = db.users.findIndex((u) => u.id === req.params.id);
   if (index === -1) return res.status(404).json({ error: "Usuario no encontrado" });
@@ -46,7 +42,6 @@ router.put("/:id", (req: Request, res: Response) => {
   res.json(db.users[index]);
 });
 
-// DELETE user
 router.delete("/:id", (req: Request, res: Response) => {
   const index = db.users.findIndex((u) => u.id === req.params.id);
   if (index === -1) return res.status(404).json({ error: "Usuario no encontrado" });
