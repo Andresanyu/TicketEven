@@ -32,32 +32,39 @@ router.post("/", (req: Request, res: Response) => {
     return res.status(400).json({ error: "El campo valor debe ser numérico" });
   }
 
-  const newId = db.eventos.length > 0 ? Math.max(...db.eventos.map((e) => e.id)) + 1 : 1;
-
-  const event: Event = {
-    id: newId,
-    nombre: nombre,
-    categoria: categoria || "Sin categoría",
-    fecha: fecha ? new Date(fecha) : undefined,
-    valor: normalizedValor,
-    descripcion: descripcion || "Sin descripción",
-    imagen_url: imagen_url || undefined,
-    activo: activo !== false,
-  };
-
-  console.log("Creating event:", event);
-  pool.query(
-    "INSERT INTO eventos (id, nombre, categoria, fecha, valor, descripcion, imagen_url, activo) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)",
-    [event.id, event.nombre, event.categoria, event.fecha, event.valor, event.descripcion, event.imagen_url, event.activo],
-    (err: Error | null) => {
-      if (err) {
-        console.error("Error inserting event:", err);
-        return res.status(500).json({ error: "Error al crear el evento" });
-      }
-      db.eventos.push(event);
-      res.status(201).json(event);
+  pool.query("SELECT COALESCE(MAX(id), 0) AS last_id FROM eventos", (maxErr: Error | null, maxResult) => {
+    if (maxErr) {
+      console.error("Error getting last event id:", maxErr);
+      return res.status(500).json({ error: "Error al crear el evento" });
     }
-  );
+
+    const newId = Number(maxResult.rows[0].last_id) + 1;
+
+    const event: Event = {
+      id: newId,
+      nombre: nombre,
+      categoria: categoria || "Sin categoría",
+      fecha: fecha ? new Date(fecha) : undefined,
+      valor: normalizedValor,
+      descripcion: descripcion || "Sin descripción",
+      imagen_url: imagen_url || undefined,
+      activo: activo !== false,
+    };
+
+    console.log("Creating event:", event);
+    pool.query(
+      "INSERT INTO eventos (id, nombre, categoria, fecha, valor, descripcion, imagen_url, activo) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)",
+      [event.id, event.nombre, event.categoria, event.fecha, event.valor, event.descripcion, event.imagen_url, event.activo],
+      (err: Error | null) => {
+        if (err) {
+          console.error("Error inserting event:", err);
+          return res.status(500).json({ error: "Error al crear el evento" });
+        }
+        db.eventos.push(event);
+        res.status(201).json(event);
+      }
+    );
+  });
 });
 
 router.put("/:id", (req: Request, res: Response) => {
