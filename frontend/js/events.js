@@ -9,17 +9,14 @@ const CATEGORY_COLORS = {
   'Comedia':  { bg: '#2e2a1a', emoji: '😂' },
 };
 
-let ALL_EVENTS  = [];   // orden original del servidor — nunca se modifica
-let BASE_EVENTS = [];   // orden activo (puede estar ordenado)
+let ALL_EVENTS  = [];
+let BASE_EVENTS = [];
 
 const PAGE_SIZE = 10;
 let currentFilter = 'Todos';
 let page = 0;
 let filtered = [];
 
-/* ─────────────────────────────────────
-   CARGA DE EVENTOS
-───────────────────────────────────── */
 async function loadEvents() {
   try {
     const events = await api.get("/events");
@@ -27,8 +24,8 @@ async function loadEvents() {
     ALL_EVENTS = events
       .filter(e => e.activo !== false)
       .map((ev, idx) => ({
-        _idx: idx,                                          // ← para restaurar orden original
-        _ts:  ev.fecha ? new Date(ev.fecha).getTime() : 0, // ← timestamp para ordenar por fecha
+        _idx: idx,
+        _ts:  ev.fecha ? new Date(ev.fecha).getTime() : 0,
         id:   ev.id,
         name: ev.nombre,
         date: ev.fecha
@@ -40,7 +37,7 @@ async function loadEvents() {
         image_url:   ev.imagen_url,
       }));
 
-    BASE_EVENTS   = ALL_EVENTS.slice(); // copia; se reordena con _applySort
+    BASE_EVENTS   = ALL_EVENTS.slice();
     currentFilter = 'Todos';
     page          = 0;
 
@@ -57,15 +54,10 @@ async function loadEvents() {
   }
 }
 
-/* ─────────────────────────────────────
-   ORDENAMIENTO
-   Llamado por eventos.html → window._applySort
-───────────────────────────────────── */
 const SORT_FNS = {
   default: null,
 
   date: (a, b) => {
-    // Próximo a vencer = fecha más cercana a hoy primero
     const now = Date.now();
     return Math.abs(a._ts - now) - Math.abs(b._ts - now);
   },
@@ -74,12 +66,57 @@ const SORT_FNS = {
     (a.name || '').toLowerCase().localeCompare((b.name || '').toLowerCase(), 'es'),
 };
 
+const SORT_LABELS = {
+  default: 'Ordenar',
+  date: 'Por fecha',
+  alpha: 'A → Z',
+};
+
+function toggleSort() {
+  const btn = document.getElementById('sortBtn');
+  const drop = document.getElementById('sortDrop');
+  if (!btn || !drop) return;
+  const open = drop.classList.toggle('open');
+  btn.classList.toggle('open', open);
+}
+
+document.addEventListener('click', function(e) {
+  const wrap = document.getElementById('sortWrap');
+  const drop = document.getElementById('sortDrop');
+  const btn = document.getElementById('sortBtn');
+  if (wrap && !wrap.contains(e.target) && drop && btn) {
+    drop.classList.remove('open');
+    btn.classList.remove('open');
+  }
+});
+
+function applySort(type) {
+  ['default', 'date', 'alpha'].forEach(function(id) {
+    const option = document.getElementById('opt-' + id);
+    if (option) option.classList.toggle('active', id === type);
+  });
+
+  const label = document.getElementById('sortLabel');
+  if (label) label.textContent = SORT_LABELS[type] || SORT_LABELS.default;
+
+  const sortBtn = document.getElementById('sortBtn');
+  if (sortBtn) {
+    sortBtn.classList.toggle('has-filter', type !== 'default');
+    sortBtn.classList.remove('open');
+  }
+
+  const drop = document.getElementById('sortDrop');
+  if (drop) drop.classList.remove('open');
+
+  _applySort(type);
+}
+
 function _applySort(type) {
   const fn = SORT_FNS[type] || null;
 
   BASE_EVENTS = fn
-    ? ALL_EVENTS.slice().sort(fn)               // ordenado
-    : ALL_EVENTS.slice();                       // orden original
+    ? ALL_EVENTS.slice().sort(fn)
+    : ALL_EVENTS.slice();
 
   page = 0;
   const grid = document.getElementById('grid');
@@ -88,9 +125,6 @@ function _applySort(type) {
   loadMore();
 }
 
-/* ─────────────────────────────────────
-   FILTRO POR CATEGORÍA
-───────────────────────────────────── */
 function getFiltered() {
   return currentFilter === 'Todos'
     ? BASE_EVENTS
@@ -108,9 +142,6 @@ function filterCategory(cat, btn) {
   loadMore();
 }
 
-/* ─────────────────────────────────────
-   TARJETA
-───────────────────────────────────── */
 function buildCard(ev, idx) {
   const info    = CATEGORY_COLORS[ev.category] || { bg: '#1a1c19', emoji: '🎪' };
   const isGratis = ev.price === 'Gratis';
@@ -140,9 +171,6 @@ function buildCard(ev, idx) {
     </div>`;
 }
 
-/* ─────────────────────────────────────
-   PAGINACIÓN
-───────────────────────────────────── */
 function loadMore() {
   filtered = getFiltered();
   const start = page * PAGE_SIZE;
@@ -170,26 +198,19 @@ function loadMore() {
   }
 }
 
-/* ─────────────────────────────────────
-   EXPONER AL SCOPE GLOBAL
-───────────────────────────────────── */
 window.loadEvents     = loadEvents;
 window.filterCategory = filterCategory;
 window.loadMore       = loadMore;
-window._applySort     = _applySort;   // ← usado por eventos.html
+window._applySort     = _applySort;
+window.toggleSort     = toggleSort;
+window.applySort      = applySort;
 
-/* ─────────────────────────────────────
-   INIT
-───────────────────────────────────── */
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', loadEvents);
 } else {
   loadEvents();
 }
 
-/* ─────────────────────────────────────
-   FORMULARIO (sin cambios)
-───────────────────────────────────── */
 let editingEventId = null;
 
 function showToast(msg, type) {
