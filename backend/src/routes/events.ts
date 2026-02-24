@@ -1,84 +1,190 @@
 import { Router, Request, Response } from "express";
-import { db, Event } from "../models/types";
+import { EventUpsertInput } from "../models/types";
 import { pool } from "../config/database";
 
 const router = Router();
 
-router.get("/", (_req: Request, res: Response) => {
-  pool.query("SELECT * FROM eventos", (err: Error | null, result) => {
-    if (err) {
-      console.error("Error fetching events:", err);
-      return res.status(500).json({ error: "Error al obtener los eventos" });
-    }
+const EVENT_SELECT_QUERY = `
+  SELECT
+    e.id,
+    e.nombre,
+    COALESCE(c.nombre, 'Sin categoría') AS categoria,
+    e.fecha,
+    e.valor,
+    e.descripcion,
+    e.imagen_url,
+    e.activo
+  FROM eventos e
+  LEFT JOIN categorias c ON c.id = e.categoria_id
+`;
+
+function parseCategoriaId(value: unknown): number | null {
+  if (value === undefined || value === null || value === "") return null;
+  const parsed = Number(value);
+  if (!Number.isInteger(parsed) || parsed <= 0) return NaN;
+  return parsed;
+}
+
+router.get("/", async (_req: Request, res: Response) => {
+  try {
+    const result = await pool.query(`${EVENT_SELECT_QUERY} ORDER BY e.id DESC`);
     res.json(result.rows);
-  });
+  } catch (err) {
+    console.error("Error fetching events:", err);
+    res.status(500).json({ error: "Error al obtener los eventos" });
+  }
 });
 
-router.get("/:id", (req: Request, res: Response) => {
-  const event = db.eventos.find((e) => e.id === Number(req.params.id));
-  if (!event) return res.status(404).json({ error: "Evento no encontrado" });
-  res.json(event);
+router.get("/:id", async (req: Request, res: Response) => {
+  const id = Number(req.params.id);
+  if (!Number.isInteger(id) || id <= 0) {
+    return res.status(400).json({ error: "ID de evento inválido" });
+  }
+
+  try {
+    const result = await pool.query(`${EVENT_SELECT_QUERY} WHERE e.id = $1`, [id]);
+    if (result.rowCount === 0) {
+      return res.status(404).json({ error: "Evento no encontrado" });
+    }
+    res.json(result.rows[0]);
+  } catch (err) {
+    console.error("Error fetching event by id:", err);
+    res.status(500).json({ error: "Error al obtener el evento" });
+  }
 });
 
-router.post("/", (req: Request, res: Response) => {
-  const { nombre, categoria, fecha, valor, descripcion, imagen_url, activo } = req.body;
+router.post("/", async (req: Request, res: Response) => {
+  const { nombre, categoria_id, fecha, valor, descripcion, imagen_url, activo } = req.body as EventUpsertInput;
 
-  if (!nombre) {
+  if (!nombre || !String(nombre).trim()) {
     return res.status(400).json({ error: "El campo nombre es requerido" });
   }
 
-  const normalizedValor = valor === undefined || valor === null ? 0 : Number(valor);
-  if (Number.isNaN(normalizedValor)) {
+  const normalizedCategoriaId = parseCategoriaId(categoria_id);
+  if (Number.isNaN(normalizedCategoriaId)) {
+    return res.status(400).json({ error: "El campo categoria_id debe ser un número entero válido" });
+  }
+
+  const normalizedValor = valor === undefined || valor === null || valor === "" ? null : Number(valor);
+  if (normalizedValor !== null && Number.isNaN(normalizedValor)) {
     return res.status(400).json({ error: "El campo valor debe ser numérico" });
   }
 
-  pool.query("SELECT COALESCE(MAX(id), 0) AS last_id FROM eventos", (maxErr: Error | null, maxResult) => {
-    if (maxErr) {
-      console.error("Error getting last event id:", maxErr);
-      return res.status(500).json({ error: "Error al crear el evento" });
+  const normalizedActivo = activo === undefined ? true : Boolean(activo);
+  const normalizedFecha = fecha ? new Date(fecha) : null;
+
+  if (normalizedFecha && Number.isNaN(normalizedFecha.getTime())) {
+    return res.status(400).json({ error: "El campo fecha es inválido" });
+  }
+
+  try {
+    const insertResult = await pool.query(
+      `
+        INSERT INTO eventos (nombre, categoria_id, fecha, valor, descripcion, imagen_url, activo)
+        VALUES ($1, $2, $3, $4, $5, $6, $7)
+        RETURNING id
+      `,
+      [
+        String(nombre).trim(),
+        normalizedCategoriaId,
+        normalizedFecha,
+        normalizedValor,
+        descripcion ?? null,
+        imagen_url ?? null,
+        normalizedActivo,
+      ]
+    );
+
+    const createdEvent = await pool.query(`${EVENT_SELECT_QUERY} WHERE e.id = $1`, [insertResult.rows[0].id]);
+    res.status(201).json(createdEvent.rows[0]);
+  } catch (err) {
+    console.error("Error inserting event:", err);
+    res.status(500).json({ error: "Error al crear el evento" });
+  }
+});
+
+router.put("/:id", async (req: Request, res: Response) => {
+  const id = Number(req.params.id);
+  if (!Number.isInteger(id) || id <= 0) {
+    return res.status(400).json({ error: "ID de evento inválido" });
+  }
+
+  const { nombre, categoria_id, fecha, valor, descripcion, imagen_url, activo } = req.body as EventUpsertInput;
+
+  if (!nombre || !String(nombre).trim()) {
+    return res.status(400).json({ error: "El campo nombre es requerido" });
+  }
+
+  const normalizedCategoriaId = parseCategoriaId(categoria_id);
+  if (Number.isNaN(normalizedCategoriaId)) {
+    return res.status(400).json({ error: "El campo categoria_id debe ser un número entero válido" });
+  }
+
+  const normalizedValor = valor === undefined || valor === null || valor === "" ? null : Number(valor);
+  if (normalizedValor !== null && Number.isNaN(normalizedValor)) {
+    return res.status(400).json({ error: "El campo valor debe ser numérico" });
+  }
+
+  const normalizedFecha = fecha ? new Date(fecha) : null;
+  if (normalizedFecha && Number.isNaN(normalizedFecha.getTime())) {
+    return res.status(400).json({ error: "El campo fecha es inválido" });
+  }
+
+  try {
+    const updateResult = await pool.query(
+      `
+        UPDATE eventos
+        SET
+          nombre = $1,
+          categoria_id = $2,
+          fecha = $3,
+          valor = $4,
+          descripcion = $5,
+          imagen_url = $6,
+          activo = $7
+        WHERE id = $8
+        RETURNING id
+      `,
+      [
+        String(nombre).trim(),
+        normalizedCategoriaId,
+        normalizedFecha,
+        normalizedValor,
+        descripcion ?? null,
+        imagen_url ?? null,
+        activo ?? null,
+        id,
+      ]
+    );
+
+    if (updateResult.rowCount === 0) {
+      return res.status(404).json({ error: "Evento no encontrado" });
     }
 
-    const newId = Number(maxResult.rows[0].last_id) + 1;
-
-    const event: Event = {
-      id: newId,
-      nombre: nombre,
-      categoria: categoria || "Sin categoría",
-      fecha: fecha ? new Date(fecha) : undefined,
-      valor: normalizedValor,
-      descripcion: descripcion || "Sin descripción",
-      imagen_url: imagen_url || undefined,
-      activo: activo !== false,
-    };
-
-    console.log("Creating event:", event);
-    pool.query(
-      "INSERT INTO eventos (id, nombre, categoria, fecha, valor, descripcion, imagen_url, activo) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)",
-      [event.id, event.nombre, event.categoria, event.fecha, event.valor, event.descripcion, event.imagen_url, event.activo],
-      (err: Error | null) => {
-        if (err) {
-          console.error("Error inserting event:", err);
-          return res.status(500).json({ error: "Error al crear el evento" });
-        }
-        db.eventos.push(event);
-        res.status(201).json(event);
-      }
-    );
-  });
+    const updatedEvent = await pool.query(`${EVENT_SELECT_QUERY} WHERE e.id = $1`, [id]);
+    res.json(updatedEvent.rows[0]);
+  } catch (err) {
+    console.error("Error updating event:", err);
+    res.status(500).json({ error: "Error al actualizar el evento" });
+  }
 });
 
-router.put("/:id", (req: Request, res: Response) => {
-  const index = db.eventos.findIndex((e) => e.id === Number(req.params.id));
-  if (index === -1) return res.status(404).json({ error: "Evento no encontrado" });
-  db.eventos[index] = { ...db.eventos[index], ...req.body };
-  res.json(db.eventos[index]);
-});
+router.delete("/:id", async (req: Request, res: Response) => {
+  const id = Number(req.params.id);
+  if (!Number.isInteger(id) || id <= 0) {
+    return res.status(400).json({ error: "ID de evento inválido" });
+  }
 
-router.delete("/:id", (req: Request, res: Response) => {
-  const index = db.eventos.findIndex((e) => e.id === Number(req.params.id));
-  if (index === -1) return res.status(404).json({ error: "Evento no encontrado" });
-  db.eventos.splice(index, 1);
-  res.status(204).send();
+  try {
+    const result = await pool.query("DELETE FROM eventos WHERE id = $1", [id]);
+    if (result.rowCount === 0) {
+      return res.status(404).json({ error: "Evento no encontrado" });
+    }
+    res.status(204).send();
+  } catch (err) {
+    console.error("Error deleting event:", err);
+    res.status(500).json({ error: "Error al eliminar el evento" });
+  }
 });
 
 export default router;

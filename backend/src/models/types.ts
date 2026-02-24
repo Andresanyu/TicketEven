@@ -1,14 +1,20 @@
-export interface Event {
+export interface EventResponse {
   id: number;
   nombre: string;
   categoria: string;
-  fecha?: Date;
-  valor?: number;
-  descripcion: string;
-  imagen_url?: string;
-  activo: boolean;
+  fecha: Date | null;
+  valor: number | null;
+  descripcion: string | null;
+  imagen_url: string | null;
+  activo: boolean | null;
 }
 
-export const db = {
-  eventos: [] as Event[],
-};
+export interface EventUpsertInput {
+  nombre: string;
+  categoria_id: number | string | null;
+  fecha?: string | Date | null;
+  valor?: number | string | null;
+  descripcion?: string | null;
+  imagen_url?: string | null;
+  activo?: boolean | null;
+}
