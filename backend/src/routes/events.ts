@@ -1,15 +1,21 @@
 import { Router, Request, Response } from "express";
-import { v4 as uuidv4 } from "uuid";
 import { db, Event } from "../models/types";
+import { pool } from "../config/database";
 
 const router = Router();
 
 router.get("/", (_req: Request, res: Response) => {
-  res.json(db.events);
+  pool.query("SELECT * FROM eventos", (err: Error | null, result) => {
+    if (err) {
+      console.error("Error fetching events:", err);
+      return res.status(500).json({ error: "Error al obtener los eventos" });
+    }
+    res.json(result.rows);
+  });
 });
 
 router.get("/:id", (req: Request, res: Response) => {
-  const event = db.events.find((e) => e.id === req.params.id);
+  const event = db.eventos.find((e) => e.id === Number(req.params.id));
   if (!event) return res.status(404).json({ error: "Evento no encontrado" });
   res.json(event);
 });
@@ -21,56 +27,50 @@ router.post("/", (req: Request, res: Response) => {
     return res.status(400).json({ error: "El campo nombre es requerido" });
   }
 
-  const categoryMap: Record<string, Event["category"]> = {
-    concierto: "concert",
-    teatro: "theater",
-    deporte: "sport",
-    conferencia: "conference",
-    other: "other",
-    concert: "concert",
-    theater: "theater",
-    sport: "sport",
-    conference: "conference",
-  };
-
-  const normalizedCategory =
-    categoryMap[String(categoria || "").toLowerCase()] ?? "other";
-
-  const normalizedPrice = valor === undefined || valor === null ? 0 : Number(valor);
-  if (Number.isNaN(normalizedPrice)) {
+  const normalizedValor = valor === undefined || valor === null ? 0 : Number(valor);
+  if (Number.isNaN(normalizedValor)) {
     return res.status(400).json({ error: "El campo valor debe ser numérico" });
   }
 
+  const newId = db.eventos.length > 0 ? Math.max(...db.eventos.map((e) => e.id)) + 1 : 1;
+
   const event: Event = {
-    id: uuidv4(),
-    name: nombre,
-    date: fecha ? new Date(fecha).toISOString() : new Date().toISOString(),
-    venue: descripcion || "Sin ubicación",
-    category: normalizedCategory,
-    totalSeats: 0,
-    availableSeats: 0,
-    price: normalizedPrice,
-    status: activo === false ? "cancelled" : "active",
-    createdAt: new Date().toISOString(),
+    id: newId,
+    nombre: nombre,
+    categoria: categoria || "Sin categoría",
+    fecha: fecha ? new Date(fecha) : undefined,
+    valor: normalizedValor,
+    descripcion: descripcion || "Sin descripción",
+    imagen_url: imagen_url || undefined,
+    activo: activo !== false,
   };
 
-  void imagen_url;
-
-  db.events.push(event);
-  res.status(201).json(event);
+  console.log("Creating event:", event);
+  pool.query(
+    "INSERT INTO eventos (id, nombre, categoria, fecha, valor, descripcion, imagen_url, activo) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)",
+    [event.id, event.nombre, event.categoria, event.fecha, event.valor, event.descripcion, event.imagen_url, event.activo],
+    (err: Error | null) => {
+      if (err) {
+        console.error("Error inserting event:", err);
+        return res.status(500).json({ error: "Error al crear el evento" });
+      }
+      db.eventos.push(event);
+      res.status(201).json(event);
+    }
+  );
 });
 
 router.put("/:id", (req: Request, res: Response) => {
-  const index = db.events.findIndex((e) => e.id === req.params.id);
+  const index = db.eventos.findIndex((e) => e.id === Number(req.params.id));
   if (index === -1) return res.status(404).json({ error: "Evento no encontrado" });
-  db.events[index] = { ...db.events[index], ...req.body };
-  res.json(db.events[index]);
+  db.eventos[index] = { ...db.eventos[index], ...req.body };
+  res.json(db.eventos[index]);
 });
 
 router.delete("/:id", (req: Request, res: Response) => {
-  const index = db.events.findIndex((e) => e.id === req.params.id);
+  const index = db.eventos.findIndex((e) => e.id === Number(req.params.id));
   if (index === -1) return res.status(404).json({ error: "Evento no encontrado" });
-  db.events.splice(index, 1);
+  db.eventos.splice(index, 1);
   res.status(204).send();
 });
 
