@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EventPro — Eventos</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+<!-- MAIN -->
+<main class="main">
+  <div class="page-header">
+    <h1 class="page-title">Eventos<span>.</span></h1>
+  </div>
+
+  <div class="events-grid" id="grid"></div>
+
+  <div class="load-more-wrap">
+    <div style="text-align:center">
+      <button class="load-more-btn" id="loadMoreBtn" onclick="loadMore()">
+        <span>Visualizar más</span>
+        <span style="font-size:18px;line-height:1">↓</span>
+      </button>
+      <div class="count-badge" id="countBadge"></div>
+    </div>
+  </div>
+</main>
+
+<script>
+// ── DATA ──
+const CATEGORY_COLORS = {
+  'Música':   { bg: '#1a1a2e', emoji: '🎵' },
+  'Teatro':   { bg: '#1e1a2e', emoji: '🎭' },
+  'Deporte':  { bg: '#1a2e1e', emoji: '⚽' },
+  'Arte':     { bg: '#2e1a1a', emoji: '🎨' },
+  'Tech':     { bg: '#1a2028', emoji: '💻' },
+  'Comedia':  { bg: '#2e2a1a', emoji: '😂' },
+};
+
+const ALL_EVENTS = [
+  { name: 'Festival Electrónico Neon',    date: '15 Mar 2025', price: '$85.000',  category: 'Música'  },
+  { name: 'Obra: La Casa de Bernarda',    date: '20 Mar 2025', price: '$45.000',  category: 'Teatro'  },
+  { name: 'Final Copa Libertadores',      date: '22 Mar 2025', price: '$120.000', category: 'Deporte' },
+  { name: 'Exposición Arte Urbano',       date: '25 Mar 2025', price: 'Gratis',   category: 'Arte'    },
+  { name: 'Tech Summit Latinoamérica',    date: '28 Mar 2025', price: '$150.000', category: 'Tech'    },
+  { name: 'Stand Up: Noche de Risas',     date: '1 Abr 2025',  price: '$35.000',  category: 'Comedia' },
+  { name: 'Concierto Sinfónico Nacional', date: '3 Abr 2025',  price: '$70.000',  category: 'Música'  },
+  { name: 'Ballet Clásico Giselle',       date: '5 Abr 2025',  price: '$55.000',  category: 'Teatro'  },
+  { name: 'Maratón Ciudad 10K',           date: '6 Abr 2025',  price: '$25.000',  category: 'Deporte' },
+  { name: 'Galería: Impresionismo Hoy',   date: '8 Abr 2025',  price: 'Gratis',   category: 'Arte'    },
+  { name: 'Hackathon IA & Futuro',        date: '10 Abr 2025', price: '$20.000',  category: 'Tech'    },
+  { name: 'Comedia Improvisada Live',     date: '12 Abr 2025', price: '$30.000',  category: 'Comedia' },
+  { name: 'Reggaeton en el Parque',       date: '14 Abr 2025', price: '$60.000',  category: 'Música'  },
+  { name: 'Obra: Hamlet Moderno',         date: '16 Abr 2025', price: '$48.000',  category: 'Teatro'  },
+  { name: 'Torneo Nacional Ajedrez',      date: '18 Abr 2025', price: '$15.000',  category: 'Deporte' },
+  { name: 'Muralismo & Grafiti Expo',     date: '20 Abr 2025', price: 'Gratis',   category: 'Arte'    },
+  { name: 'Conferencia Blockchain 2025',  date: '22 Abr 2025', price: '$200.000', category: 'Tech'    },
+  { name: 'Monólogos del Absurdo',        date: '24 Abr 2025', price: '$28.000',  category: 'Comedia' },
+  { name: 'Jazz & Blues Night Out',       date: '26 Abr 2025', price: '$40.000',  category: 'Música'  },
+  { name: 'Ópera: Don Giovanni',          date: '28 Abr 2025', price: '$95.000',  category: 'Teatro'  },
+  { name: 'Campeonato Surf Caribe',       date: '30 Abr 2025', price: '$18.000',  category: 'Deporte' },
+  { name: 'Escultura Contemporánea',      date: '2 May 2025',  price: 'Gratis',   category: 'Arte'    },
+  { name: 'DevFest Colombia 2025',        date: '5 May 2025',  price: '$80.000',  category: 'Tech'    },
+  { name: 'Festival de Humor Latino',     date: '8 May 2025',  price: '$50.000',  category: 'Comedia' },
+  { name: 'Rock Sinfónico — Metalika',    date: '10 May 2025', price: '$110.000', category: 'Música'  },
+  { name: 'Feria Internacional del Libro',date: '12 May 2025', price: '$10.000',  category: 'Arte'    },
+  { name: 'Liga Profesional Baloncesto',  date: '14 May 2025', price: '$45.000',  category: 'Deporte' },
+  { name: 'Noche de Electrónica Ambient', date: '17 May 2025', price: '$55.000',  category: 'Música'  },
+  { name: 'Circo Contemporáneo Show',     date: '20 May 2025', price: '$65.000',  category: 'Teatro'  },
+  { name: 'UX Summit 2025',              date: '22 May 2025', price: '$130.000', category: 'Tech'    },
+];
+
+const PAGE_SIZE = 10;
+let currentFilter = 'Todos';
+let page = 0;
+let filtered = [];
+
+function getFiltered() {
+  return currentFilter === 'Todos'
+    ? ALL_EVENTS
+    : ALL_EVENTS.filter(e => e.category === currentFilter);
+}
+
+function filterCategory(cat, btn) {
+  currentFilter = cat;
+  page = 0;
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('grid').innerHTML = '';
+  filtered = getFiltered();
+  loadMore();
+}
+
+function setActive(el, page) {
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  el.classList.add('active');
+}
+
+function buildCard(ev, idx) {
+  const info = CATEGORY_COLORS[ev.category] || { bg: '#1a1c19', emoji: '🎪' };
+  const isGratis = ev.price === 'Gratis';
+  const delay = (idx % PAGE_SIZE) * 40;
+
+  return `
+    <div class="event-card" style="animation-delay:${delay}ms">
+      <div class="card-img-placeholder" style="background:${info.bg};">
+        <span style="font-size:32px;z-index:1;position:relative">${info.emoji}</span>
+        <div style="position:absolute;inset:0;background:radial-gradient(circle at 30% 40%, rgba(198,241,53,.08) 0%, transparent 70%)"></div>
+      </div>
+      <div class="card-body">
+        <div class="card-category">${ev.category}</div>
+        <div class="card-name">${ev.name}</div>
+        <div class="card-meta">
+          <div class="card-date">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+              <line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/>
+              <line x1="3" y1="10" x2="21" y2="10"/>
+            </svg>
+            ${ev.date}
+          </div>
+          <div class="card-price ${isGratis ? 'free' : ''}">${isGratis ? '✦ GRATIS' : ev.price}</div>
+        </div>
+      </div>
+    </div>`;
+}
+
+function loadMore() {
+  filtered = getFiltered();
+  const start = page * PAGE_SIZE;
+  const chunk = filtered.slice(start, start + PAGE_SIZE);
+
+  const grid = document.getElementById('grid');
+  chunk.forEach((ev, i) => {
+    grid.insertAdjacentHTML('beforeend', buildCard(ev, i));
+  });
+
+  page++;
+  const shown = Math.min(page * PAGE_SIZE, filtered.length);
+  const total = filtered.length;
+
+  document.getElementById('countBadge').textContent =
+    `Mostrando ${shown} de ${total} eventos`;
+
+  const btn = document.getElementById('loadMoreBtn');
+  btn.disabled = shown >= total;
+  if (btn.disabled) {
+    btn.querySelector('span').textContent = 'Sin más eventos';
+  } else {
+    btn.querySelectorAll('span')[0].textContent = 'Visualizar más';
+  }
+}
+
+// Init
+filtered = getFiltered();
+loadMore();
+</script>
+</body>
+</html>
