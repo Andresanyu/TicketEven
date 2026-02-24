@@ -9,10 +9,8 @@
 </head>
 <body>
 
-<!-- MAIN -->
 <main class="main">
 
-  <!-- Header -->
   <div class="page-header">
     <div>
       <h1 class="page-title">Nuevo Evento<span>.</span></h1>
@@ -31,23 +29,19 @@
     </a>
   </div>
 
-  <!-- Formulario -->
   <form id="eventForm" novalidate>
     <div class="form-card">
 
-      <!-- ── Información básica ── -->
       <div class="section-title">Información básica</div>
 
       <div class="form-grid">
 
-        <!-- Nombre -->
         <div class="field full" id="field-nombre">
           <label>Nombre del evento <span class="req">*</span></label>
           <input type="text" id="ev-name" placeholder="Ej: Festival Electrónico Neon" maxlength="150">
           <span class="err-msg">El nombre es obligatorio (máx. 150 caracteres).</span>
         </div>
 
-        <!-- Categoría -->
         <div class="field" id="field-categoria">
           <label>Categoría</label>
           <div class="select-wrap">
@@ -64,21 +58,18 @@
           </div>
         </div>
 
-        <!-- Fecha -->
         <div class="field" id="field-fecha">
           <label>Fecha y hora <span class="req">*</span></label>
           <input type="datetime-local" id="ev-date">
-          <span class="err-msg">La fecha es obligatoria.</span>
+          <span class="err-msg">La fecha debe ser después de la fecha actual.</span>
         </div>
 
-        <!-- Valor -->
         <div class="field full" id="field-valor">
           <label>Valor de entrada</label>
           <input type="number" id="ev-price" placeholder="0  (dejar vacío = gratis)" min="0" step="100">
           <span class="err-msg">Ingresa un valor numérico válido (≥ 0).</span>
         </div>
 
-        <!-- Descripción -->
         <div class="field full" id="field-descripcion">
           <label>Descripción</label>
           <textarea id="ev-descripcion" placeholder="Describe brevemente el evento…"></textarea>
@@ -89,12 +80,10 @@
 
       <hr class="divider">
 
-      <!-- ── Imagen y estado ── -->
       <div class="section-title">Imagen y estado</div>
 
       <div class="form-grid">
 
-        <!-- URL Imagen -->
         <div class="field" id="field-imagen">
           <label>URL de imagen promocional</label>
           <input type="url" id="ev-imagen" placeholder="https://ejemplo.com/imagen.jpg" oninput="previewImg(this.value)">
@@ -112,7 +101,6 @@
           </div>
         </div>
 
-        <!-- Activo -->
         <div class="field" id="field-activo">
           <label>Estado</label>
           <div class="toggle-row">
@@ -130,7 +118,6 @@
 
       <hr class="divider">
 
-      <!-- Acciones -->
       <div class="form-actions">
         <button type="button" class="btn btn-ghost" onclick="resetForm()">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -153,176 +140,10 @@
 
 </main>
 
-<!-- Toast -->
 <div class="toast" id="toast">
   <div class="toast-dot"></div>
   <span id="toastMsg"></span>
 </div>
-
-<script>
-
-  // ── Estado ──
-  let editingEventId = null;
-
-  // ── API helper ──
-  const api = {
-    post: (url, data) => fetch(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data)
-    }),
-    put: (url, data) => fetch(url, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data)
-    })
-  };
-
-  // ── Toast ──
-  function showToast(msg, type) {
-    var t = document.getElementById('toast');
-    document.getElementById('toastMsg').textContent = msg;
-    t.className = 'toast' + (type === 'error' ? ' error' : '');
-    t.classList.add('show');
-    setTimeout(function() { t.classList.remove('show'); }, 3000);
-  }
-
-  // ── Preview imagen ──
-  function previewImg(url) {
-    var img    = document.getElementById('imgTag');
-    var box    = document.getElementById('imgBox');
-    var holder = document.getElementById('imgHolder');
-
-    if (!url) {
-      img.classList.remove('show');
-      box.classList.remove('loaded');
-      holder.style.display = 'flex';
-      return;
-    }
-    var tmp = new Image();
-    tmp.onload = function() {
-      img.src = url;
-      img.classList.add('show');
-      box.classList.add('loaded');
-      holder.style.display = 'none';
-    };
-    tmp.onerror = function() {
-      img.classList.remove('show');
-      box.classList.remove('loaded');
-      holder.style.display = 'flex';
-    };
-    tmp.src = url;
-  }
-
-  // ── Validación ──
-  function validate() {
-    var ok = true;
-
-    function check(fieldId, inputId, cond, msg) {
-      var field = document.getElementById(fieldId);
-      var input = document.getElementById(inputId);
-      var err   = field.querySelector('.err-msg');
-      if (!cond) {
-        field.classList.add('has-error');
-        input.classList.add('invalid');
-        if (msg) err.textContent = msg;
-        ok = false;
-      } else {
-        field.classList.remove('has-error');
-        input.classList.remove('invalid');
-      }
-    }
-
-    var nombre = document.getElementById('ev-name').value.trim();
-    check('field-nombre', 'ev-name', nombre.length > 0 && nombre.length <= 150,
-      'El nombre es obligatorio (máx. 150 caracteres).');
-
-    var fecha = document.getElementById('ev-date').value;
-    check('field-fecha', 'ev-date', fecha !== '', 'La fecha es obligatoria.');
-
-    var valor = document.getElementById('ev-price').value;
-    check('field-valor', 'ev-price',
-      valor === '' || (!isNaN(valor) && Number(valor) >= 0),
-      'Ingresa un valor numérico válido (≥ 0).');
-
-    var desc = document.getElementById('ev-descripcion').value;
-    check('field-descripcion', 'ev-descripcion', desc.length <= 1000,
-      'La descripción no puede superar 1000 caracteres.');
-
-    var imgUrl = document.getElementById('ev-imagen').value.trim();
-    if (imgUrl) {
-      try { new URL(imgUrl); check('field-imagen', 'ev-imagen', true); }
-      catch(e) { check('field-imagen', 'ev-imagen', false, 'Ingresa una URL válida.'); }
-    }
-
-    return ok;
-  }
-
-  // ── saveEvent (función solicitada) ──
-  async function saveEvent() {
-    var data = {
-      nombre:      document.getElementById('ev-name').value.trim(),
-      categoria:   document.getElementById('ev-category').value,
-      fecha:       document.getElementById('ev-date').value,
-      valor:       document.getElementById('ev-price').value !== ''
-                     ? parseFloat(document.getElementById('ev-price').value)
-                     : null,
-      descripcion: document.getElementById('ev-descripcion').value.trim() || 'Sin descripción',
-      imagen_url:  document.getElementById('ev-imagen').value.trim() || null,
-      activo:      document.getElementById('ev-activo').checked,
-    };
-
-    if (editingEventId) {
-      await api.put('/events/' + editingEventId, data);
-      showToast('Evento actualizado');
-    } else {
-      await api.post('/events', data);
-      showToast('Evento creado');
-    }
-
-    closeEventModal();
-    if (typeof loadEvents === 'function') loadEvents();
-  }
-
-  function closeEventModal() { console.log('closeEventModal()'); }
-  function loadEvents()      { console.log('loadEvents()'); }
-
-  // ── Submit ──
-  document.getElementById('eventForm').addEventListener('submit', async function(e) {
-    e.preventDefault();
-    if (!validate()) {
-      showToast('Corrige los errores antes de continuar.', 'error');
-      return;
-    }
-    var btn = document.getElementById('submitBtn');
-    btn.classList.add('loading');
-    try {
-      await saveEvent();
-    } catch(err) {
-      showToast('Error al guardar el evento.', 'error');
-      console.error(err);
-    } finally {
-      btn.classList.remove('loading');
-    }
-  });
-
-  // ── Reset ──
-  function resetForm() {
-    document.getElementById('eventForm').reset();
-    document.querySelectorAll('.field').forEach(function(f) { f.classList.remove('has-error'); });
-    document.querySelectorAll('.invalid').forEach(function(i) { i.classList.remove('invalid'); });
-    previewImg('');
-    editingEventId = null;
-  }
-
-  // limpiar error al escribir
-  document.querySelectorAll('input, select, textarea').forEach(function(el) {
-    el.addEventListener('input', function() {
-      var f = this.closest('.field');
-      if (f) { f.classList.remove('has-error'); this.classList.remove('invalid'); }
-    });
-  });
-
-</script>
+<script type="module" src="js/events.js"></script>
 </body>
 </html>

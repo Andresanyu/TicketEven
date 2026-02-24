@@ -6,6 +6,7 @@ export const api = {
     return res.json();
   },
   async post(path, body) {
+    console.log("POST", path, body);
     const res = await fetch(`${BASE}${path}`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -14,3 +15,5 @@ export const api = {
     return res.json();
   },
 };
+
+export default api;
