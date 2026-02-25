@@ -213,6 +213,32 @@ if (document.readyState === 'loading') {
 
 let editingEventId = null;
 
+async function loadCategoryOptions() {
+  var select = document.getElementById('ev-category');
+  if (!select) return;
+
+  try {
+    var categories = await api.get('/categories');
+    select.innerHTML = '';
+
+    if (!Array.isArray(categories) || categories.length === 0) {
+      select.innerHTML = '<option value="">Sin categorías disponibles</option>';
+      return;
+    }
+
+    categories.forEach(function(category) {
+      var option = document.createElement('option');
+      option.value = String(category.id);
+      option.textContent = category.nombre;
+      select.appendChild(option);
+    });
+  } catch (err) {
+    console.error('Error cargando categorías:', err);
+    select.innerHTML = '<option value="">No se pudieron cargar</option>';
+    showToast('No se pudieron cargar las categorías.', 'error');
+  }
+}
+
 function showToast(msg, type) {
   var t = document.getElementById('toast');
   if (!t) return;
@@ -304,9 +330,11 @@ function validate() {
 }
 
 async function saveEvent() {
+  var categoryValue = document.getElementById('ev-category').value;
+
   var data = {
     nombre:      document.getElementById('ev-name').value.trim(),
-    categoria:   document.getElementById('ev-category').value,
+    categoria_id: categoryValue === '' ? null : Number(categoryValue),
     fecha:       document.getElementById('ev-date').value,
     valor:       document.getElementById('ev-price').value !== ''
                    ? parseFloat(document.getElementById('ev-price').value)
@@ -378,3 +406,4 @@ function setMinEventDate() {
 }
 
 setMinEventDate();
+loadCategoryOptions();
