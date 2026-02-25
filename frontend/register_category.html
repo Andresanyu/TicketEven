@@ -9,6 +9,27 @@
 </head>
 <body>
 
+<aside class="sidebar">
+  <div class="logo">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <circle cx="12" cy="12" r="10"/>
+      <path d="M12 6v6l4 2"/>
+    </svg>
+    EventPro
+  </div>
+
+  <div class="nav-section-label">Gestionar</div>
+
+  <a href="register.html" class="nav-item">
+    <span class="nav-dot"></span>
+    Eventos
+  </a>
+  <a href="register_category.html" class="nav-item active">
+    <span class="nav-dot"></span>
+    Categorías
+  </a>
+</aside>
+
 <main class="main">
 
   <div class="page-header">
@@ -32,12 +53,10 @@
   <form id="categoryForm" novalidate>
     <div class="form-card">
 
-      <!-- ── Información de la categoría ── -->
       <div class="section-title">Información de la categoría</div>
 
       <div class="form-grid">
 
-        <!-- Nombre -->
         <div class="field full" id="field-nombre">
           <label>Nombre de la categoría <span class="req">*</span></label>
           <input
@@ -53,7 +72,6 @@
 
       <hr class="divider">
 
-      <!-- Acciones -->
       <div class="form-actions">
         <button type="button" class="btn btn-ghost" onclick="resetCategoryForm()">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -76,7 +94,6 @@
 
 </main>
 
-<!-- Toast -->
 <div class="toast" id="toast">
   <div class="toast-dot"></div>
   <span id="toastMsg"></span>
