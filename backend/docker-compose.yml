@@ -3,17 +3,20 @@ services:
     image: postgres:16-alpine
     container_name: ticket_event_db
     restart: unless-stopped
+    env_file:
+      - .env
     ports:
-      - "${DB_PORT}:5432"
+      - "${DB_PORT:-5432}:5432"
     environment:
-      POSTGRES_USER: ${DB_USER}
-      POSTGRES_PASSWORD: ${DB_PASSWORD}
-      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-bases123}
+      POSTGRES_DB: ${DB_NAME:-ticketeven}
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./entities.sql:/docker-entrypoint-initdb.d/entities.sql:ro
+      - ./Database/entities.sql:/docker-entrypoint-initdb.d/01_entities.sql:ro
+      - ./Database/populate.sql:/docker-entrypoint-initdb.d/02_populate.sql:ro
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-postgres} -d ${DB_NAME:-ticketeven}"]
       interval: 10s
       timeout: 5s
       retries: 5

@@ -6,15 +6,22 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.pool = void 0;
 exports.connectDatabase = connectDatabase;
 const dotenv_1 = __importDefault(require("dotenv"));
+const path_1 = __importDefault(require("path"));
 const pg_1 = require("pg");
+dotenv_1.default.config({ path: path_1.default.resolve(__dirname, "../../.env") });
 dotenv_1.default.config();
 const dbPort = Number(process.env.DB_PORT ?? 5432);
+const rawDbPassword = process.env.DB_PASSWORD ?? process.env.PGPASSWORD;
+if (rawDbPassword === undefined || rawDbPassword === null || String(rawDbPassword).trim() === "") {
+    throw new Error("DB_PASSWORD no está configurado. Define DB_PASSWORD en backend/.env para conectar con PostgreSQL (Docker/local).");
+}
+const dbPassword = String(rawDbPassword);
 exports.pool = new pg_1.Pool({
     host: process.env.DB_HOST ?? "localhost",
     port: Number.isNaN(dbPort) ? 5432 : dbPort,
     user: process.env.DB_USER ?? "postgres",
     database: process.env.DB_NAME ?? "postgres",
-    password: process.env.DB_PASSWORD ?? "",
+    password: dbPassword,
 });
 async function connectDatabase() {
     await exports.pool.query("SELECT 1");
