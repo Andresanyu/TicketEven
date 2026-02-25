@@ -8,9 +8,9 @@ function normalizeBaseUrl(value) {
 const runtimeBase =
   normalizeBaseUrl(window.localStorage?.getItem("API_BASE_URL")) ||
   normalizeBaseUrl(window.API_BASE_URL) ||
-  "http://localhost:4000/api";
+  "https://ticketeven-backend.onrender.com/api";
 
-const FALLBACK_BASE = "http://localhost:4000/api";
+const FALLBACK_BASE = "https://ticketeven-backend.onrender.com/api";
 const BASE_CANDIDATES = Array.from(new Set([runtimeBase, FALLBACK_BASE]));
 
 async function parseResponse(res) {
