@@ -5,8 +5,10 @@ INSERT INTO categorias (nombre) VALUES
     ('Deporte'),       
     ('Arte'),          
     ('Tech'),          
-    ('Comedia'),       
-    ('Otro');          
+    ('Comedia'),
+    ('Otro'),
+    ('Conferencia')
+ON CONFLICT (nombre) DO NOTHING;
 
 INSERT INTO eventos (nombre, categoria_id, fecha, valor, descripcion, imagen_url, activo)
 VALUES 
