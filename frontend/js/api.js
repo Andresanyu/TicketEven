@@ -12,7 +12,8 @@ const runtimeBase =
 
 const FALLBACK_BASE = "http://localhost:4001/api";
 const SECONDARY_FALLBACK_BASE = "http://localhost:4002/api";
-const BASE_CANDIDATES = Array.from(new Set([runtimeBase, FALLBACK_BASE, SECONDARY_FALLBACK_BASE]));
+const TERTIARY_FALLBACK_BASE = "http://localhost:4003/api";
+const BASE_CANDIDATES = Array.from(new Set([runtimeBase, FALLBACK_BASE, SECONDARY_FALLBACK_BASE, TERTIARY_FALLBACK_BASE]));
 
 async function parseResponse(res) {
   let data = null;
