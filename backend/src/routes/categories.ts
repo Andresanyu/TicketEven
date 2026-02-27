@@ -79,4 +79,30 @@ router.put("/:id", async (req: Request, res: Response) => {
   }
 });
 
+router.delete("/:id", async (req: Request, res: Response) => {
+  const id = Number(req.params.id);
+  if (!Number.isInteger(id) || id <= 0) {
+    return res.status(400).json({ error: "ID de categoría inválido" });
+  }
+
+  try {
+    const result = await pool.query(
+      "DELETE FROM categorias WHERE id = $1 RETURNING id, nombre",
+      [id]
+    );
+
+    if (result.rowCount === 0) {
+      return res.status(404).json({ error: "Categoría no encontrada" });
+    }
+
+    return res.json({
+      message: "Categoría eliminada correctamente",
+      categoria: result.rows[0],
+    });
+  } catch (err) {
+    console.error("Error deleting category:", err);
+    return res.status(500).json({ error: "Error al eliminar la categoría" });
+  }
+});
+
 export default router;

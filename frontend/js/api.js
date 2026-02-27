@@ -111,6 +111,24 @@ export const api = {
 
     throw lastError;
   },
+  async delete(path) {
+    let lastError;
+
+    for (const base of BASE_CANDIDATES) {
+      try {
+        const res = await fetch(`${base}${path}`, {
+          method: "DELETE",
+        });
+        return await parseResponse(res);
+      } catch (err) {
+        lastError = err;
+        const isNetworkError = !err?.status;
+        if (!isNetworkError) throw err;
+      }
+    }
+
+    throw lastError;
+  },
 };
 
 export default api;
