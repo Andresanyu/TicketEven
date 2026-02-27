@@ -11,7 +11,8 @@ const runtimeBase =
   "http://localhost:4001/api";
 
 const FALLBACK_BASE = "http://localhost:4001/api";
-const BASE_CANDIDATES = Array.from(new Set([runtimeBase, FALLBACK_BASE]));
+const SECONDARY_FALLBACK_BASE = "http://localhost:4002/api";
+const BASE_CANDIDATES = Array.from(new Set([runtimeBase, FALLBACK_BASE, SECONDARY_FALLBACK_BASE]));
 
 async function parseResponse(res) {
   let data = null;
@@ -76,6 +77,26 @@ export const api = {
       try {
         const res = await fetch(`${base}${path}`, {
           method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body),
+        });
+        return await parseResponse(res);
+      } catch (err) {
+        lastError = err;
+        const isNetworkError = !err?.status;
+        if (!isNetworkError) throw err;
+      }
+    }
+
+    throw lastError;
+  },
+  async patch(path, body) {
+    let lastError;
+
+    for (const base of BASE_CANDIDATES) {
+      try {
+        const res = await fetch(`${base}${path}`, {
+          method: "PATCH",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(body),
         });

@@ -169,6 +169,42 @@ router.put("/:id", async (req: Request, res: Response) => {
   }
 });
 
+router.patch("/:id", async (req: Request, res: Response) => {
+  const id = Number(req.params.id);
+  if (!Number.isInteger(id) || id <= 0) {
+    return res.status(400).json({ error: "ID de evento inválido" });
+  }
+
+  const hasActivoField = Object.prototype.hasOwnProperty.call(req.body ?? {}, "activo");
+  if (!hasActivoField) {
+    return res.status(400).json({ error: "El campo activo es requerido" });
+  }
+
+  const activo = Boolean(req.body.activo);
+
+  try {
+    const updateResult = await pool.query(
+      `
+        UPDATE eventos
+        SET activo = $1
+        WHERE id = $2
+        RETURNING id
+      `,
+      [activo, id]
+    );
+
+    if (updateResult.rowCount === 0) {
+      return res.status(404).json({ error: "Evento no encontrado" });
+    }
+
+    const updatedEvent = await pool.query(`${EVENT_SELECT_QUERY} WHERE e.id = $1`, [id]);
+    return res.json(updatedEvent.rows[0]);
+  } catch (err) {
+    console.error("Error toggling event status:", err);
+    return res.status(500).json({ error: "Error al actualizar el estado del evento" });
+  }
+});
+
 router.delete("/:id", async (req: Request, res: Response) => {
   const id = Number(req.params.id);
   if (!Number.isInteger(id) || id <= 0) {
