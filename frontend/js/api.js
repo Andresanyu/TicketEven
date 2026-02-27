@@ -8,9 +8,9 @@ function normalizeBaseUrl(value) {
 const runtimeBase =
   normalizeBaseUrl(window.localStorage?.getItem("API_BASE_URL")) ||
   normalizeBaseUrl(window.API_BASE_URL) ||
-  "https://ticketeven-backend.onrender.com/api";
+  "http://localhost:4001/api";
 
-const FALLBACK_BASE = "https://ticketeven-backend.onrender.com/api";
+const FALLBACK_BASE = "http://localhost:4001/api";
 const BASE_CANDIDATES = Array.from(new Set([runtimeBase, FALLBACK_BASE]));
 
 async function parseResponse(res) {
@@ -56,6 +56,26 @@ export const api = {
       try {
         const res = await fetch(`${base}${path}`, {
           method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body),
+        });
+        return await parseResponse(res);
+      } catch (err) {
+        lastError = err;
+        const isNetworkError = !err?.status;
+        if (!isNetworkError) throw err;
+      }
+    }
+
+    throw lastError;
+  },
+  async put(path, body) {
+    let lastError;
+
+    for (const base of BASE_CANDIDATES) {
+      try {
+        const res = await fetch(`${base}${path}`, {
+          method: "PUT",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(body),
         });
