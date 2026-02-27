@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EventPro — Eliminar Categoría</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/register.css">
+<link rel="stylesheet" href="css/disable.css">
+</head>
+<body>
+
+<aside class="sidebar">
+  <div class="logo">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <circle cx="12" cy="12" r="10"/>
+      <path d="M12 6v6l4 2"/>
+    </svg>
+    EventPro
+  </div>
+
+  <div class="nav-section-label">Gestionar</div>
+
+  <a href="register.html" class="nav-item">
+    <span class="nav-dot"></span>
+    Eventos
+  </a>
+  <a href="edit-evento.html" class="nav-item nav-sub">
+    <span class="nav-sub-dot"></span>
+    Editar
+  </a>
+  <a href="inactivar-evento.html" class="nav-item nav-sub">
+    <span class="nav-sub-dot"></span>
+    Inactivar
+  </a>
+
+  <a href="register_category.html" class="nav-item">
+    <span class="nav-dot"></span>
+    Categorías
+  </a>
+  <a href="edit-categoria.html" class="nav-item nav-sub">
+    <span class="nav-sub-dot"></span>
+    Editar
+  </a>
+  <a href="inactivar-categoria.html" class="nav-item nav-sub active">
+    <span class="nav-sub-dot"></span>
+    Eliminar
+  </a>
+</aside>
+
+<main class="main">
+
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Eliminar Categoría<span>.</span></h1>
+      <div class="breadcrumb">
+        <a href="register_category.html">Categorías</a>
+        &rsaquo;
+        Eliminar
+      </div>
+    </div>
+  </div>
+
+  <div class="search-wrap">
+    <div class="search-box" id="searchBox">
+      <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="11" cy="11" r="8"/>
+        <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+      </svg>
+      <input
+        type="text"
+        id="searchInput"
+        class="search-input"
+        placeholder="Busca una categoría por nombre…"
+        autocomplete="off"
+      >
+      <span class="search-clear" id="searchClear" onclick="clearSearch()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="18" y1="6" x2="6" y2="18"/>
+          <line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </span>
+    </div>
+
+    <div class="search-dropdown" id="searchDropdown"></div>
+  </div>
+
+  <div id="actionSection"></div>
+
+</main>
+
+<div class="toast" id="toast">
+  <div class="toast-dot"></div>
+  <span id="toastMsg"></span>
+</div>
+
+<script type="module" src="js/disable_category.js"></script>
+</body>
+</html>
