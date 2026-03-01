@@ -5,6 +5,7 @@ import express from "express";
 import cors from "cors";
 import eventsRouter from "./routes/events";
 import categoriesRouter from "./routes/categories";
+import { connectDatabase, runSchemaMigrations } from "./config/database";
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -19,6 +20,18 @@ app.get("/api/health", (_req, res) => {
   res.json({ status: "ok", timestamp: new Date().toISOString() });
 });
 
-app.listen(PORT, () => {
-  console.log(`---> TicketEven API corriendo en http://localhost:${PORT}`);
-});
+async function bootstrap() {
+  try {
+    await connectDatabase();
+    await runSchemaMigrations();
+
+    app.listen(PORT, () => {
+      console.log(`---> TicketEven API corriendo en http://localhost:${PORT}`);
+    });
+  } catch (err) {
+    console.error("No se pudo iniciar la API por error de base de datos:", err);
+    process.exit(1);
+  }
+}
+
+bootstrap();

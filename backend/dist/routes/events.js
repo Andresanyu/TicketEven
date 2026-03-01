@@ -12,7 +12,8 @@ const EVENT_SELECT_QUERY = `
     e.valor,
     e.descripcion,
     e.imagen_url,
-    e.activo
+    e.activo,
+    e.contador_interes
   FROM eventos e
   LEFT JOIN categorias c ON c.id = e.categoria_id
 `;
@@ -144,6 +145,56 @@ router.put("/:id", async (req, res) => {
     catch (err) {
         console.error("Error updating event:", err);
         res.status(500).json({ error: "Error al actualizar el evento" });
+    }
+});
+router.patch("/:id", async (req, res) => {
+    const id = Number(req.params.id);
+    if (!Number.isInteger(id) || id <= 0) {
+        return res.status(400).json({ error: "ID de evento inválido" });
+    }
+    const hasActivoField = Object.prototype.hasOwnProperty.call(req.body ?? {}, "activo");
+    if (!hasActivoField) {
+        return res.status(400).json({ error: "El campo activo es requerido" });
+    }
+    const activo = Boolean(req.body.activo);
+    try {
+        const updateResult = await database_1.pool.query(`
+        UPDATE eventos
+        SET activo = $1
+        WHERE id = $2
+        RETURNING id
+      `, [activo, id]);
+        if (updateResult.rowCount === 0) {
+            return res.status(404).json({ error: "Evento no encontrado" });
+        }
+        const updatedEvent = await database_1.pool.query(`${EVENT_SELECT_QUERY} WHERE e.id = $1`, [id]);
+        return res.json(updatedEvent.rows[0]);
+    }
+    catch (err) {
+        console.error("Error toggling event status:", err);
+        return res.status(500).json({ error: "Error al actualizar el estado del evento" });
+    }
+});
+router.patch("/:id/interes", async (req, res) => {
+    const id = Number(req.params.id);
+    if (!Number.isInteger(id) || id <= 0) {
+        return res.status(400).json({ error: "ID de evento inválido" });
+    }
+    try {
+        const updateResult = await database_1.pool.query(`
+        UPDATE eventos
+        SET contador_interes = COALESCE(contador_interes, 0) + 1
+        WHERE id = $1
+        RETURNING contador_interes
+      `, [id]);
+        if (updateResult.rowCount === 0) {
+            return res.status(404).json({ error: "Evento no encontrado" });
+        }
+        return res.json({ contador_interes: updateResult.rows[0].contador_interes });
+    }
+    catch (err) {
+        console.error("Error incrementing event interest counter:", err);
+        return res.status(500).json({ error: "Error al registrar interés" });
     }
 });
 router.delete("/:id", async (req, res) => {

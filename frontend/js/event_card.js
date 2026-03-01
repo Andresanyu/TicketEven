@@ -25,7 +25,6 @@ const heroDateText   = document.getElementById('heroDateText');
 const heroPriceText  = document.getElementById('heroPriceText');
 const detailDesc     = document.getElementById('detailDescription');
 const interestCount  = document.getElementById('interestCount');
-const interestBar    = document.getElementById('interestBar');
 const btnInterest    = document.getElementById('btnInterest');
 const btnInterestText= document.getElementById('btnInterestText');
 const interestHint   = document.getElementById('interestHint');
@@ -70,17 +69,6 @@ function formatPrice(value) {
   }).format(value);
 }
 
-/** Anima la barra de interés según el contador. */
-function animateBar(count) {
-  // Escala: 100 interesados = barra llena (ajusta el tope si quieres)
-  const TOPE = 100;
-  const pct  = Math.min((count / TOPE) * 100, 100);
-  setTimeout(() => { interestBar.style.width = pct + '%'; }, 150);
-}
-
-// ── Estado de interés (localStorage para no repetir clics) ──
-const STORAGE_KEY = `eventpro_interest_${eventId}`;
-let alreadyClicked = localStorage.getItem(STORAGE_KEY) === 'true';
 
 // ── Cargar evento ──────────────────────────────────────
 async function loadEvent() {
@@ -99,9 +87,6 @@ async function loadEvent() {
     populateDOM(ev);
     hide(stateLoading);
     show(detailContent);
-
-    // Si ya hizo clic antes, muestra el botón en estado "done"
-    if (alreadyClicked) setDoneState(false);
 
   } catch (err) {
     console.error('Error al cargar el evento:', err);
@@ -165,15 +150,24 @@ function populateDOM(ev) {
   // ── Contador de interesados
   // 👉 Ajusta el campo: interesados / contador_interes / interes / num_interesados
   const count = Number(ev.interesados ?? ev.contador_interes ?? ev.interes ?? ev.num_interesados ?? 0);
-  interestCount.textContent = count.toLocaleString('es-CO');
-  animateBar(count);
+  if (interestCount) {
+    interestCount.textContent = count.toLocaleString('es-CO');
+  }
 }
 
 // ── Botón "Estoy interesado" (RF-06) ──────────────────
-async function markInterest() {
-  if (btnInterest.disabled) return;
+// Sin límite de clics: cada clic llama a la API y actualiza el contador.
+let sending = false; // evita doble envío por doble clic rápido
 
-  btnInterest.disabled = true;
+async function markInterest() {
+  if (!eventId || !btnInterest) return;
+  if (sending) return;
+  sending = true;
+
+  // Feedback inmediato: animación del corazón
+  const heart = btnInterest.querySelector('.heart-icon');
+  heart?.classList.add('beat');
+  setTimeout(() => heart?.classList.remove('beat'), 500);
 
   try {
     const data = await api.patch(`/events/${eventId}/interes`, { incrementar: true });
@@ -185,48 +179,30 @@ async function markInterest() {
     );
 
     if (!isNaN(nuevo)) {
-      interestCount.textContent = nuevo.toLocaleString('es-CO');
-      animateBar(nuevo);
+      if (interestCount) {
+        interestCount.textContent = nuevo.toLocaleString('es-CO');
+      }
     } else {
       // Si el backend no devuelve el nuevo valor, incrementa localmente
-      const actual = parseInt(interestCount.textContent.replace(/\D/g, '')) || 0;
-      interestCount.textContent = (actual + 1).toLocaleString('es-CO');
-      animateBar(actual + 1);
+      const actual = parseInt((interestCount?.textContent || '').replace(/\D/g, '')) || 0;
+      if (interestCount) {
+        interestCount.textContent = (actual + 1).toLocaleString('es-CO');
+      }
     }
 
-    // Guardar en localStorage para no spam
-    localStorage.setItem(STORAGE_KEY, 'true');
-    alreadyClicked = true;
-
-    setDoneState(true); // feedback visual
+    if (interestHint) {
+      interestHint.textContent = '¡Interés registrado correctamente!';
+    }
 
   } catch (err) {
     console.error('Error al registrar interés:', err);
-    // Feedback de error al usuario
-    btnInterestText.textContent = 'Error al registrar. Intenta de nuevo.';
-    btnInterest.classList.add('error');
+    if (btnInterestText) btnInterestText.textContent = 'Error. Intenta de nuevo.';
     setTimeout(() => {
-      btnInterestText.textContent = 'Estoy interesado';
-      btnInterest.classList.remove('error');
-      btnInterest.disabled = false;
-    }, 2500);
-  }
-}
-
-/**
- * Cambia visualmente el botón al estado "ya interesé".
- * @param {boolean} animate  — si true, aplica la animación de latido
- */
-function setDoneState(animate) {
-  btnInterest.classList.add('done');
-  btnInterestText.textContent = '¡Gracias por tu interés!';
-  interestHint.textContent    = 'Ya registramos tu interés en este evento ✓';
-
-  if (animate) {
-    // Animación de latido en el corazón
-    const heart = btnInterest.querySelector('.heart-icon');
-    heart?.classList.add('beat');
-    setTimeout(() => heart?.classList.remove('beat'), 600);
+      if (btnInterestText) btnInterestText.textContent = 'Estoy interesado';
+      if (interestHint) interestHint.textContent = 'Haz clic para registrar tu interés en este evento';
+    }, 2000);
+  } finally {
+    sending = false;
   }
 }
 

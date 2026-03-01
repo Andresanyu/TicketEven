@@ -13,7 +13,8 @@ const EVENT_SELECT_QUERY = `
     e.valor,
     e.descripcion,
     e.imagen_url,
-    e.activo
+    e.activo,
+    e.contador_interes
   FROM eventos e
   LEFT JOIN categorias c ON c.id = e.categoria_id
 `;
@@ -202,6 +203,34 @@ router.patch("/:id", async (req: Request, res: Response) => {
   } catch (err) {
     console.error("Error toggling event status:", err);
     return res.status(500).json({ error: "Error al actualizar el estado del evento" });
+  }
+});
+
+router.patch("/:id/interes", async (req: Request, res: Response) => {
+  const id = Number(req.params.id);
+  if (!Number.isInteger(id) || id <= 0) {
+    return res.status(400).json({ error: "ID de evento inválido" });
+  }
+
+  try {
+    const updateResult = await pool.query(
+      `
+        UPDATE eventos
+        SET contador_interes = COALESCE(contador_interes, 0) + 1
+        WHERE id = $1
+        RETURNING contador_interes
+      `,
+      [id]
+    );
+
+    if (updateResult.rowCount === 0) {
+      return res.status(404).json({ error: "Evento no encontrado" });
+    }
+
+    return res.json({ contador_interes: updateResult.rows[0].contador_interes });
+  } catch (err) {
+    console.error("Error incrementing event interest counter:", err);
+    return res.status(500).json({ error: "Error al registrar interés" });
   }
 });
 
