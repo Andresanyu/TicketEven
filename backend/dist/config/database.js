@@ -5,6 +5,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.pool = void 0;
 exports.connectDatabase = connectDatabase;
+exports.runSchemaMigrations = runSchemaMigrations;
 const dotenv_1 = __importDefault(require("dotenv"));
 const path_1 = __importDefault(require("path"));
 const pg_1 = require("pg");
@@ -25,4 +26,15 @@ exports.pool = new pg_1.Pool({
 });
 async function connectDatabase() {
     await exports.pool.query("SELECT 1");
+}
+async function runSchemaMigrations() {
+    await exports.pool.query(`
+    ALTER TABLE eventos
+    ADD COLUMN IF NOT EXISTS contador_interes INTEGER DEFAULT 0
+  `);
+    await exports.pool.query(`
+    UPDATE eventos
+    SET contador_interes = 0
+    WHERE contador_interes IS NULL
+  `);
 }

@@ -11,5 +11,6 @@ CREATE TABLE eventos (
     valor NUMERIC,
     descripcion TEXT DEFAULT 'Sin descripción',
     imagen_url VARCHAR(255),
-    activo BOOLEAN DEFAULT true
+    activo BOOLEAN DEFAULT true,
+    contador_interes INTEGER DEFAULT 0
 );

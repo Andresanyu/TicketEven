@@ -27,3 +27,16 @@ export const pool = new Pool({
 export async function connectDatabase(): Promise<void> {
   await pool.query("SELECT 1");
 }
+
+export async function runSchemaMigrations(): Promise<void> {
+  await pool.query(`
+    ALTER TABLE eventos
+    ADD COLUMN IF NOT EXISTS contador_interes INTEGER DEFAULT 0
+  `);
+
+  await pool.query(`
+    UPDATE eventos
+    SET contador_interes = 0
+    WHERE contador_interes IS NULL
+  `);
+}

@@ -7,6 +7,7 @@ export interface EventResponse {
   descripcion: string | null;
   imagen_url: string | null;
   activo: boolean | null;
+  contador_interes: number;
 }
 
 export interface EventUpsertInput {
