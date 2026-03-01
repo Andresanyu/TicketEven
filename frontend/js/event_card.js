@@ -1,3 +1,5 @@
+import api from './api.js';
+
 /* ══════════════════════════════════════════════════
    detalle.js  — EventPro · Detalle de Evento
    ══════════════════════════════════════════════════
@@ -8,10 +10,6 @@
    │  del archivo para que los cambies fácilmente       │
    └───────────────────────────────────────────────────┘
 */
-
-// ── Configuración ─────────────────────────────────────
-// 👉 Cambia esta URL por la de tu API en Render
-const BASE_URL = 'https://ticketeven-backend.onrender.com/api';
 
 // ── Elementos del DOM ─────────────────────────────────
 const stateLoading   = document.getElementById('stateLoading');
@@ -92,18 +90,7 @@ async function loadEvent() {
   }
 
   try {
-    // 👉 Ajusta el endpoint si tu ruta es diferente, ej: /eventos, /events, /event
-    const res = await fetch(`${BASE_URL}/eventos/${eventId}`);
-
-    if (!res.ok) {
-      const msg = res.status === 404
-        ? 'El evento no fue encontrado.'
-        : `Error del servidor (${res.status}).`;
-      showError(msg);
-      return;
-    }
-
-    const data = await res.json();
+    const data = await api.get(`/events/${eventId}`);
 
     // La API puede devolver { data: {...} } o directamente el objeto
     // 👉 Ajusta según la estructura real de tu respuesta
@@ -118,6 +105,14 @@ async function loadEvent() {
 
   } catch (err) {
     console.error('Error al cargar el evento:', err);
+    if (err?.status === 404) {
+      showError('El evento no fue encontrado.');
+      return;
+    }
+    if (err?.status) {
+      showError(`Error del servidor (${err.status}).`);
+      return;
+    }
     showError('No se pudo conectar con el servidor. Intenta más tarde.');
   }
 }
@@ -181,21 +176,7 @@ async function markInterest() {
   btnInterest.disabled = true;
 
   try {
-    // 👉 Ajusta el endpoint y método (PATCH / POST) según tu API
-    //    Opción A — PATCH (incrementa el contador en el backend):
-    const res = await fetch(`${BASE_URL}/eventos/${eventId}/interes`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      // Si tu endpoint necesita un body, descomenta:
-      // body: JSON.stringify({ incrementar: true }),
-    });
-
-    //    Opción B — POST si prefieres:
-    //    const res = await fetch(`${BASE_URL}/eventos/${eventId}/interes`, { method: 'POST' });
-
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-
-    const data = await res.json();
+    const data = await api.patch(`/events/${eventId}/interes`, { incrementar: true });
 
     // 👉 Actualiza el contador con la respuesta del backend
     //    Ajusta el campo: interesados / contador_interes / interes / count
