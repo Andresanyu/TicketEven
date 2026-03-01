@@ -158,6 +158,8 @@
     border-radius: 12px;
     overflow: hidden;
     cursor: pointer;
+    text-decoration: none;
+    color: inherit;
     transition: transform .25s cubic-bezier(.2,.8,.2,1), border-color .25s, box-shadow .25s;
     animation: fadeUp .4s ease both;
     display: flex;

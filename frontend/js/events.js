@@ -146,9 +146,10 @@ function buildCard(ev, idx) {
   const info    = CATEGORY_COLORS[ev.category] || { bg: '#1a1c19', emoji: '🎪' };
   const isGratis = ev.price === 'Gratis';
   const delay   = (idx % PAGE_SIZE) * 40;
+  const detailHref = `event_card.html?id=${encodeURIComponent(ev.id)}`;
 
   return `
-    <div class="event-card" style="animation-delay:${delay}ms">
+    <a class="event-card" href="${detailHref}" style="animation-delay:${delay}ms" aria-label="Ver detalle de ${ev.name}">
       <div class="card-img-placeholder" style="background:${info.bg};">
         <span style="font-size:32px;z-index:1;position:relative">${info.emoji}</span>
         <div style="position:absolute;inset:0;background:radial-gradient(circle at 30% 40%, rgba(198,241,53,.08) 0%, transparent 70%)"></div>
@@ -168,7 +169,7 @@ function buildCard(ev, idx) {
           <div class="card-price ${isGratis ? 'free' : ''}">${isGratis ? '✦ GRATIS' : ev.price}</div>
         </div>
       </div>
-    </div>`;
+    </a>`;
 }
 
 function loadMore() {
