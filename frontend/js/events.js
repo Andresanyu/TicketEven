@@ -64,12 +64,19 @@ const SORT_FNS = {
 
   alpha: (a, b) =>
     (a.name || '').toLowerCase().localeCompare((b.name || '').toLowerCase(), 'es'),
+
+  category: (a, b) => {
+    const byCategory = (a.category || '').toLowerCase().localeCompare((b.category || '').toLowerCase(), 'es');
+    if (byCategory !== 0) return byCategory;
+    return (a.name || '').toLowerCase().localeCompare((b.name || '').toLowerCase(), 'es');
+  },
 };
 
 const SORT_LABELS = {
   default: 'Ordenar',
   date: 'Por fecha',
   alpha: 'A → Z',
+  category: 'Por categoría',
 };
 
 function toggleSort() {
@@ -91,7 +98,7 @@ document.addEventListener('click', function(e) {
 });
 
 function applySort(type) {
-  ['default', 'date', 'alpha'].forEach(function(id) {
+  ['default', 'date', 'alpha', 'category'].forEach(function(id) {
     const option = document.getElementById('opt-' + id);
     if (option) option.classList.toggle('active', id === type);
   });
