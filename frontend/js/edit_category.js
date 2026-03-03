@@ -1,4 +1,7 @@
 import api from "./api.js";
+import { Auth } from "./auth.js";
+
+Auth.requireAdmin();
 
 let ALL_CATS   = [];
 let selectedId = null;

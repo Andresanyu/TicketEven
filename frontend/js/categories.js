@@ -1,4 +1,7 @@
 import api from "./api.js";
+import { Auth } from "./auth.js";
+
+Auth.requireAdmin();
 
 function showToast(msg, type) {
   var t = document.getElementById('toast');

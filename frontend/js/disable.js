@@ -1,4 +1,7 @@
 import api from "./api.js";
+import { Auth } from "./auth.js";
+
+Auth.requireAdmin();
 
 const CATEGORY_COLORS = {
   'Música':  { bg: '#1a1a2e', emoji: '🎵' },
