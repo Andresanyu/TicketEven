@@ -15,14 +15,6 @@ CREATE TABLE eventos (
     contador_interes INTEGER DEFAULT 0
 );
 
-CREATE TABLE favoritos (
-    id SERIAL PRIMARY KEY,
-    usuario_id INTEGER REFERENCES usuarios(id) ON DELETE CASCADE,
-    evento_id INTEGER REFERENCES eventos(id) ON DELETE CASCADE,
-    fecha_agregado TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    UNIQUE (usuario_id, evento_id)
-);
-
 CREATE TABLE usuarios (
     id SERIAL PRIMARY KEY,
     nombre VARCHAR(100) NOT NULL,
@@ -31,4 +23,12 @@ CREATE TABLE usuarios (
     rol VARCHAR(20) NOT NULL CHECK (rol IN ('externo', 'admin')),
     activo BOOLEAN DEFAULT true,
     fecha_registro TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE favoritos (
+    id SERIAL PRIMARY KEY,
+    usuario_id INTEGER REFERENCES usuarios(id) ON DELETE CASCADE,
+    evento_id INTEGER REFERENCES eventos(id) ON DELETE CASCADE,
+    fecha_agregado TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE (usuario_id, evento_id)
 );

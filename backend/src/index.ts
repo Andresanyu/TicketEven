@@ -5,6 +5,7 @@ import express from "express";
 import cors from "cors";
 import eventsRouter from "./routes/events";
 import categoriesRouter from "./routes/categories";
+import usersRouter from "./routes/users";
 import { connectDatabase, runSchemaMigrations } from "./config/database";
 
 const app = express();
@@ -15,6 +16,7 @@ app.use(express.json());
 
 app.use("/api/events", eventsRouter);
 app.use("/api/categories", categoriesRouter);
+app.use("/api/users", usersRouter);
 
 app.get("/api/health", (_req, res) => {
   res.json({ status: "ok", timestamp: new Date().toISOString() });
