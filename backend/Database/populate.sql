@@ -40,7 +40,7 @@ VALUES
 ('Juan Pérez', 'juan.perez@email.com', '$2b$10$abc123hashsimulado1', 'externo', true),
 ('María Gómez', 'maria.gomez@email.com', '$2b$10$abc123hashsimulado2', 'externo', true),
 ('Carlos López', 'carlos.lopez@email.com', '$2b$10$abc123hashsimulado3', 'externo', true),
-('Admin Principal', 'admin@email.com', '$2b$10$abc123hashadmin', 'admin', true),
+('Admin Principal', 'admin@email.com', '$2b$10$zku3bZSfXzL0e1MCnCSJNuFQOwcmWFF98Rt/yvyGwZrPRiQf8.xvO', 'admin', true),
 ('Usuario Inactivo', 'inactivo@email.com', '$2b$10$abc123hashsimulado4', 'externo', false);
 
 INSERT INTO favoritos (usuario_id, evento_id)
