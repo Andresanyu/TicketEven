@@ -1,6 +1,7 @@
 import { Router, Request, Response } from "express";
 import { EventUpsertInput } from "../models/types";
 import { pool } from "../config/database";
+import { authenticateToken, authorizeAdmin } from "../middlewares/auth";
 
 const router = Router();
 
@@ -54,7 +55,7 @@ router.get("/:id", async (req: Request, res: Response) => {
   }
 });
 
-router.get("/reporte", async (_req: Request, res: Response) => {
+router.get("/interest/report", authenticateToken, async (_req: Request, res: Response) => {
   try {
     const result = await pool.query(
       `${EVENT_SELECT_QUERY} ORDER BY e.contador_interes DESC`
@@ -66,7 +67,7 @@ router.get("/reporte", async (_req: Request, res: Response) => {
   }
 });
 
-router.post("/", async (req: Request, res: Response) => {
+router.post("/", authenticateToken, authorizeAdmin, async (req: Request, res: Response) => {
   const { nombre, categoria_id, fecha, valor, descripcion, imagen_url, activo } = req.body as EventUpsertInput;
 
   if (!nombre || !String(nombre).trim()) {
@@ -116,7 +117,7 @@ router.post("/", async (req: Request, res: Response) => {
   }
 });
 
-router.put("/:id", async (req: Request, res: Response) => {
+router.put("/:id", authenticateToken, authorizeAdmin, async (req: Request, res: Response) => {
   const id = Number(req.params.id);
   if (!Number.isInteger(id) || id <= 0) {
     return res.status(400).json({ error: "ID de evento inválido" });
@@ -182,7 +183,7 @@ router.put("/:id", async (req: Request, res: Response) => {
   }
 });
 
-router.patch("/:id", async (req: Request, res: Response) => {
+router.patch("/:id", authenticateToken, authorizeAdmin, async (req: Request, res: Response) => {
   const id = Number(req.params.id);
   if (!Number.isInteger(id) || id <= 0) {
     return res.status(400).json({ error: "ID de evento inválido" });
@@ -246,7 +247,7 @@ router.patch("/:id/interes", async (req: Request, res: Response) => {
   }
 });
 
-router.delete("/:id", async (req: Request, res: Response) => {
+router.delete("/:id", authenticateToken, authorizeAdmin, async (req: Request, res: Response) => {
   const id = Number(req.params.id);
   if (!Number.isInteger(id) || id <= 0) {
     return res.status(400).json({ error: "ID de evento inválido" });
