@@ -1,6 +1,7 @@
 import { Router, Request, Response } from "express";
 import { UserResponse, UserFavoritoResponse } from "../models/types";
 import { pool } from "../config/database";
+import bcrypt from "bcrypt";
 
 const router = Router();
 
@@ -102,6 +103,42 @@ router.post("/favorite", async (req: Request, res: Response) => {
         }
 
         res.status(500).json({ error: "Error al crear el favorito" });
+    }
+});
+
+router.post("/register", async (req: Request, res: Response) => {
+    const { nombre, email, password } = req.body;
+
+    if (!nombre || !email || !password) {
+        return res.status(400).json({ error: "Todos los campos son obligatorios" });
+    }
+
+    try {
+        const existingUser = await pool.query(
+        "SELECT id FROM usuarios WHERE email = $1",
+        [email]
+        );
+
+        if (existingUser.rowCount && existingUser.rowCount > 0) {
+        return res.status(409).json({ error: "El email ya está registrado" });
+        }
+
+        const saltRounds = 10;
+        const password_hash = await bcrypt.hash(password, saltRounds);
+
+        const result = await pool.query(
+        `
+        INSERT INTO usuarios (nombre, email, password_hash, rol)
+        VALUES ($1, $2, $3, 'externo')
+        RETURNING id, nombre, email, rol, activo, fecha_registro
+        `,
+        [nombre, email, password_hash]
+        );
+
+        res.status(201).json(result.rows[0]);
+    } catch (err) {
+        console.error("Error registering user:", err);
+        res.status(500).json({ error: "Error al registrar el usuario" });
     }
 });
 
