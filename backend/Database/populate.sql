@@ -34,3 +34,20 @@ VALUES
     ('Museo de Historia', 5, '2026-11-02 08:00:00', 0, 'Jornada de puertas abiertas.', 'https://picsum.photos/id/149/300/200', true),
     ('Conferencia IA 2026', 6, '2026-11-18 14:00:00', 120000, 'El futuro de la IA.', 'https://picsum.photos/id/160/300/200', true),
     ('Fiesta de Fin de Año', 1, '2026-12-31 22:00:00', 85000, 'Despide el año con nosotros.', 'https://picsum.photos/id/319/300/200', true);
+
+INSERT INTO usuarios (nombre, email, password_hash, rol, activo)
+VALUES 
+('Juan Pérez', 'juan.perez@email.com', '$2b$10$abc123hashsimulado1', 'externo', true),
+('María Gómez', 'maria.gomez@email.com', '$2b$10$abc123hashsimulado2', 'externo', true),
+('Carlos López', 'carlos.lopez@email.com', '$2b$10$abc123hashsimulado3', 'externo', true),
+('Admin Principal', 'admin@email.com', '$2b$10$abc123hashadmin', 'admin', true),
+('Usuario Inactivo', 'inactivo@email.com', '$2b$10$abc123hashsimulado4', 'externo', false);
+
+INSERT INTO favoritos (usuario_id, evento_id)
+VALUES
+(1, 1),
+(1, 2),
+(2, 1),
+(2, 3),
+(3, 2),
+(3, 4);

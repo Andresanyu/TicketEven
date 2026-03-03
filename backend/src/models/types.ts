@@ -19,3 +19,24 @@ export interface EventUpsertInput {
   imagen_url?: string | null;
   activo?: boolean | null;
 }
+
+export interface UserResponse {
+  id: number;
+  nombre: string;
+  email: string;
+  rol: string;
+  activo: boolean;
+  fecha_registro: Date;
+}
+
+export interface UserFavoritoResponse {
+  favorito_id: number;
+  fecha_agregado: Date;
+  usuario_id: number;
+  usuario_nombre: string;
+  usuario_email: string;
+  evento_id: number;
+  evento_nombre: string;
+  evento_fecha: Date;
+  evento_valor: number;
+}
