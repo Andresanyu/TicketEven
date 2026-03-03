@@ -63,4 +63,46 @@ router.get("/:id/favorites", async (req: Request, res: Response) => {
     }
 });
 
+router.post("/favorite", async (req: Request, res: Response) => {
+    const { usuario_id, evento_id } = req.body;
+
+    if (
+        !Number.isInteger(usuario_id) ||
+        usuario_id <= 0 ||
+        !Number.isInteger(evento_id) ||
+        evento_id <= 0
+    ) {
+        return res.status(400).json({ error: "Datos inválidos" });
+    }
+
+    try {
+        const result = await pool.query(
+        `
+        INSERT INTO favoritos (usuario_id, evento_id)
+        VALUES ($1, $2)
+        RETURNING *
+        `,
+        [usuario_id, evento_id]
+        );
+
+        res.status(201).json(result.rows[0]);
+    } catch (err: any) {
+        console.error("Error creating favorito:", err);
+
+        if (err.code === "23505") {
+        return res.status(409).json({
+            error: "El evento ya está marcado como favorito por este usuario"
+        });
+        }
+
+        if (err.code === "23503") {
+        return res.status(400).json({
+            error: "Usuario o evento no existe"
+        });
+        }
+
+        res.status(500).json({ error: "Error al crear el favorito" });
+    }
+});
+
 export default router;
