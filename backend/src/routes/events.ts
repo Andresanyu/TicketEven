@@ -54,6 +54,18 @@ router.get("/:id", async (req: Request, res: Response) => {
   }
 });
 
+router.get("/reporte", async (_req: Request, res: Response) => {
+  try {
+    const result = await pool.query(
+      `${EVENT_SELECT_QUERY} ORDER BY e.contador_interes DESC`
+    );
+    res.json(result.rows);
+  } catch (err) {
+    console.error("Error fetching events report:", err);
+    res.status(500).json({ error: "Error al obtener el reporte de eventos" });
+  }
+});
+
 router.post("/", async (req: Request, res: Response) => {
   const { nombre, categoria_id, fecha, valor, descripcion, imagen_url, activo } = req.body as EventUpsertInput;
 
