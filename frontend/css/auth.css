@@ -1,0 +1,204 @@
+/* ══════════════════════════════════════════════════
+   auth.css  — EventPro · Login & Register
+   ══════════════════════════════════════════════════ */
+
+:root {
+  --bg:            #111210;
+  --bg-card:       #1a1c19;
+  --border:        #2a2d29;
+  --accent:        #c6f135;
+  --accent-dim:    #8aab1f;
+  --red:           #e05c5c;
+  --text-primary:  #e8ead4;
+  --text-secondary:#7a7f72;
+  --text-muted:    #4a4f42;
+}
+
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  background: var(--bg);
+  color: var(--text-primary);
+  font-family: 'DM Sans', sans-serif;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  -webkit-font-smoothing: antialiased;
+}
+
+a { text-decoration: none; color: inherit; }
+
+/* ── Card ── */
+.card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 40px 36px;
+  width: 100%;
+  max-width: 420px;
+  animation: fadeUp .4s ease both;
+}
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Logo ── */
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: 'Syne', sans-serif;
+  font-weight: 700;
+  font-size: 17px;
+  color: var(--accent);
+  margin-bottom: 32px;
+}
+
+.logo svg { width: 18px; height: 18px; }
+
+/* ── Encabezado ── */
+h1 {
+  font-family: 'Syne', sans-serif;
+  font-size: 26px;
+  font-weight: 800;
+  letter-spacing: -.5px;
+  color: var(--text-primary);
+  margin-bottom: 6px;
+}
+
+.subtitle {
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin-bottom: 32px;
+}
+
+.subtitle a { color: var(--accent); font-weight: 500; }
+.subtitle a:hover { color: #d4ff3d; }
+
+/* ── Campos ── */
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 16px;
+}
+
+label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: .6px;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+input {
+  background: var(--bg);
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+  color: var(--text-primary);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px;
+  padding: 10px 14px;
+  outline: none;
+  transition: border-color .2s;
+  width: 100%;
+}
+
+input::placeholder { color: var(--text-muted); }
+input:focus { border-color: var(--accent-dim); }
+input.invalid { border-color: var(--red); }
+
+/* ── Mensaje de error de campo ── */
+.field-error {
+  font-size: 11px;
+  color: var(--red);
+  display: none;
+}
+
+.field-error.visible { display: block; }
+
+/* ── Alerta global ── */
+.alert {
+  border-radius: 8px;
+  font-size: 13px;
+  padding: 10px 14px;
+  margin-bottom: 20px;
+  border: 1px solid transparent;
+  display: none;
+}
+
+.alert.visible { display: block; }
+
+.alert.error {
+  background: rgba(224, 92, 92, .08);
+  border-color: rgba(224, 92, 92, .25);
+  color: #e05c5c;
+}
+
+.alert.success {
+  background: rgba(198, 241, 53, .07);
+  border-color: rgba(198, 241, 53, .2);
+  color: var(--accent);
+}
+
+/* ── Botón submit ── */
+.btn-submit {
+  width: 100%;
+  padding: 12px 20px;
+  background: var(--accent);
+  color: #111210;
+  border: none;
+  border-radius: 8px;
+  font-family: 'Syne', sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: .3px;
+  cursor: pointer;
+  margin-top: 8px;
+  transition: background .2s, transform .15s, box-shadow .2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.btn-submit:hover {
+  background: #d4ff3d;
+  transform: translateY(-1px);
+  box-shadow: 0 8px 24px rgba(198, 241, 53, .2);
+}
+
+.btn-submit:active { transform: translateY(0); }
+
+.btn-submit:disabled {
+  opacity: .45;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+/* Spinner dentro del botón */
+.btn-spinner {
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(17,18,16,.3);
+  border-top-color: #111210;
+  border-radius: 50%;
+  animation: spin .65s linear infinite;
+  display: none;
+}
+
+.btn-submit.loading .btn-spinner { display: block; }
+.btn-submit.loading .btn-label   { opacity: .5; }
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── Responsive ── */
+@media (max-width: 480px) {
+  .card { padding: 28px 20px; }
+  h1    { font-size: 22px; }
+}
