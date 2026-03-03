@@ -42,14 +42,12 @@ export const Auth = {
     return this.getPayload()?.rol ?? null;
   },
 
-  // Llama a esto al inicio de cada página protegida
   requireAuth(redirectTo = "./login.html") {
     if (!this.isLoggedIn()) {
       window.location.href = redirectTo;
     }
   },
 
-  // Llama a esto al inicio de cada página exclusiva de admin
   requireAdmin(redirectTo = "./index.html") {
     this.requireAuth();
     if (this.getRol() !== "admin") {
@@ -61,7 +59,11 @@ export const Auth = {
 export async function handleLogin(email, password) {
   const data = await api.post("/users/login", { email, password });
   Auth.saveToken(data.token);
-  window.location.href = "/frontend/index.html";
+  if (Auth.getRol() === "admin") {
+    window.location.href = "/frontend/register_event.html";
+  } else {
+    window.location.href = "/frontend/index.html";
+  }
 }
 
 export async function handleRegister(nombre, email, password) {
