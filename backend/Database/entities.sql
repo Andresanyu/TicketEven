@@ -15,6 +15,14 @@ CREATE TABLE eventos (
     contador_interes INTEGER DEFAULT 0
 );
 
+CREATE TABLE favoritos (
+    id SERIAL PRIMARY KEY,
+    usuario_id INTEGER REFERENCES usuarios(id) ON DELETE CASCADE,
+    evento_id INTEGER REFERENCES eventos(id) ON DELETE CASCADE,
+    fecha_agregado TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE (usuario_id, evento_id)
+);
+
 CREATE TABLE usuarios (
     id SERIAL PRIMARY KEY,
     nombre VARCHAR(100) NOT NULL,
