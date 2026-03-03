@@ -9,9 +9,6 @@
 </head>
 <body>
 
-  <!-- ══════════════════════════════════════════
-       NAVBAR
-  ══════════════════════════════════════════ -->
   <nav class="navbar">
     <a href="index.html" class="nav-logo">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -29,17 +26,11 @@
     </a>
   </nav>
 
-  <!-- ══════════════════════════════════════════
-       ESTADO: CARGANDO
-  ══════════════════════════════════════════ -->
   <div class="state-wrap" id="stateLoading">
     <div class="spinner-ring"></div>
     <p>Cargando evento…</p>
   </div>
 
-  <!-- ══════════════════════════════════════════
-       ESTADO: ERROR
-  ══════════════════════════════════════════ -->
   <div class="state-wrap hidden" id="stateError">
     <div class="state-icon">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
@@ -52,18 +43,11 @@
     <a href="index.html" class="btn-outline">Ver todos los eventos</a>
   </div>
 
-  <!-- ══════════════════════════════════════════
-       CONTENIDO PRINCIPAL
-  ══════════════════════════════════════════ -->
   <main class="detail-wrap hidden" id="detailContent">
 
-    <!-- ── HERO ── -->
     <section class="hero">
-
       <div class="hero-media">
-        <!-- Imagen → ajusta al campo real: imagen_url / imagen / imagen_promotional -->
         <img id="heroImg" src="" alt="" class="hero-img hidden">
-        <!-- Placeholder si no hay imagen -->
         <div class="hero-placeholder" id="heroPlaceholder">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
             <rect x="3" y="3" width="18" height="18" rx="2"/>
@@ -75,14 +59,9 @@
       </div>
 
       <div class="hero-info">
-        <!-- Categoría → ajusta al campo: categoria / categoria_nombre / cat.nombre -->
         <span class="badge-cat" id="heroCategory"></span>
-
-        <!-- Nombre → ajusta al campo: nombre / nombre_evento -->
         <h1 class="hero-title" id="heroTitle"></h1>
-
         <div class="hero-chips">
-          <!-- Fecha → ajusta al campo: fecha / fecha_evento -->
           <div class="chip">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <rect x="3" y="4" width="18" height="18" rx="2"/>
@@ -92,7 +71,6 @@
             </svg>
             <span id="heroDateText"></span>
           </div>
-          <!-- Precio → ajusta al campo: valor / precio / costo -->
           <div class="chip">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <line x1="12" y1="1" x2="12" y2="23"/>
@@ -102,20 +80,15 @@
           </div>
         </div>
       </div>
-
     </section>
 
-    <!-- ── CUERPO ── -->
     <div class="detail-body">
 
-      <!-- Descripción -->
       <article class="detail-article">
         <div class="article-label">Sobre este evento</div>
-        <!-- Descripción → ajusta al campo: descripcion / descripcion_evento -->
         <p class="detail-description" id="detailDescription"></p>
       </article>
 
-      <!-- Panel de interés RF-06 -->
       <aside class="interest-panel">
 
         <div class="interest-header">
@@ -125,6 +98,7 @@
           </div>
         </div>
 
+        <!-- Botón interés RF-06 -->
         <button class="btn-interest" id="btnInterest" onclick="markInterest()">
           <svg class="heart-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
@@ -133,6 +107,16 @@
         </button>
 
         <p class="interest-hint" id="interestHint">Haz clic para registrar tu interés en este evento</p>
+
+        <hr class="panel-divider">
+
+        <!-- Botón guardar (toggle) -->
+        <button class="btn-save" id="btnSave" onclick="toggleSave()">
+          <svg class="save-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/>
+          </svg>
+          <span id="btnSaveText">Guardar evento</span>
+        </button>
 
       </aside>
 

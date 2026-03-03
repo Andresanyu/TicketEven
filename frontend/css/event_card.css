@@ -1,9 +1,7 @@
 /* ══════════════════════════════════════════════════
-   detalle.css  — EventPro · Vista de Detalle de Evento
-   Comparte tokens con register.css / edit-evento.css
+   event_card.css  — EventPro · Vista de Detalle de Evento
    ══════════════════════════════════════════════════ */
 
-/* ── Variables ── */
 :root {
   --bg:            #111210;
   --bg-card:       #1a1c19;
@@ -21,7 +19,6 @@
   --radius:        12px;
 }
 
-/* ── Reset ── */
 *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
 body {
@@ -35,9 +32,7 @@ body {
 a { text-decoration: none; color: inherit; }
 .hidden { display: none !important; }
 
-/* ══════════════════════════════════════════
-   NAVBAR
-══════════════════════════════════════════ */
+/* ── Navbar ── */
 .navbar {
   position: sticky;
   top: 0;
@@ -77,9 +72,7 @@ a { text-decoration: none; color: inherit; }
 .nav-back:hover { color: var(--text-primary); }
 .nav-back svg { width: 15px; height: 15px; }
 
-/* ══════════════════════════════════════════
-   ESTADOS (loading / error)
-══════════════════════════════════════════ */
+/* ── Estados ── */
 .state-wrap {
   min-height: calc(100vh - var(--nav-h));
   display: flex;
@@ -92,7 +85,6 @@ a { text-decoration: none; color: inherit; }
   padding: 40px 20px;
 }
 
-/* Spinner */
 .spinner-ring {
   width: 36px;
   height: 36px;
@@ -103,7 +95,6 @@ a { text-decoration: none; color: inherit; }
 }
 @keyframes spin { to { transform: rotate(360deg); } }
 
-/* Icono de error */
 .state-icon svg {
   width: 48px;
   height: 48px;
@@ -123,9 +114,7 @@ a { text-decoration: none; color: inherit; }
 }
 .btn-outline:hover { border-color: var(--accent-dim); color: var(--accent); }
 
-/* ══════════════════════════════════════════
-   CONTENEDOR PRINCIPAL
-══════════════════════════════════════════ */
+/* ── Contenedor ── */
 .detail-wrap {
   max-width: var(--body-max);
   margin: 0 auto;
@@ -138,9 +127,7 @@ a { text-decoration: none; color: inherit; }
   to   { opacity: 1; transform: translateY(0); }
 }
 
-/* ══════════════════════════════════════════
-   HERO
-══════════════════════════════════════════ */
+/* ── Hero ── */
 .hero {
   position: relative;
   border-radius: var(--radius);
@@ -150,7 +137,6 @@ a { text-decoration: none; color: inherit; }
   margin-bottom: 32px;
 }
 
-/* Imagen */
 .hero-media {
   position: relative;
   width: 100%;
@@ -165,10 +151,8 @@ a { text-decoration: none; color: inherit; }
   display: block;
   transition: transform .6s ease;
 }
-
 .hero:hover .hero-img { transform: scale(1.025); }
 
-/* Placeholder cuando no hay imagen */
 .hero-placeholder {
   width: 100%;
   height: 100%;
@@ -184,7 +168,6 @@ a { text-decoration: none; color: inherit; }
   opacity: .4;
 }
 
-/* Gradiente oscuro sobre la imagen */
 .hero-overlay {
   position: absolute;
   inset: 0;
@@ -196,7 +179,6 @@ a { text-decoration: none; color: inherit; }
   );
 }
 
-/* Info sobre el hero */
 .hero-info {
   position: absolute;
   bottom: 0; left: 0; right: 0;
@@ -251,9 +233,7 @@ a { text-decoration: none; color: inherit; }
 }
 .chip svg { width: 13px; height: 13px; flex-shrink: 0; }
 
-/* ══════════════════════════════════════════
-   CUERPO: descripción + panel
-══════════════════════════════════════════ */
+/* ── Cuerpo ── */
 .detail-body {
   display: grid;
   grid-template-columns: 1fr 320px;
@@ -261,7 +241,6 @@ a { text-decoration: none; color: inherit; }
   align-items: start;
 }
 
-/* ── Artículo de descripción ── */
 .detail-article {
   background: var(--bg-card);
   border: 1px solid var(--border);
@@ -287,19 +266,20 @@ a { text-decoration: none; color: inherit; }
   white-space: pre-wrap;
 }
 
-/* ── Panel de interés ── */
+/* ── Panel lateral ── */
 .interest-panel {
   background: var(--bg-card);
   border: 1px solid var(--border);
   border-radius: var(--radius);
   padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
   position: sticky;
   top: calc(var(--nav-h) + 16px);
 }
 
-.interest-header {
-  margin-bottom: 16px;
-}
+.interest-header { margin-bottom: 16px; }
 
 .interest-counter {
   display: flex;
@@ -320,7 +300,7 @@ a { text-decoration: none; color: inherit; }
   color: var(--text-secondary);
 }
 
-/* Botón "Estoy interesado" */
+/* Botón interés */
 .btn-interest {
   width: 100%;
   display: flex;
@@ -341,35 +321,14 @@ a { text-decoration: none; color: inherit; }
   overflow: hidden;
 }
 
-.btn-interest::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: rgba(255,255,255,0);
-  transition: background .2s;
-}
-
 .btn-interest:hover {
   background: #d4ff3d;
   transform: translateY(-1px);
   box-shadow: 0 8px 24px rgba(198,241,53,.22);
 }
-
 .btn-interest:active { transform: translateY(0); }
+.btn-interest:disabled { cursor: not-allowed; transform: none; box-shadow: none; }
 
-.btn-interest:disabled {
-  cursor: not-allowed;
-  transform: none;
-  box-shadow: none;
-}
-
-.interest-hint {
-  margin-top: 12px;
-  font-size: 12px;
-  color: var(--text-secondary);
-}
-
-/* Icono de corazón */
 .heart-icon {
   width: 17px;
   height: 17px;
@@ -377,26 +336,90 @@ a { text-decoration: none; color: inherit; }
   transition: fill .3s, transform .3s;
 }
 
+.interest-hint {
+  margin-top: 10px;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+/* Divisor entre botones */
+.panel-divider {
+  border: none;
+  border-top: 1px solid var(--border);
+  margin: 18px 0;
+}
+
 /* ══════════════════════════════════════════
-   RESPONSIVE
+   BOTÓN GUARDAR (toggle)
 ══════════════════════════════════════════ */
+.btn-save {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  padding: 12px 20px;
+  background: transparent;
+  color: var(--text-secondary);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  font-family: 'Syne', sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background .2s, color .2s, border-color .2s, transform .15s;
+}
+
+.btn-save:hover {
+  background: rgba(198,241,53,.06);
+  color: var(--text-primary);
+  border-color: rgba(198,241,53,.3);
+  transform: translateY(-1px);
+}
+
+.btn-save:active { transform: translateY(0); }
+
+/* Estado: guardado */
+.btn-save.saved {
+  background: rgba(198,241,53,.1);
+  color: var(--accent);
+  border-color: rgba(198,241,53,.3);
+}
+
+.btn-save.saved:hover {
+  background: rgba(224,92,92,.08);
+  color: #e05c5c;
+  border-color: rgba(224,92,92,.3);
+}
+
+/* Icono de marcador */
+.save-icon {
+  width: 15px;
+  height: 15px;
+  flex-shrink: 0;
+  transition: fill .25s, stroke .25s;
+}
+
+/* Relleno del marcador cuando está guardado */
+.btn-save.saved .save-icon {
+  fill: var(--accent);
+  stroke: var(--accent);
+}
+
+/* Al hacer hover sobre el botón guardado, muestra rojo */
+.btn-save.saved:hover .save-icon {
+  fill: #e05c5c;
+  stroke: #e05c5c;
+}
+
+/* ── Responsive ── */
 @media (max-width: 820px) {
   .navbar { padding: 0 20px; }
-
   .detail-wrap { padding: 24px 20px 60px; }
-
   .hero-media { height: 280px; }
   .hero-info  { padding: 20px 20px 24px; }
-
-  .detail-body {
-    grid-template-columns: 1fr;
-  }
-
-  .interest-panel {
-    position: static;
-    /* En móvil el panel va arriba del artículo */
-    order: -1;
-  }
+  .detail-body { grid-template-columns: 1fr; }
+  .interest-panel { position: static; order: -1; }
 }
 
 @media (max-width: 480px) {
