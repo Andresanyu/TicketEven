@@ -14,7 +14,17 @@ export const Auth = {
   },
 
   isLoggedIn() {
-    return !!this.getToken();
+    const token = this.getToken();
+    if (!token) return false;
+
+    const payload = this.getPayload();
+    const exp = payload?.exp;
+    if (typeof exp === "number" && Date.now() >= exp * 1000) {
+      this.removeToken();
+      return false;
+    }
+
+    return true;
   },
 
   logout() {
