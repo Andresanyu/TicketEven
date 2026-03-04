@@ -65,6 +65,114 @@ router.get("/:id/favorites", authenticateToken, async (req: Request, res: Respon
     }
 });
 
+router.get("/favorites", authenticateToken, async (req: AuthRequest, res: Response) => {
+    const usuario_id = req.user!.id;
+
+    try {
+        const result = await pool.query(
+            `${USERS_FAVORITOS_SELECT_QUERY}
+            WHERE u.id = $1
+            ORDER BY f.fecha_agregado DESC`,
+            [usuario_id]
+        );
+
+        res.json(result.rows);
+    } catch (err) {
+        console.error("Error fetching authenticated user favoritos:", err);
+        res.status(500).json({ error: "Error al obtener los favoritos del usuario autenticado" });
+    }
+});
+
+router.get("/favorites/:eventId/status", authenticateToken, async (req: AuthRequest, res: Response) => {
+    const usuario_id = req.user!.id;
+    const evento_id = Number(req.params.eventId);
+
+    if (!Number.isInteger(evento_id) || evento_id <= 0) {
+        return res.status(400).json({ error: "ID de evento inválido" });
+    }
+
+    try {
+        const result = await pool.query(
+            `SELECT id
+             FROM favoritos
+             WHERE usuario_id = $1 AND evento_id = $2
+             LIMIT 1`,
+            [usuario_id, evento_id]
+        );
+
+        res.json({
+            saved: Number(result.rowCount ?? 0) > 0,
+            favorito_id: result.rows[0]?.id ?? null,
+        });
+    } catch (err) {
+        console.error("Error checking favorito status:", err);
+        res.status(500).json({ error: "Error al validar el estado de favorito" });
+    }
+});
+
+router.post("/favorites", authenticateToken, async (req: AuthRequest, res: Response) => {
+    const usuario_id = req.user!.id;
+    const evento_id = Number(req.body?.evento_id);
+
+    if (!Number.isInteger(evento_id) || evento_id <= 0) {
+        return res.status(400).json({ error: "ID de evento inválido" });
+    }
+
+    try {
+        const insertResult = await pool.query(
+            `INSERT INTO favoritos (usuario_id, evento_id)
+             VALUES ($1, $2)
+             ON CONFLICT (usuario_id, evento_id) DO NOTHING
+             RETURNING *`,
+            [usuario_id, evento_id]
+        );
+
+        if (insertResult.rowCount && insertResult.rowCount > 0) {
+            return res.status(201).json(insertResult.rows[0]);
+        }
+
+        const existing = await pool.query(
+            `SELECT *
+             FROM favoritos
+             WHERE usuario_id = $1 AND evento_id = $2
+             LIMIT 1`,
+            [usuario_id, evento_id]
+        );
+
+        return res.status(200).json(existing.rows[0]);
+    } catch (err) {
+        console.error("Error creating favorito:", err);
+        res.status(500).json({ error: "Error al crear favorito" });
+    }
+});
+
+router.delete("/favorites/:eventId", authenticateToken, async (req: AuthRequest, res: Response) => {
+    const usuario_id = req.user!.id;
+    const evento_id = Number(req.params.eventId);
+
+    if (!Number.isInteger(evento_id) || evento_id <= 0) {
+        return res.status(400).json({ error: "ID de evento inválido" });
+    }
+
+    try {
+        const result = await pool.query(
+            `DELETE FROM favoritos
+             WHERE usuario_id = $1 AND evento_id = $2
+             RETURNING id`,
+            [usuario_id, evento_id]
+        );
+
+        if (!result.rowCount) {
+            return res.status(404).json({ error: "Favorito no encontrado" });
+        }
+
+        res.json({ message: "Favorito eliminado correctamente" });
+    } catch (err) {
+        console.error("Error deleting favorito:", err);
+        res.status(500).json({ error: "Error al eliminar favorito" });
+    }
+});
+
 router.post(
     "/",
     authenticateToken,
