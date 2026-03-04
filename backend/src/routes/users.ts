@@ -65,6 +65,38 @@ router.get("/:id/favorites", authenticateToken, async (req: Request, res: Respon
     }
 });
 
+router.get("/favorites", authenticateToken, async (req: AuthRequest, res: Response) => {
+    const usuario_id = req.user!.id;
+
+    try {
+        const result = await pool.query(
+            `${USERS_FAVORITOS_SELECT_QUERY}
+            WHERE u.id = $1
+            ORDER BY f.fecha_agregado DESC`,
+            [usuario_id]
+        );
+
+        res.json(result.rows);
+    } catch (err) {
+        console.error("Error fetching authenticated user favoritos:", err);
+        res.status(500).json({ error: "Error al obtener los favoritos del usuario autenticado" });
+    }
+});
+
+router.get("/favorites/all", authenticateToken, authorizeAdmin, async (req: AuthRequest, res: Response) => {
+    try {
+        const result = await pool.query(
+            `${USERS_FAVORITOS_SELECT_QUERY}
+            ORDER BY f.fecha_agregado DESC`
+        );
+
+        res.json(result.rows);
+    } catch (err) {
+        console.error("Error fetching all favoritos:", err);
+        res.status(500).json({ error: "Error al obtener todos los favoritos" });
+    }
+});
+
 router.get("/favorites/:eventId/status", authenticateToken, async (req: AuthRequest, res: Response) => {
     const usuario_id = req.user!.id;
     const evento_id = Number(req.params.eventId);
