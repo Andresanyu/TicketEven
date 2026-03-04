@@ -1,4 +1,5 @@
 import api from './api.js';
+import { Auth } from './auth.js';
 
 // ── Elementos del DOM ─────────────────────────────────
 const stateLoading   = document.getElementById('stateLoading');
@@ -60,8 +61,8 @@ async function loadEvent() {
     hide(stateLoading);
     show(detailContent);
 
-    // Restaurar estado de guardado al cargar
-    initSaveState();
+    syncSaveAvailability();
+    await initSaveState();
 
   } catch (err) {
     console.error('Error al cargar el evento:', err);
@@ -147,13 +148,35 @@ async function markInterest() {
 // ══════════════════════════════════════════
 // GUARDAR EVENTO (toggle con localStorage)
 // ══════════════════════════════════════════
-const SAVE_KEY = `eventpro_saved_${eventId}`;
+let saveLoading = false;
+let saveState = false;
+
+function syncSaveAvailability() {
+  if (!btnSave) return;
+  const logged = Auth.isLoggedIn();
+  btnSave.disabled = !logged;
+  btnSave.title = logged ? '' : 'Inicia sesión para guardar este evento';
+}
 
 /** Lee el localStorage y pinta el botón según el estado guardado. */
-function initSaveState() {
+async function initSaveState() {
   if (!btnSave || !btnSaveText) return;
-  const saved = localStorage.getItem(SAVE_KEY) === 'true';
-  setSaveVisual(saved);
+
+  if (!Auth.isLoggedIn() || !eventId) {
+    saveState = false;
+    setSaveVisual(false);
+    return;
+  }
+
+  try {
+    const data = await api.get(`/users/favorites/${eventId}/status`, Auth.authOptions());
+    saveState = Boolean(data?.saved);
+    setSaveVisual(saveState);
+  } catch (err) {
+    console.error('Error al consultar favorito:', err);
+    saveState = false;
+    setSaveVisual(false);
+  }
 }
 
 /** Actualiza clases y texto del botón. */
@@ -169,12 +192,26 @@ function setSaveVisual(saved) {
 }
 
 /** Toggle: guarda o quita del guardado. */
-function toggleSave() {
-  if (!eventId) return;
-  const isSaved = localStorage.getItem(SAVE_KEY) === 'true';
-  const newState = !isSaved;
-  localStorage.setItem(SAVE_KEY, String(newState));
-  setSaveVisual(newState);
+async function toggleSave() {
+  if (!eventId || saveLoading) return;
+  if (!Auth.isLoggedIn()) return;
+
+  saveLoading = true;
+  try {
+    if (saveState) {
+      await api.delete(`/users/favorites/${eventId}`, Auth.authOptions());
+      saveState = false;
+    } else {
+      await api.post('/users/favorites', { evento_id: Number(eventId) }, Auth.authOptions());
+      saveState = true;
+    }
+
+    setSaveVisual(saveState);
+  } catch (err) {
+    console.error('Error al guardar/quitar favorito:', err);
+  } finally {
+    saveLoading = false;
+  }
 }
 
 // ── Estado de error ────────────────────────────────────

@@ -16,15 +16,48 @@
 
     <div class="header-actions">
 
-      <!-- ── BOTÓN LOGIN ── -->
-      <a href="login.html" class="login-btn">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/>
-          <polyline points="10 17 15 12 10 7"/>
-          <line x1="15" y1="12" x2="3" y2="12"/>
-        </svg>
-        Iniciar sesión
-      </a>
+    
+<a href="login.html" class="login-btn" id="loginBtn">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+    <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/>
+    <polyline points="10 17 15 12 10 7"/>
+    <line x1="15" y1="12" x2="3" y2="12"/>
+  </svg>
+  Iniciar sesión
+</a>
+
+    <div class="user-btn" id="userBtn" hidden>
+
+  <!-- Avatar con inicial del nombre -->
+  <div class="user-avatar">
+    <span class="user-initial" id="userInitial">J</span>
+  </div>
+
+  <!-- Nombre del usuario -->
+  <span class="user-name" id="userName">Juan García</span>
+
+  <!-- Chevron -->
+  <svg class="user-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+    <polyline points="6 9 12 15 18 9"/>
+  </svg>
+
+  <!-- Dropdown -->
+  <div class="user-dropdown" id="userDropdown">
+    <div class="user-dropdown-header">
+      <span class="ud-name"    id="udName">Juan García</span>
+    </div>
+    <hr class="ud-sep">
+    <button class="ud-item ud-logout" id="logoutBtn">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+        <polyline points="16 17 21 12 16 7"/>
+        <line x1="21" y1="12" x2="9" y2="12"/>
+      </svg>
+      Cerrar sesión
+    </button>
+  </div>
+
+</div>
 
       <!-- ── BOTÓN ORDENAR ── -->
       <div class="sort-wrap" id="sortWrap">

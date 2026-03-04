@@ -1,4 +1,5 @@
 import api from "./api.js";
+import { Auth } from "./auth.js";
 
 const CATEGORY_COLORS = {
   'Música':  { bg: '#1a1a2e', emoji: '🎵' },
@@ -38,6 +39,63 @@ const SORT_LABELS = {
   alpha:    'A → Z',
   category: 'Por categoría',
 };
+
+function getUserDataFromToken() {
+  const payload = Auth.getPayload();
+  if (!payload) return null;
+
+  const name = payload.nombre || payload.name || payload.username || payload.user_name || payload.sub || "Usuario";
+  const email = payload.email || payload.mail || "Sin correo";
+  return { name, email };
+}
+
+function initializeAuthHeader() {
+  const loginBtn = document.getElementById("loginBtn");
+  const userBtn = document.getElementById("userBtn");
+  const userName = document.getElementById("userName");
+  const userInitial = document.getElementById("userInitial");
+  const udName = document.getElementById("udName");
+  const udEmail = document.getElementById("udEmail");
+  const logoutBtn = document.getElementById("logoutBtn");
+
+  if (!loginBtn || !userBtn) return;
+
+  const loggedIn = Auth.isLoggedIn();
+
+  loginBtn.hidden = loggedIn;
+  loginBtn.style.display = loggedIn ? "none" : "inline-flex";
+
+  userBtn.hidden = !loggedIn;
+  userBtn.style.display = loggedIn ? "inline-flex" : "none";
+
+  if (!loggedIn) return;
+
+  const user = getUserDataFromToken() || { name: "Usuario", email: "Sin correo" };
+  const initial = user.name.trim().charAt(0).toUpperCase() || "U";
+
+  if (userName) userName.textContent = user.name;
+  if (userInitial) userInitial.textContent = initial;
+  if (udName) udName.textContent = user.name;
+  if (udEmail) udEmail.textContent = user.email;
+
+  userBtn.addEventListener("click", (event) => {
+    event.stopPropagation();
+    userBtn.classList.toggle("open");
+  });
+
+  document.addEventListener("click", (event) => {
+    if (!userBtn.contains(event.target)) {
+      userBtn.classList.remove("open");
+    }
+  });
+
+  if (logoutBtn) {
+    logoutBtn.addEventListener("click", (event) => {
+      event.stopPropagation();
+      Auth.logout();
+    });
+  }
+}
 
 export async function loadEvents() {
   try {
@@ -203,7 +261,11 @@ window.toggleSort     = toggleSort;
 window.applySort      = applySort;
 
 if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', loadEvents);
+  document.addEventListener('DOMContentLoaded', () => {
+    initializeAuthHeader();
+    loadEvents();
+  });
 } else {
+  initializeAuthHeader();
   loadEvents();
 }
