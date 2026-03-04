@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>EventPro — Favoritos</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/favorites.css">
+</head>
+<body>
+
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="logo">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="12" cy="12" r="10"/>
+        <path d="M12 6v6l4 2"/>
+      </svg>
+      EventPro
+    </div>
+    <div class="nav-section-label">Gestionar</div>
+    <a href="register_event.html" class="nav-item">
+      <span class="nav-dot"></span>
+      Eventos
+    </a>
+    <a href="edit_event.html" class="nav-item nav-sub">
+      <span class="nav-sub-dot"></span>
+      Editar
+    </a>
+    <a href="disable_event.html" class="nav-item nav-sub">
+      <span class="nav-sub-dot"></span>
+      Inactivar
+    </a>
+    <a href="register_category.html" class="nav-item">
+      <span class="nav-dot"></span>
+      Categorías
+    </a>
+    <a href="edit_category.html" class="nav-item nav-sub">
+      <span class="nav-sub-dot"></span>
+      Editar
+    </a>
+    <a href="disable_category.html" class="nav-item nav-sub">
+      <span class="nav-sub-dot"></span>
+      Eliminar
+    </a>
+    <a href="favorites.html" class="nav-item active">
+      <span class="nav-dot"></span>
+      Favoritos
+    </a>
+  </aside>
+
+  <!-- Main -->
+  <main class="main">
+
+    <div class="page-header">
+      <div>
+        <h1 class="page-title">Eventos <span>Favoritos</span></h1>
+        <div class="breadcrumb">
+          <a href="#">Inicio</a>
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="9 18 15 12 9 6"/>
+          </svg>
+          Favoritos
+        </div>
+      </div>
+      <div class="counter" id="counter">—</div>
+    </div>
+
+    <!-- Estado: cargando -->
+    <div class="state-box" id="stateLoading">
+      <div class="spinner-lg"></div>
+      <span>Cargando favoritos…</span>
+    </div>
+
+    <!-- Estado: sin datos -->
+    <div class="state-box hidden" id="stateEmpty">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4">
+        <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+      </svg>
+      <p>Aún no hay eventos marcados como favoritos.</p>
+    </div>
+
+    <!-- Lista de favoritos -->
+    <div class="fav-list" id="favList"></div>
+
+  </main>
+
+  <!-- Toast -->
+  <div class="toast" id="toast">
+    <span class="toast-dot"></span>
+    <span id="toastMsg"></span>
+  </div>
+
+  <script type="module" src="js/favorites.js"></script>
+</body>
+</html>
