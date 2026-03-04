@@ -621,3 +621,17 @@
   background: rgba(224,92,92,.08);
   color: #e05c5c;
 }
+
+.ud-saved {
+  color: var(--text-secondary);
+  display: flex;        /* hereda de .ud-item pero por si acaso */
+  align-items: center;
+  gap: 9px;
+}
+
+.ud-saved:hover {
+  background: rgba(198,241,53,.06);
+  color: var(--accent);
+}
+
+.ud-saved:hover svg { opacity: 1; }
