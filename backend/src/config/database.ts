@@ -30,13 +30,32 @@ export async function connectDatabase(): Promise<void> {
 
 export async function runSchemaMigrations(): Promise<void> {
   await pool.query(`
-    ALTER TABLE eventos
-    ADD COLUMN IF NOT EXISTS contador_interes INTEGER DEFAULT 0
+    CREATE TABLE IF NOT EXISTS saved_events (
+      user_id INTEGER REFERENCES usuarios(id) ON DELETE CASCADE,
+      event_id INTEGER REFERENCES eventos(id) ON DELETE CASCADE,
+      saved_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      PRIMARY KEY (user_id, event_id)
+    )
   `);
 
   await pool.query(`
-    UPDATE eventos
-    SET contador_interes = 0
-    WHERE contador_interes IS NULL
+    INSERT INTO saved_events (user_id, event_id, saved_at)
+    SELECT
+      f.usuario_id,
+      f.evento_id,
+      COALESCE(f.fecha_agregado, CURRENT_TIMESTAMP)
+    FROM favoritos f
+    ON CONFLICT (user_id, event_id) DO NOTHING
+  `).catch(() => {
+    // Ignora si la tabla legacy no existe en instalaciones limpias.
+  });
+
+  await pool.query(`
+    DROP TABLE IF EXISTS favoritos
+  `);
+
+  await pool.query(`
+    ALTER TABLE eventos
+    DROP COLUMN IF EXISTS contador_interes
   `);
 }

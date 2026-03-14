@@ -10,8 +10,6 @@ INSERT INTO categorias (nombre) VALUES
     ('Conferencia')
 ON CONFLICT (nombre) DO NOTHING;
 
--- Como 'contador_interes' tiene un DEFAULT 0, no necesitamos agregarlo manualmente en este INSERT, 
--- la base de datos le pondrá 0 automáticamente a todos estos eventos.
 INSERT INTO eventos (nombre, categoria_id, fecha, valor, descripcion, imagen_url, activo)
 VALUES 
     ('Concierto Rock Local', 2, '2026-03-15 20:00:00', 45000, 'Gran concierto de bandas locales.', 'https://picsum.photos/id/117/300/200', true),
@@ -43,7 +41,7 @@ VALUES
 ('Admin Principal', 'admin@email.com', '$2b$10$zku3bZSfXzL0e1MCnCSJNuFQOwcmWFF98Rt/yvyGwZrPRiQf8.xvO', 'admin', true),
 ('Usuario Inactivo', 'inactivo@email.com', '$2b$10$abc123hashsimulado4', 'externo', false);
 
-INSERT INTO favoritos (usuario_id, evento_id)
+INSERT INTO saved_events (user_id, event_id)
 VALUES
 (1, 1),
 (1, 2),

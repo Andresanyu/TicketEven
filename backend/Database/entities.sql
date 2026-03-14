@@ -11,8 +11,7 @@ CREATE TABLE eventos (
     valor NUMERIC,
     descripcion TEXT DEFAULT 'Sin descripción',
     imagen_url VARCHAR(255),
-    activo BOOLEAN DEFAULT true,
-    contador_interes INTEGER DEFAULT 0
+    activo BOOLEAN DEFAULT true
 );
 
 CREATE TABLE usuarios (
@@ -25,10 +24,9 @@ CREATE TABLE usuarios (
     fecha_registro TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE TABLE favoritos (
-    id SERIAL PRIMARY KEY,
-    usuario_id INTEGER REFERENCES usuarios(id) ON DELETE CASCADE,
-    evento_id INTEGER REFERENCES eventos(id) ON DELETE CASCADE,
-    fecha_agregado TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    UNIQUE (usuario_id, evento_id)
+CREATE TABLE saved_events (
+    user_id INTEGER REFERENCES usuarios(id) ON DELETE CASCADE,
+    event_id INTEGER REFERENCES eventos(id) ON DELETE CASCADE,
+    saved_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (user_id, event_id)
 );
