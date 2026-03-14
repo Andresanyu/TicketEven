@@ -17,10 +17,9 @@ SELECT
 FROM usuarios u
 `;
 
-const USERS_FAVORITOS_SELECT_QUERY = `
+const USERS_SAVED_EVENTS_SELECT_QUERY = `
 SELECT
-    f.id AS favorito_id,
-    f.fecha_agregado,
+    se.saved_at,
     u.id AS usuario_id,
     u.nombre AS usuario_nombre,
     u.email AS usuario_email,
@@ -28,9 +27,9 @@ SELECT
     e.nombre AS evento_nombre,
     e.fecha AS evento_fecha,
     e.valor AS evento_valor
-FROM favoritos f
-JOIN usuarios u ON u.id = f.usuario_id
-JOIN eventos e ON e.id = f.evento_id
+FROM saved_events se
+JOIN usuarios u ON u.id = se.user_id
+JOIN eventos e ON e.id = se.event_id
 `;
 
 router.get("/", authenticateToken, authorizeAdmin, async (_req: Request, res: Response) => {
@@ -43,7 +42,7 @@ router.get("/", authenticateToken, authorizeAdmin, async (_req: Request, res: Re
     }
 });
 
-router.get("/:id/favorites", authenticateToken, async (req: Request, res: Response) => {
+router.get("/:id/saved-events", authenticateToken, async (req: Request, res: Response) => {
     const id = Number(req.params.id);
 
     if (!Number.isInteger(id) || id <= 0) {
@@ -52,52 +51,38 @@ router.get("/:id/favorites", authenticateToken, async (req: Request, res: Respon
 
     try {
         const result = await pool.query(
-            `${USERS_FAVORITOS_SELECT_QUERY}
+            `${USERS_SAVED_EVENTS_SELECT_QUERY}
             WHERE u.id = $1
-            ORDER BY f.fecha_agregado DESC`,
+            ORDER BY se.saved_at DESC`,
             [id]
         );
 
         res.json(result.rows);
     } catch (err) {
-        console.error("Error fetching user favoritos:", err);
-        res.status(500).json({ error: "Error al obtener los favoritos del usuario" });
+        console.error("Error fetching user saved events:", err);
+        res.status(500).json({ error: "Error al obtener los eventos guardados del usuario" });
     }
 });
 
-router.get("/favorites", authenticateToken, async (req: AuthRequest, res: Response) => {
+router.get("/saved-events", authenticateToken, async (req: AuthRequest, res: Response) => {
     const usuario_id = req.user!.id;
 
     try {
         const result = await pool.query(
-            `${USERS_FAVORITOS_SELECT_QUERY}
+            `${USERS_SAVED_EVENTS_SELECT_QUERY}
             WHERE u.id = $1
-            ORDER BY f.fecha_agregado DESC`,
+            ORDER BY se.saved_at DESC`,
             [usuario_id]
         );
 
         res.json(result.rows);
     } catch (err) {
-        console.error("Error fetching authenticated user favoritos:", err);
-        res.status(500).json({ error: "Error al obtener los favoritos del usuario autenticado" });
+        console.error("Error fetching authenticated user saved events:", err);
+        res.status(500).json({ error: "Error al obtener los eventos guardados del usuario autenticado" });
     }
 });
 
-router.get("/favorites/all", authenticateToken, authorizeAdmin, async (req: AuthRequest, res: Response) => {
-    try {
-        const result = await pool.query(
-            `${USERS_FAVORITOS_SELECT_QUERY}
-            ORDER BY f.fecha_agregado DESC`
-        );
-
-        res.json(result.rows);
-    } catch (err) {
-        console.error("Error fetching all favoritos:", err);
-        res.status(500).json({ error: "Error al obtener todos los favoritos" });
-    }
-});
-
-router.get("/favorites/:eventId/status", authenticateToken, async (req: AuthRequest, res: Response) => {
+router.get("/saved-events/:eventId/status", authenticateToken, async (req: AuthRequest, res: Response) => {
     const usuario_id = req.user!.id;
     const evento_id = Number(req.params.eventId);
 
@@ -107,60 +92,23 @@ router.get("/favorites/:eventId/status", authenticateToken, async (req: AuthRequ
 
     try {
         const result = await pool.query(
-            `SELECT id
-             FROM favoritos
-             WHERE usuario_id = $1 AND evento_id = $2
+            `SELECT event_id
+             FROM saved_events
+             WHERE user_id = $1 AND event_id = $2
              LIMIT 1`,
             [usuario_id, evento_id]
         );
 
         res.json({
-            saved: Number(result.rowCount ?? 0) > 0,
-            favorito_id: result.rows[0]?.id ?? null,
+            isSaved: Number(result.rowCount ?? 0) > 0,
         });
     } catch (err) {
-        console.error("Error checking favorito status:", err);
-        res.status(500).json({ error: "Error al validar el estado de favorito" });
+        console.error("Error checking saved event status:", err);
+        res.status(500).json({ error: "Error al validar el estado del guardado" });
     }
 });
 
-router.post("/favorites", authenticateToken, async (req: AuthRequest, res: Response) => {
-    const usuario_id = req.user!.id;
-    const evento_id = Number(req.body?.evento_id);
-
-    if (!Number.isInteger(evento_id) || evento_id <= 0) {
-        return res.status(400).json({ error: "ID de evento inválido" });
-    }
-
-    try {
-        const insertResult = await pool.query(
-            `INSERT INTO favoritos (usuario_id, evento_id)
-             VALUES ($1, $2)
-             ON CONFLICT (usuario_id, evento_id) DO NOTHING
-             RETURNING *`,
-            [usuario_id, evento_id]
-        );
-
-        if (insertResult.rowCount && insertResult.rowCount > 0) {
-            return res.status(201).json(insertResult.rows[0]);
-        }
-
-        const existing = await pool.query(
-            `SELECT *
-             FROM favoritos
-             WHERE usuario_id = $1 AND evento_id = $2
-             LIMIT 1`,
-            [usuario_id, evento_id]
-        );
-
-        return res.status(200).json(existing.rows[0]);
-    } catch (err) {
-        console.error("Error creating favorito:", err);
-        res.status(500).json({ error: "Error al crear favorito" });
-    }
-});
-
-router.delete("/favorites/:eventId", authenticateToken, async (req: AuthRequest, res: Response) => {
+router.delete("/saved-events/:eventId", authenticateToken, async (req: AuthRequest, res: Response) => {
     const usuario_id = req.user!.id;
     const evento_id = Number(req.params.eventId);
 
@@ -170,44 +118,22 @@ router.delete("/favorites/:eventId", authenticateToken, async (req: AuthRequest,
 
     try {
         const result = await pool.query(
-            `DELETE FROM favoritos
-             WHERE usuario_id = $1 AND evento_id = $2
-             RETURNING id`,
+            `DELETE FROM saved_events
+             WHERE user_id = $1 AND event_id = $2
+             RETURNING event_id`,
             [usuario_id, evento_id]
         );
 
         if (!result.rowCount) {
-            return res.status(404).json({ error: "Favorito no encontrado" });
+            return res.status(404).json({ error: "Guardado no encontrado" });
         }
 
-        res.json({ message: "Favorito eliminado correctamente" });
+        res.json({ message: "Evento guardado eliminado correctamente" });
     } catch (err) {
-        console.error("Error deleting favorito:", err);
-        res.status(500).json({ error: "Error al eliminar favorito" });
+        console.error("Error deleting saved event:", err);
+        res.status(500).json({ error: "Error al eliminar el guardado" });
     }
 });
-
-router.post(
-    "/",
-    authenticateToken,
-    async (req: AuthRequest, res: Response) => {
-        const usuario_id = req.user!.id;
-        const { evento_id } = req.body;
-
-        try {
-            const result = await pool.query(
-                    `INSERT INTO favoritos (usuario_id, evento_id)
-                    VALUES ($1, $2)
-                    RETURNING *`,
-                    [usuario_id, evento_id]
-            );
-
-            res.status(201).json(result.rows[0]);
-        } catch (err) {
-            res.status(500).json({ error: "Error al crear favorito" });
-        }
-    }
-);
 
 router.post("/register", async (req: Request, res: Response) => {
     const { nombre, email, password } = req.body;

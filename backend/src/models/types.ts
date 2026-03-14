@@ -7,7 +7,6 @@ export interface EventResponse {
   descripcion: string | null;
   imagen_url: string | null;
   activo: boolean | null;
-  contador_interes: number;
 }
 
 export interface EventUpsertInput {
@@ -29,9 +28,8 @@ export interface UserResponse {
   fecha_registro: Date;
 }
 
-export interface UserFavoritoResponse {
-  favorito_id: number;
-  fecha_agregado: Date;
+export interface UserSavedEventResponse {
+  saved_at: Date;
   usuario_id: number;
   usuario_nombre: string;
   usuario_email: string;

@@ -1,7 +1,7 @@
 import { Router, Request, Response } from "express";
 import { EventUpsertInput } from "../models/types";
 import { pool } from "../config/database";
-import { authenticateToken, authorizeAdmin } from "../middlewares/auth";
+import { authenticateToken, authorizeAdmin, AuthRequest } from "../middlewares/auth";
 
 const router = Router();
 
@@ -14,8 +14,7 @@ const EVENT_SELECT_QUERY = `
     e.valor,
     e.descripcion,
     e.imagen_url,
-    e.activo,
-    e.contador_interes
+    e.activo
   FROM eventos e
   LEFT JOIN categorias c ON c.id = e.categoria_id
 `;
@@ -55,15 +54,42 @@ router.get("/:id", async (req: Request, res: Response) => {
   }
 });
 
-router.get("/interest/report", authenticateToken, async (_req: Request, res: Response) => {
+router.post("/:id/save", authenticateToken, async (req: AuthRequest, res: Response) => {
+  const eventId = Number(req.params.id);
+  const userId = req.user!.id;
+
+  if (!Number.isInteger(eventId) || eventId <= 0) {
+    return res.status(400).json({ error: "ID de evento inválido" });
+  }
+
   try {
-    const result = await pool.query(
-      `${EVENT_SELECT_QUERY} ORDER BY e.contador_interes DESC`
+    const eventCheck = await pool.query("SELECT id FROM eventos WHERE id = $1", [eventId]);
+    if (!eventCheck.rowCount) {
+      return res.status(404).json({ error: "Evento no encontrado" });
+    }
+
+    const deleteResult = await pool.query(
+      `DELETE FROM saved_events
+       WHERE user_id = $1 AND event_id = $2
+       RETURNING event_id`,
+      [userId, eventId]
     );
-    res.json(result.rows);
+
+    if (deleteResult.rowCount) {
+      return res.json({ isSaved: false });
+    }
+
+    await pool.query(
+      `INSERT INTO saved_events (user_id, event_id)
+       VALUES ($1, $2)
+       ON CONFLICT (user_id, event_id) DO NOTHING`,
+      [userId, eventId]
+    );
+
+    return res.json({ isSaved: true });
   } catch (err) {
-    console.error("Error fetching events report:", err);
-    res.status(500).json({ error: "Error al obtener el reporte de eventos" });
+    console.error("Error toggling saved event:", err);
+    return res.status(500).json({ error: "Error al guardar el evento" });
   }
 });
 
@@ -216,34 +242,6 @@ router.patch("/:id", authenticateToken, authorizeAdmin, async (req: Request, res
   } catch (err) {
     console.error("Error toggling event status:", err);
     return res.status(500).json({ error: "Error al actualizar el estado del evento" });
-  }
-});
-
-router.patch("/:id/interes", async (req: Request, res: Response) => {
-  const id = Number(req.params.id);
-  if (!Number.isInteger(id) || id <= 0) {
-    return res.status(400).json({ error: "ID de evento inválido" });
-  }
-
-  try {
-    const updateResult = await pool.query(
-      `
-        UPDATE eventos
-        SET contador_interes = COALESCE(contador_interes, 0) + 1
-        WHERE id = $1
-        RETURNING contador_interes
-      `,
-      [id]
-    );
-
-    if (updateResult.rowCount === 0) {
-      return res.status(404).json({ error: "Evento no encontrado" });
-    }
-
-    return res.json({ contador_interes: updateResult.rows[0].contador_interes });
-  } catch (err) {
-    console.error("Error incrementing event interest counter:", err);
-    return res.status(500).json({ error: "Error al registrar interés" });
   }
 });
 
