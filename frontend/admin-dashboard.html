@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TicketEven — Panel de Control</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/admin_dashboard.css">
+</head>
+<body>
+
+  <!-- ══════════════════════════════════
+       SIDEBAR
+  ══════════════════════════════════ -->
+  <aside class="sidebar">
+
+    <div class="sidebar-logo">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="12" cy="12" r="10"/>
+        <path d="M12 6v6l4 2"/>
+      </svg>
+      TicketEven
+    </div>
+
+    <nav class="sidebar-nav">
+
+      <span class="nav-section-label">Principal</span>
+
+      <a href="admin_dashboard.html" class="nav-item active">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="3" y="3" width="7" height="7" rx="1"/>
+          <rect x="14" y="3" width="7" height="7" rx="1"/>
+          <rect x="3" y="14" width="7" height="7" rx="1"/>
+          <rect x="14" y="14" width="7" height="7" rx="1"/>
+        </svg>
+        Inicio
+        <span class="nav-active-bar"></span>
+      </a>
+
+      <a href="events.html" class="nav-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="3" y="4" width="18" height="18" rx="2"/>
+          <line x1="16" y1="2" x2="16" y2="6"/>
+          <line x1="8"  y1="2" x2="8"  y2="6"/>
+          <line x1="3"  y1="10" x2="21" y2="10"/>
+          <line x1="12" y1="14" x2="12" y2="18"/>
+          <line x1="10" y1="16" x2="14" y2="16"/>
+        </svg>
+        Eventos
+      </a>
+
+      <a href="categories.html" class="nav-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M3 7h7M3 12h7M3 17h7"/>
+          <rect x="13" y="5" width="8" height="4" rx="1"/>
+          <rect x="13" y="10" width="8" height="4" rx="1"/>
+          <rect x="13" y="15" width="8" height="4" rx="1"/>
+        </svg>
+        Categorías
+      </a>
+
+      <a href="reports.html" class="nav-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="18" y1="20" x2="18" y2="10"/>
+          <line x1="12" y1="20" x2="12" y2="4"/>
+          <line x1="6"  y1="20" x2="6"  y2="14"/>
+          <polyline points="2 20 22 20"/>
+        </svg>
+        Reportes
+      </a>
+
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="sidebar-admin">
+        <div class="admin-avatar" id="sidebarAvatar">A</div>
+        <div class="admin-info">
+          <span class="admin-name" id="sidebarName">Administrador</span>
+          <span class="admin-role">Admin</span>
+        </div>
+      </div>
+    </div>
+
+  </aside>
+
+  <!-- ══════════════════════════════════
+       CONTENIDO PRINCIPAL
+  ══════════════════════════════════ -->
+  <div class="main">
+
+    <!-- Header -->
+    <header class="dash-header">
+      <div class="dash-header-left">
+        <p class="dash-eyebrow">Panel de Control</p>
+        <h1 class="dash-title">Bienvenido, <span id="headerName">Administrador</span><span class="title-dot">.</span></h1>
+      </div>
+      <div class="dash-header-right">
+        <div class="dash-date" id="dashDate"></div>
+      </div>
+    </header>
+
+    <!-- Separador decorativo -->
+    <div class="dash-divider"></div>
+
+    <!-- Grid de tarjetas -->
+    <section class="cards-section">
+      <p class="cards-label">Accesos rápidos</p>
+
+      <div class="cards-grid">
+
+        <!-- ── Tarjeta 1: Gestión de Eventos ── -->
+        <a href="events.html" class="dash-card" style="--delay: 0ms">
+          <div class="card-glow"></div>
+          <div class="card-icon-wrap">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <rect x="3" y="4" width="18" height="18" rx="2"/>
+              <line x1="16" y1="2" x2="16" y2="6"/>
+              <line x1="8"  y1="2" x2="8"  y2="6"/>
+              <line x1="3"  y1="10" x2="21" y2="10"/>
+              <line x1="12" y1="14" x2="12" y2="18"/>
+              <line x1="10" y1="16" x2="14" y2="16"/>
+            </svg>
+          </div>
+          <div class="card-content">
+            <h2 class="card-title">Gestión de Eventos</h2>
+            <p class="card-subtitle">Administra, crea y edita los eventos del sistema</p>
+          </div>
+          <div class="card-arrow">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="5" y1="12" x2="19" y2="12"/>
+              <polyline points="12 5 19 12 12 19"/>
+            </svg>
+          </div>
+        </a>
+
+        <!-- ── Tarjeta 2: Gestión de Categorías ── -->
+        <a href="categories.html" class="dash-card" style="--delay: 80ms">
+          <div class="card-glow"></div>
+          <div class="card-icon-wrap">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <path d="M3 7h7M3 12h7M3 17h7"/>
+              <rect x="13" y="5" width="8" height="4" rx="1"/>
+              <rect x="13" y="10" width="8" height="4" rx="1"/>
+              <rect x="13" y="15" width="8" height="4" rx="1"/>
+            </svg>
+          </div>
+          <div class="card-content">
+            <h2 class="card-title">Gestión de Categorías</h2>
+            <p class="card-subtitle">Administra las categorías para clasificar eventos</p>
+          </div>
+          <div class="card-arrow">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="5" y1="12" x2="19" y2="12"/>
+              <polyline points="12 5 19 12 12 19"/>
+            </svg>
+          </div>
+        </a>
+
+        <!-- ── Tarjeta 3: Reportes de Popularidad ── -->
+        <a href="reports.html" class="dash-card" style="--delay: 160ms">
+          <div class="card-glow"></div>
+          <div class="card-icon-wrap">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <line x1="18" y1="20" x2="18" y2="10"/>
+              <line x1="12" y1="20" x2="12" y2="4"/>
+              <line x1="6"  y1="20" x2="6"  y2="14"/>
+              <polyline points="2 20 22 20"/>
+              <circle cx="18" cy="8" r="2" fill="currentColor" stroke="none" opacity=".3"/>
+              <circle cx="12" cy="2" r="2" fill="currentColor" stroke="none" opacity=".3"/>
+            </svg>
+          </div>
+          <div class="card-content">
+            <h2 class="card-title">Reportes de Popularidad</h2>
+            <p class="card-subtitle">Visualiza qué eventos son los más guardados por los usuarios</p>
+          </div>
+          <div class="card-arrow">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="5" y1="12" x2="19" y2="12"/>
+              <polyline points="12 5 19 12 12 19"/>
+            </svg>
+          </div>
+        </a>
+
+      </div>
+    </section>
+
+  </div><!-- /main -->
+
+  <script type="module" src="js/admin_dashboard.js"></script>
+
+</body>
+</html>
