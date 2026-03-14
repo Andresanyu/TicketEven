@@ -1,242 +1,191 @@
 import api from './api.js';
 import { Auth } from './auth.js';
 
-// ── Elementos del DOM ─────────────────────────────────
-const stateLoading   = document.getElementById('stateLoading');
-const stateError     = document.getElementById('stateError');
-const detailContent  = document.getElementById('detailContent');
-const errorMsg       = document.getElementById('errorMsg');
+const stateLoading = document.getElementById('stateLoading');
+const stateError = document.getElementById('stateError');
+const detailContent = document.getElementById('detailContent');
+const errorMsg = document.getElementById('errorMsg');
 
-const heroImg        = document.getElementById('heroImg');
-const heroPlaceholder= document.getElementById('heroPlaceholder');
-const heroCategory   = document.getElementById('heroCategory');
-const heroTitle      = document.getElementById('heroTitle');
-const heroDateText   = document.getElementById('heroDateText');
-const heroPriceText  = document.getElementById('heroPriceText');
-const detailDesc     = document.getElementById('detailDescription');
-const interestCount  = document.getElementById('interestCount');
-const btnInterest    = document.getElementById('btnInterest');
-const btnInterestText= document.getElementById('btnInterestText');
-const interestHint   = document.getElementById('interestHint');
-const btnSave        = document.getElementById('btnSave');
-const btnSaveText    = document.getElementById('btnSaveText');
+const heroImg = document.getElementById('heroImg');
+const heroPlaceholder = document.getElementById('heroPlaceholder');
+const heroCategory = document.getElementById('heroCategory');
+const heroTitle = document.getElementById('heroTitle');
+const heroDateText = document.getElementById('heroDateText');
+const heroPriceText = document.getElementById('heroPriceText');
+const detailDesc = document.getElementById('detailDescription');
 
-// ── Leer parámetro ?id= de la URL ──────────────────────
-const params  = new URLSearchParams(window.location.search);
+const btnSave = document.getElementById('btnSave');
+const btnSaveText = document.getElementById('btnSaveText');
+const saveHint = document.getElementById('saveHint');
+
+const params = new URLSearchParams(window.location.search);
 const eventId = params.get('id');
 
-// ── Helpers ────────────────────────────────────────────
-function show(el) { el.classList.remove('hidden'); }
-function hide(el) { el.classList.add('hidden');    }
+let saveLoading = false;
+let saveState = false;
+
+function show(el) {
+  el.classList.remove('hidden');
+}
+
+function hide(el) {
+  el.classList.add('hidden');
+}
 
 function formatDate(isoString) {
   if (!isoString) return 'Sin fecha';
   try {
     return new Date(isoString).toLocaleDateString('es-CO', {
-      weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
     });
-  } catch { return isoString; }
+  } catch {
+    return isoString;
+  }
 }
 
 function formatPrice(value) {
   if (!value && value !== 0) return 'Sin precio';
-  if (Number(value) === 0)   return 'Gratis';
+  if (Number(value) === 0) return 'Gratis';
   return new Intl.NumberFormat('es-CO', {
-    style: 'currency', currency: 'COP', minimumFractionDigits: 0,
+    style: 'currency',
+    currency: 'COP',
+    minimumFractionDigits: 0,
   }).format(value);
 }
 
-// ── Cargar evento ──────────────────────────────────────
-async function loadEvent() {
-  if (!eventId) {
-    showError('No se especificó ningún evento en la URL (falta el parámetro ?id=).');
-    return;
-  }
-
-  try {
-    const data = await api.get(`/events/${eventId}`);
-    const ev   = data.data ?? data.evento ?? data;
-
-    populateDOM(ev);
-    hide(stateLoading);
-    show(detailContent);
-
-    syncSaveAvailability();
-    await initSaveState();
-
-  } catch (err) {
-    console.error('Error al cargar el evento:', err);
-    if (err?.status === 404) { showError('El evento no fue encontrado.'); return; }
-    if (err?.status)         { showError(`Error del servidor (${err.status}).`); return; }
-    showError('No se pudo conectar con el servidor. Intenta más tarde.');
-  }
-}
-
-// ── Inyectar datos en el DOM ───────────────────────────
-function populateDOM(ev) {
-  document.title = `EventPro — ${ev.nombre ?? 'Evento'}`;
-
-  // Imagen
-  const imgUrl = ev.imagen_url ?? ev.imagen ?? ev.imagen_promotional ?? null;
-  if (imgUrl) {
-    heroImg.src = imgUrl;
-    heroImg.alt = ev.nombre ?? 'Imagen del evento';
-    heroImg.onload  = () => { show(heroImg); hide(heroPlaceholder); };
-    heroImg.onerror = () => { hide(heroImg); show(heroPlaceholder); };
-  } else {
-    hide(heroImg); show(heroPlaceholder);
-  }
-
-  // Campos de texto
-  const catName = ev.categoria?.nombre ?? ev.categoria_nombre ?? ev.categoria ?? 'Sin categoría';
-  heroCategory.textContent = catName;
-  heroTitle.textContent    = ev.nombre ?? ev.nombre_evento ?? 'Sin nombre';
-
-  const fechaRaw  = ev.fecha ?? ev.fecha_evento ?? ev.fecha_inicio ?? null;
-  heroDateText.textContent = formatDate(fechaRaw);
-
-  const precioRaw = ev.valor ?? ev.precio ?? ev.costo ?? ev.precio_entrada ?? null;
-  heroPriceText.textContent = formatPrice(precioRaw);
-
-  const desc = ev.descripcion ?? ev.descripcion_evento ?? ev.detalle ?? 'Sin descripción.';
-  detailDesc.textContent = desc;
-
-  // Contador de interesados
-  const count = Number(ev.interesados ?? ev.contador_interes ?? ev.interes ?? ev.num_interesados ?? 0);
-  if (interestCount) interestCount.textContent = count.toLocaleString('es-CO');
-}
-
-// ── Botón "Estoy interesado" (RF-06) ──────────────────
-let sending = false;
-
-async function markInterest() {
-  if (!eventId || !btnInterest || sending) return;
-  sending = true;
-
-  const heart = btnInterest.querySelector('.heart-icon');
-  heart?.classList.add('beat');
-  setTimeout(() => heart?.classList.remove('beat'), 500);
-
-  try {
-    const data = await api.patch(`/events/${eventId}/interes`, { incrementar: true });
-
-    const nuevo = Number(
-      data?.interesados ?? data?.contador_interes ?? data?.interes ?? data?.count ?? null
-    );
-
-    if (!isNaN(nuevo)) {
-      if (interestCount) interestCount.textContent = nuevo.toLocaleString('es-CO');
-    } else {
-      const actual = parseInt((interestCount?.textContent || '').replace(/\D/g, '')) || 0;
-      if (interestCount) interestCount.textContent = (actual + 1).toLocaleString('es-CO');
-    }
-
-    if (interestHint) interestHint.textContent = '¡Interés registrado correctamente!';
-
-  } catch (err) {
-    console.error('Error al registrar interés:', err);
-    if (btnInterestText) btnInterestText.textContent = 'Error. Intenta de nuevo.';
-    setTimeout(() => {
-      if (btnInterestText) btnInterestText.textContent = 'Estoy interesado';
-      if (interestHint)    interestHint.textContent    = 'Haz clic para registrar tu interés en este evento';
-    }, 2000);
-  } finally {
-    sending = false;
-  }
-}
-
-// ══════════════════════════════════════════
-// GUARDAR EVENTO (toggle con localStorage)
-// ══════════════════════════════════════════
-let saveLoading = false;
-let saveState = false;
-
-function syncSaveAvailability() {
-  if (!btnSave) return;
-  const logged = Auth.isLoggedIn();
-  btnSave.disabled = !logged;
-  btnSave.title = logged ? '' : 'Inicia sesión para guardar este evento';
-}
-
-/** Lee el localStorage y pinta el botón según el estado guardado. */
-async function initSaveState() {
-  if (!btnSave || !btnSaveText) return;
-
-  if (!Auth.isLoggedIn() || !eventId) {
-    saveState = false;
-    setSaveVisual(false);
-    return;
-  }
-
-  try {
-    const data = await api.get(`/users/favorites/${eventId}/status`, Auth.authOptions());
-    saveState = Boolean(data?.saved);
-    setSaveVisual(saveState);
-  } catch (err) {
-    console.error('Error al consultar favorito:', err);
-    saveState = false;
-    setSaveVisual(false);
-  }
-}
-
-/** Actualiza clases y texto del botón. */
 function setSaveVisual(saved) {
   if (!btnSave || !btnSaveText) return;
+
   if (saved) {
     btnSave.classList.add('saved');
-    btnSaveText.textContent = 'Evento guardado';
+    btnSaveText.textContent = 'Guardado';
+    if (saveHint) saveHint.textContent = 'Este evento esta en tus guardados';
   } else {
     btnSave.classList.remove('saved');
-    btnSaveText.textContent = 'Guardar evento';
+    btnSaveText.textContent = 'Guardar';
+    if (saveHint) saveHint.textContent = Auth.isLoggedIn()
+      ? 'Haz clic para guardar este evento'
+      : 'Inicia sesion para guardar este evento';
   }
 }
 
-/** Toggle: guarda o quita del guardado. */
-async function toggleSave() {
-  if (!eventId || saveLoading) return;
-  if (!Auth.isLoggedIn()) return;
+async function initSaveState() {
+  if (!eventId) return;
 
-  saveLoading = true;
+  if (!Auth.isLoggedIn()) {
+    saveState = false;
+    setSaveVisual(false);
+    return;
+  }
+
   try {
-    if (saveState) {
-      await api.delete(`/users/favorites/${eventId}`, Auth.authOptions());
-      saveState = false;
-    } else {
-      await api.post('/users/favorites', { evento_id: Number(eventId) }, Auth.authOptions());
-      saveState = true;
-    }
-
+    const data = await api.get(`/users/saved-events/${eventId}/status`, Auth.authOptions());
+    saveState = Boolean(data?.isSaved);
     setSaveVisual(saveState);
   } catch (err) {
-    console.error('Error al guardar/quitar favorito:', err);
+    console.error('Error al consultar estado de guardado:', err);
+    saveState = false;
+    setSaveVisual(false);
+  }
+}
+
+async function toggleSave() {
+  if (!eventId || saveLoading) return;
+
+  if (!Auth.isLoggedIn()) {
+    window.location.href = 'login.html';
+    return;
+  }
+
+  saveLoading = true;
+
+  try {
+    const data = await api.post(`/events/${eventId}/save`, {}, Auth.authOptions());
+    saveState = Boolean(data?.isSaved);
+    setSaveVisual(saveState);
+  } catch (err) {
+    console.error('Error al guardar evento:', err);
+    if (saveHint) {
+      saveHint.textContent = err?.status === 404
+        ? 'El evento no existe o fue eliminado'
+        : 'No se pudo actualizar el guardado';
+    }
   } finally {
     saveLoading = false;
   }
 }
 
-// ── Estado de error ────────────────────────────────────
+function populateDOM(ev) {
+  document.title = `EventPro - ${ev.nombre ?? 'Evento'}`;
+
+  const imgUrl = ev.imagen_url ?? ev.imagen ?? ev.imagen_promotional ?? null;
+  if (imgUrl) {
+    heroImg.src = imgUrl;
+    heroImg.alt = ev.nombre ?? 'Imagen del evento';
+    heroImg.onload = () => {
+      show(heroImg);
+      hide(heroPlaceholder);
+    };
+    heroImg.onerror = () => {
+      hide(heroImg);
+      show(heroPlaceholder);
+    };
+  } else {
+    hide(heroImg);
+    show(heroPlaceholder);
+  }
+
+  const catName = ev.categoria?.nombre ?? ev.categoria_nombre ?? ev.categoria ?? 'Sin categoria';
+  heroCategory.textContent = catName;
+  heroTitle.textContent = ev.nombre ?? ev.nombre_evento ?? 'Sin nombre';
+
+  const fechaRaw = ev.fecha ?? ev.fecha_evento ?? ev.fecha_inicio ?? null;
+  heroDateText.textContent = formatDate(fechaRaw);
+
+  const precioRaw = ev.valor ?? ev.precio ?? ev.costo ?? ev.precio_entrada ?? null;
+  heroPriceText.textContent = formatPrice(precioRaw);
+
+  const desc = ev.descripcion ?? ev.descripcion_evento ?? ev.detalle ?? 'Sin descripcion.';
+  detailDesc.textContent = desc;
+}
+
 function showError(msg) {
   hide(stateLoading);
   show(stateError);
   errorMsg.textContent = msg;
 }
 
-// ── Animación de latido ────────────────────────────────
-(function injectBeatCSS() {
-  const style = document.createElement('style');
-  style.textContent = `
-    @keyframes beat {
-      0%   { transform: scale(1); }
-      30%  { transform: scale(1.35); }
-      60%  { transform: scale(.95); }
-      100% { transform: scale(1); }
-    }
-    .heart-icon.beat { animation: beat .5s ease; }
-  `;
-  document.head.appendChild(style);
-})();
+async function loadEvent() {
+  if (!eventId) {
+    showError('No se especifico ningun evento en la URL (falta el parametro ?id=).');
+    return;
+  }
 
-// ── Exponer globales y arrancar ────────────────────────
-window.markInterest = markInterest;
-window.toggleSave   = toggleSave;
+  try {
+    const data = await api.get(`/events/${eventId}`);
+    const ev = data?.data ?? data?.evento ?? data;
+
+    populateDOM(ev);
+    hide(stateLoading);
+    show(detailContent);
+
+    await initSaveState();
+  } catch (err) {
+    console.error('Error al cargar el evento:', err);
+    if (err?.status === 404) {
+      showError('El evento no fue encontrado.');
+      return;
+    }
+    if (err?.status) {
+      showError(`Error del servidor (${err.status}).`);
+      return;
+    }
+    showError('No se pudo conectar con el servidor. Intenta mas tarde.');
+  }
+}
+
+window.toggleSave = toggleSave;
 loadEvent();

@@ -7,7 +7,7 @@ const savedSubtitle = document.getElementById('savedSubtitle');
 const savedList = document.getElementById('savedList');
 const emptyState = document.getElementById('emptyState');
 
-let favorites = [];
+let savedEvents = [];
 
 function getUserName() {
   const payload = Auth.getPayload();
@@ -31,7 +31,7 @@ function escHtml(str) {
 }
 
 function updateState() {
-  const count = favorites.length;
+  const count = savedEvents.length;
 
   if (savedSubtitle) {
     savedSubtitle.textContent = `${count} evento${count !== 1 ? 's' : ''} guardado${count !== 1 ? 's' : ''}`;
@@ -47,12 +47,12 @@ function updateState() {
   emptyState?.classList.add('hidden');
 }
 
-function renderFavorites() {
+function renderSavedEvents() {
   if (!savedList) return;
 
   savedList.innerHTML = '';
 
-  favorites.forEach((fav, index) => {
+  savedEvents.forEach((fav, index) => {
     const li = document.createElement('li');
     li.className = 'saved-item';
     li.id = `saved-item-${fav.evento_id}`;
@@ -90,35 +90,35 @@ function renderFavorites() {
       const target = event.currentTarget;
       const eventId = target?.getAttribute('data-event-id');
       if (!eventId) return;
-      await removeFavorite(Number(eventId));
+      await removeSavedEvent(Number(eventId));
     });
   });
 
   updateState();
 }
 
-async function loadFavorites() {
+async function loadSavedEvents() {
   if (savedSubtitle) savedSubtitle.textContent = 'Cargando eventos…';
 
   try {
-    const data = await api.get('/users/favorites', Auth.authOptions());
-    favorites = Array.isArray(data) ? data : [];
+    const data = await api.get('/users/saved-events', Auth.authOptions());
+    savedEvents = Array.isArray(data) ? data : [];
   } catch (err) {
-    console.error('Error cargando favoritos:', err);
-    favorites = [];
+    console.error('Error cargando guardados:', err);
+    savedEvents = [];
     if (savedSubtitle) savedSubtitle.textContent = 'No se pudieron cargar los guardados';
   }
 
-  renderFavorites();
+  renderSavedEvents();
 }
 
-async function removeFavorite(eventId) {
+async function removeSavedEvent(eventId) {
   try {
-    await api.delete(`/users/favorites/${eventId}`, Auth.authOptions());
-    favorites = favorites.filter((fav) => Number(fav.evento_id) !== Number(eventId));
-    renderFavorites();
+    await api.delete(`/users/saved-events/${eventId}`, Auth.authOptions());
+    savedEvents = savedEvents.filter((fav) => Number(fav.evento_id) !== Number(eventId));
+    renderSavedEvents();
   } catch (err) {
-    console.error('Error eliminando favorito:', err);
+    console.error('Error eliminando guardado:', err);
   }
 }
 
@@ -129,7 +129,7 @@ async function init() {
   }
 
   setHeaderUser();
-  await loadFavorites();
+  await loadSavedEvents();
 }
 
 if (document.readyState === 'loading') {

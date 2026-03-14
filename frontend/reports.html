@@ -62,33 +62,12 @@
       <div class="breadcrumb">
         <a href="#">Analítica</a>
         &rsaquo;
-        Favoritos &amp; Usuarios
+        Guardados &amp; Usuarios
       </div>
     </div>
 
     <div class="filter-bar">
-      <div class="search-wrap">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
-        </svg>
-        <input type="text" id="searchInput" placeholder="Buscar evento o usuario…">
-      </div>
-
-      <button class="filter-chip active" data-filter="all">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
-          <rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>
-        </svg>
-        Todos
-      </button>
-      <button class="filter-chip" data-filter="top">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <polyline points="18 15 12 9 6 15"/>
-        </svg>
-        Top 5
-      </button>
-
-      <button class="panel-action" id="refreshBtn" style="margin-left:4px;">
+      <button class="panel-action" id="refreshBtn">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <polyline points="1 4 1 10 7 10"/>
           <path d="M3.51 15a9 9 0 1 0 .49-4.12"/>
@@ -100,21 +79,6 @@
 
   <!-- STATS -->
   <div class="stats-row">
-    <div class="stat-card green">
-      <div class="stat-label">Total Favoritos</div>
-      <div class="stat-value" id="statTotal">—</div>
-      <div class="stat-sub">registros únicos</div>
-    </div>
-    <div class="stat-card blue">
-      <div class="stat-label">Eventos distintos</div>
-      <div class="stat-value" id="statEvents">—</div>
-      <div class="stat-sub">con al menos 1 favorito</div>
-    </div>
-    <div class="stat-card yellow">
-      <div class="stat-label">Usuarios activos</div>
-      <div class="stat-value" id="statUsers">—</div>
-      <div class="stat-sub">que guardaron eventos</div>
-    </div>
     <div class="stat-card red">
       <div class="stat-label">Evento más popular</div>
       <div class="stat-value" id="statTop" style="font-size:16px;line-height:1.3;">—</div>
@@ -123,57 +87,21 @@
   </div>
 
   <!-- RANKING + CHART -->
-  <div class="grid-two">
-    <div class="panel">
-      <div class="panel-header">
-        <div class="panel-title">Eventos más marcados</div>
-        <button class="panel-action" id="exportBtn">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-            <polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
-          </svg>
-          Exportar CSV
-        </button>
-      </div>
-      <table class="fav-table">
-        <thead>
-          <tr>
-            <th>#</th><th>Evento</th><th>Categoría</th><th>Favoritos</th>
-          </tr>
-        </thead>
-        <tbody id="rankBody">
-          <tr class="loading-row">
-            <td colspan="4"><span class="spinner-sm"></span>Cargando datos…</td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-
-    <div class="panel">
-      <div class="panel-header">
-        <div class="panel-title">Distribución visual</div>
-      </div>
-      <div class="chart-panel">
-        <div class="bar-chart" id="barChart"></div>
-      </div>
-    </div>
-  </div>
-
   <!-- FULL TABLE -->
   <div class="grid-full panel">
     <div class="panel-header">
-      <div class="panel-title">Todos los favoritos</div>
+      <div class="panel-title">Todos los guardados</div>
       <span id="totalCount" style="font-size:11px;color:var(--text-muted);">— registros</span>
     </div>
     <table class="fav-table">
       <thead>
         <tr>
-          <th>Usuario</th><th>Evento</th><th>Categoría</th><th>Fecha marcado</th>
+          <th>Evento</th><th>Categoría</th><th>Guardados</th>
         </tr>
       </thead>
       <tbody id="fullBody">
         <tr class="loading-row">
-          <td colspan="4"><span class="spinner-sm"></span>Cargando favoritos…</td>
+          <td colspan="3"><span class="spinner-sm"></span>Cargando popularidad…</td>
         </tr>
       </tbody>
     </table>

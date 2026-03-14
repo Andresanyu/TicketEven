@@ -36,6 +36,40 @@ router.get("/", async (_req: Request, res: Response) => {
   }
 });
 
+router.get("/reports/popularity", authenticateToken, authorizeAdmin, async (_req: Request, res: Response) => {
+  try {
+    const [eventsResult, statsResult] = await Promise.all([
+      pool.query(`
+        SELECT
+          e.id                                AS event_id,
+          e.nombre                            AS event_name,
+          COALESCE(c.nombre, 'Sin categoría') AS category_name,
+          COUNT(se.user_id)::INTEGER          AS saved_count
+        FROM eventos e
+        LEFT JOIN categorias c ON c.id = e.categoria_id
+        LEFT JOIN saved_events se ON se.event_id = e.id
+        GROUP BY e.id, e.nombre, c.nombre
+        ORDER BY saved_count DESC, e.nombre ASC
+      `),
+      pool.query(`
+        SELECT
+          COUNT(DISTINCT user_id)::INTEGER AS total_users,
+          COUNT(*)::INTEGER                AS total_saves
+        FROM saved_events
+      `)
+    ]);
+
+    res.json({
+      events:      eventsResult.rows,
+      total_saves: Number(statsResult.rows[0]?.total_saves ?? 0),
+      total_users: Number(statsResult.rows[0]?.total_users ?? 0),
+    });
+  } catch (err) {
+    console.error("Error fetching popularity report:", err);
+    res.status(500).json({ error: "Error al obtener el reporte de popularidad" });
+  }
+});
+
 router.get("/:id", async (req: Request, res: Response) => {
   const id = Number(req.params.id);
   if (!Number.isInteger(id) || id <= 0) {
