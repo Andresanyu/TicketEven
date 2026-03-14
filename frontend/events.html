@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TicketEven — Gestión de Eventos</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/events_admin.css">
+</head>
+<body>
+
+  <!-- ══════════════════════════════════
+       SIDEBAR
+  ══════════════════════════════════ -->
+  <aside class="sidebar">
+
+    <div class="sidebar-logo">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="12" cy="12" r="10"/>
+        <path d="M12 6v6l4 2"/>
+      </svg>
+      TicketEven
+    </div>
+
+    <nav class="sidebar-nav">
+      <span class="nav-section-label">Principal</span>
+
+      <a href="admin_dashboard.html" class="nav-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="3" y="3" width="7" height="7" rx="1"/>
+          <rect x="14" y="3" width="7" height="7" rx="1"/>
+          <rect x="3" y="14" width="7" height="7" rx="1"/>
+          <rect x="14" y="14" width="7" height="7" rx="1"/>
+        </svg>
+        Inicio
+      </a>
+
+      <a href="events.html" class="nav-item active">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="3" y="4" width="18" height="18" rx="2"/>
+          <line x1="16" y1="2" x2="16" y2="6"/>
+          <line x1="8"  y1="2" x2="8"  y2="6"/>
+          <line x1="3"  y1="10" x2="21" y2="10"/>
+          <line x1="12" y1="14" x2="12" y2="18"/>
+          <line x1="10" y1="16" x2="14" y2="16"/>
+        </svg>
+        Eventos
+        <span class="nav-active-bar"></span>
+      </a>
+
+      <a href="categories.html" class="nav-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M3 7h7M3 12h7M3 17h7"/>
+          <rect x="13" y="5" width="8" height="4" rx="1"/>
+          <rect x="13" y="10" width="8" height="4" rx="1"/>
+          <rect x="13" y="15" width="8" height="4" rx="1"/>
+        </svg>
+        Categorías
+      </a>
+
+      <a href="reportes.html" class="nav-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="18" y1="20" x2="18" y2="10"/>
+          <line x1="12" y1="20" x2="12" y2="4"/>
+          <line x1="6"  y1="20" x2="6"  y2="14"/>
+          <polyline points="2 20 22 20"/>
+        </svg>
+        Reportes
+      </a>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="sidebar-admin">
+        <div class="admin-avatar" id="sidebarAvatar">A</div>
+        <div class="admin-info">
+          <span class="admin-name" id="sidebarName">Administrador</span>
+          <span class="admin-role">Admin</span>
+        </div>
+      </div>
+    </div>
+
+  </aside>
+
+  <!-- ══════════════════════════════════
+       CONTENIDO PRINCIPAL
+  ══════════════════════════════════ -->
+  <div class="main">
+
+    <!-- ── Page Header ── -->
+    <header class="page-header">
+      <div class="page-header-left">
+        <p class="page-eyebrow">
+          <a href="admin_dashboard.html" class="breadcrumb-link">Panel</a>
+          <span class="breadcrumb-sep">›</span>
+          Eventos
+        </p>
+        <h1 class="page-title">Gestión de Eventos<span class="title-dot">.</span></h1>
+      </div>
+      <button class="btn-primary" id="btnNuevo">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <line x1="12" y1="5" x2="12" y2="19"/>
+          <line x1="5"  y1="12" x2="19" y2="12"/>
+        </svg>
+        Nuevo Evento
+      </button>
+    </header>
+
+    <!-- ── Toolbar ── -->
+    <div class="toolbar">
+      <div class="search-wrap">
+        <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="11" cy="11" r="8"/>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+        </svg>
+        <input
+          type="text"
+          id="searchInput"
+          class="search-input"
+          placeholder="Buscar evento por nombre…"
+        >
+      </div>
+      <span class="table-count" id="tableCount">— eventos</span>
+    </div>
+
+    <!-- ── Tabla ── -->
+    <div class="table-wrap">
+      <table class="ev-table" id="evTable">
+        <thead>
+          <tr>
+            <th class="col-id">ID</th>
+            <th class="col-name">Nombre del Evento</th>
+            <th class="col-date">Fecha y Hora</th>
+            <th class="col-cat">Categoría</th>
+            <th class="col-status">Estado</th>
+            <th class="col-actions">Acciones</th>
+          </tr>
+        </thead>
+        <tbody id="evTbody"></tbody>
+      </table>
+
+      <div class="table-empty hidden" id="tableEmpty">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2">
+          <rect x="3" y="4" width="18" height="18" rx="2"/>
+          <line x1="16" y1="2" x2="16" y2="6"/>
+          <line x1="8"  y1="2" x2="8"  y2="6"/>
+          <line x1="3"  y1="10" x2="21" y2="10"/>
+        </svg>
+        <p>No se encontraron eventos</p>
+      </div>
+    </div>
+
+  </div><!-- /main -->
+
+
+  <!-- ══════════════════════════════════
+       MODAL — CREAR / EDITAR EVENTO
+  ══════════════════════════════════ -->
+  <div class="modal-backdrop hidden" id="modalBackdrop">
+    <div class="modal" id="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+
+      <!-- Cabecera -->
+      <div class="modal-header">
+        <div>
+          <p class="modal-eyebrow" id="modalEyebrow">Nuevo</p>
+          <h2 class="modal-title" id="modalTitle">Nuevo Evento</h2>
+        </div>
+        <button class="modal-close" id="btnCloseModal" aria-label="Cerrar">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="6" x2="6" y2="18"/>
+            <line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+      </div>
+
+      <!-- Cuerpo en dos columnas -->
+      <div class="modal-body">
+
+        <input type="hidden" id="modalId">
+
+        <!-- ── Columna izquierda ── -->
+        <div class="modal-col">
+
+          <div class="field" id="field-titulo">
+            <label class="field-label" for="modalTitulo">
+              Título del Evento <span class="req">*</span>
+            </label>
+            <input
+              type="text"
+              id="modalTitulo"
+              class="field-input"
+              placeholder="Ej. Festival de Jazz 2025"
+              maxlength="150"
+            >
+            <span class="field-error" id="err-titulo"></span>
+          </div>
+
+          <div class="field" id="field-descripcion">
+            <label class="field-label" for="modalDescripcion">Descripción</label>
+            <textarea
+              id="modalDescripcion"
+              class="field-input field-textarea"
+              placeholder="Describe brevemente el evento…"
+              rows="4"
+            ></textarea>
+          </div>
+
+          <div class="field-row">
+            <div class="field" id="field-fecha">
+              <label class="field-label" for="modalFecha">
+                Fecha <span class="req">*</span>
+              </label>
+              <input
+                type="date"
+                id="modalFecha"
+                class="field-input"
+              >
+              <span class="field-error" id="err-fecha"></span>
+            </div>
+            <div class="field" id="field-hora">
+              <label class="field-label" for="modalHora">Hora</label>
+              <input type="time" id="modalHora" class="field-input">
+            </div>
+          </div>
+
+        </div>
+
+        <!-- ── Columna derecha ── -->
+        <div class="modal-col">
+
+          <div class="field" id="field-categoria">
+            <label class="field-label" for="modalCategoria">
+              Categoría <span class="req">*</span>
+            </label>
+            <div class="select-wrap">
+              <!-- 👉 Tu JS llenará estas opciones desde la API /categories -->
+              <select id="modalCategoria" class="field-input field-select">
+                <option value="">— Selecciona una categoría —</option>
+              </select>
+              <svg class="select-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="6 9 12 15 18 9"/>
+              </svg>
+            </div>
+            <span class="field-error" id="err-categoria"></span>
+          </div>
+
+          <div class="field" id="field-imagen">
+            <label class="field-label" for="modalImagen">URL de la Imagen</label>
+            <input
+              type="url"
+              id="modalImagen"
+              class="field-input"
+              placeholder="https://ejemplo.com/imagen.jpg"
+            >
+            <!-- Preview de imagen -->
+            <div class="img-preview-wrap" id="imgPreviewWrap">
+              <img id="imgPreview" src="" alt="Preview" class="img-preview hidden">
+              <span class="img-preview-hint" id="imgHint">El preview aparecerá aquí</span>
+            </div>
+          </div>
+
+          <div class="field-row">
+            <div class="field" id="field-valor">
+              <label class="field-label" for="modalValor">Precio (COP)</label>
+              <input
+                type="number"
+                id="modalValor"
+                class="field-input"
+                placeholder="0 = Gratis"
+                min="0"
+              >
+            </div>
+            <div class="field" id="field-estado">
+              <label class="field-label" for="modalEstado">Estado</label>
+              <div class="select-wrap">
+                <select id="modalEstado" class="field-input field-select">
+                  <option value="true">Activo</option>
+                  <option value="false">Inactivo</option>
+                </select>
+                <svg class="select-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polyline points="6 9 12 15 18 9"/>
+                </svg>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div><!-- /modal-body -->
+
+      <!-- Footer -->
+      <div class="modal-footer">
+        <button class="btn-ghost" id="btnCancelarModal">Cancelar</button>
+        <button class="btn-primary" id="btnGuardar">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <polyline points="20 6 9 17 4 12"/>
+          </svg>
+          <span id="btnGuardarText">Guardar Evento</span>
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script type="module" src="js/events.js"></script>
+
+</body>
+</html>
