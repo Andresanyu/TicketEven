@@ -266,87 +266,21 @@ a { text-decoration: none; color: inherit; }
   white-space: pre-wrap;
 }
 
-/* ── Panel lateral ── */
-.interest-panel {
+/* ── Panel lateral de guardado ── */
+.save-panel {
   background: var(--bg-card);
   border: 1px solid var(--border);
   border-radius: var(--radius);
   padding: 24px;
   display: flex;
   flex-direction: column;
-  gap: 0;
+  gap: 10px;
   position: sticky;
   top: calc(var(--nav-h) + 16px);
 }
-
-.interest-header { margin-bottom: 16px; }
-
-.interest-counter {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.counter-number {
-  font-family: 'Syne', sans-serif;
-  font-size: 36px;
-  font-weight: 800;
-  color: var(--accent);
-  line-height: 1;
-}
-
-.counter-label {
-  font-size: 12px;
-  color: var(--text-secondary);
-}
-
-/* Botón interés */
-.btn-interest {
-  width: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  padding: 14px 20px;
-  background: var(--accent);
-  color: #111210;
-  border: none;
-  border-radius: 10px;
-  font-family: 'Syne', sans-serif;
-  font-size: 15px;
-  font-weight: 700;
-  cursor: pointer;
-  transition: background .2s, transform .15s, box-shadow .2s;
-  position: relative;
-  overflow: hidden;
-}
-
-.btn-interest:hover {
-  background: #d4ff3d;
-  transform: translateY(-1px);
-  box-shadow: 0 8px 24px rgba(198,241,53,.22);
-}
-.btn-interest:active { transform: translateY(0); }
-.btn-interest:disabled { cursor: not-allowed; transform: none; box-shadow: none; }
-
-.heart-icon {
-  width: 17px;
-  height: 17px;
-  flex-shrink: 0;
-  transition: fill .3s, transform .3s;
-}
-
-.interest-hint {
-  margin-top: 10px;
+.save-hint {
   font-size: 12px;
   color: var(--text-muted);
-}
-
-/* Divisor entre botones */
-.panel-divider {
-  border: none;
-  border-top: 1px solid var(--border);
-  margin: 18px 0;
 }
 
 /* ══════════════════════════════════════════
@@ -419,12 +353,11 @@ a { text-decoration: none; color: inherit; }
   .hero-media { height: 280px; }
   .hero-info  { padding: 20px 20px 24px; }
   .detail-body { grid-template-columns: 1fr; }
-  .interest-panel { position: static; order: -1; }
+  .save-panel { position: static; order: -1; }
 }
 
 @media (max-width: 480px) {
   .hero-title { font-size: 22px; }
   .detail-article { padding: 20px; }
-  .interest-panel { padding: 20px 18px; }
-  .counter-number { font-size: 32px; }
+  .save-panel { padding: 20px 18px; }
 }

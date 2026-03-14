@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EventPro — Reportes</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/reports.css">
+</head>
+<body>
+
+<aside class="sidebar">
+  <div class="logo">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <circle cx="12" cy="12" r="10"/>
+      <path d="M12 6v6l4 2"/>
+    </svg>
+    EventPro
+  </div>
+
+  <div class="nav-section-label">Gestionar</div>
+
+  <a href="register_event.html" class="nav-item">
+    <span class="nav-dot"></span>
+    Eventos
+  </a>
+  <a href="edit_event.html" class="nav-item nav-sub">
+    <span class="nav-sub-dot"></span>
+    Editar
+  </a>
+  <a href="disable_event.html" class="nav-item nav-sub">
+    <span class="nav-sub-dot"></span>
+    Inactivar
+  </a>
+
+  <a href="register_category.html" class="nav-item">
+    <span class="nav-dot"></span>
+    Categorías
+  </a>
+  <a href="edit_category.html" class="nav-item nav-sub">
+    <span class="nav-sub-dot"></span>
+    Editar
+  </a>
+  <a href="disable_category.html" class="nav-item nav-sub">
+    <span class="nav-sub-dot"></span>
+    Eliminar
+  </a>
+
+  <div class="nav-section-label" style="margin-top:8px;">Analítica</div>
+
+  <a href="reports.html" class="nav-item active">
+    <span class="nav-dot"></span>
+    Reportes
+  </a>
+</aside>
+
+<main class="main">
+
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Reportes<span>.</span></h1>
+      <div class="breadcrumb">
+        <a href="#">Analítica</a>
+        &rsaquo;
+        Guardados &amp; Usuarios
+      </div>
+    </div>
+
+    <div class="filter-bar">
+      <button class="panel-action" id="refreshBtn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="1 4 1 10 7 10"/>
+          <path d="M3.51 15a9 9 0 1 0 .49-4.12"/>
+        </svg>
+        Actualizar
+      </button>
+    </div>
+  </div>
+
+  <!-- STATS -->
+  <div class="stats-row">
+    <div class="stat-card red">
+      <div class="stat-label">Evento más popular</div>
+      <div class="stat-value" id="statTop" style="font-size:16px;line-height:1.3;">—</div>
+      <div class="stat-sub" id="statTopCount"></div>
+    </div>
+  </div>
+
+  <!-- RANKING + CHART -->
+  <!-- FULL TABLE -->
+  <div class="grid-full panel">
+    <div class="panel-header">
+      <div class="panel-title">Todos los guardados</div>
+      <span id="totalCount" style="font-size:11px;color:var(--text-muted);">— registros</span>
+    </div>
+    <table class="fav-table">
+      <thead>
+        <tr>
+          <th>Evento</th><th>Categoría</th><th>Guardados</th>
+        </tr>
+      </thead>
+      <tbody id="fullBody">
+        <tr class="loading-row">
+          <td colspan="3"><span class="spinner-sm"></span>Cargando popularidad…</td>
+        </tr>
+      </tbody>
+    </table>
+    <div class="panel-footer">
+      <span class="page-info" id="pageInfo">—</span>
+      <div class="page-btns" id="pageBtns"></div>
+    </div>
+  </div>
+
+</main>
+
+<div class="toast" id="toast">
+  <div class="toast-dot"></div>
+  <span id="toastMsg"></span>
+</div>
+
+<script type="module" src="js/reports.js"></script>
+</body>
+</html>
