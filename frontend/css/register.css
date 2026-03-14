@@ -487,3 +487,35 @@
 
   .toast.error { border-color: #e05c5c; }
   .toast.error .toast-dot { background: #e05c5c; }
+
+.nav-section-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  padding: 8px 22px 2px;
+  margin-top: 4px;
+}
+
+.nav-item.nav-sub {
+  padding: 7px 22px 7px 40px;
+  font-size: 13px;
+  gap: 8px;
+}
+
+.nav-sub-dot {
+  width: 4px; height: 4px;
+  border-radius: 50%;
+  background: currentColor;
+  flex-shrink: 0;
+  opacity: .45;
+  transition: opacity .2s;
+}
+
+.nav-item.nav-sub:hover .nav-sub-dot { opacity: .8; }
+
+.nav-item.nav-sub.active .nav-sub-dot {
+  opacity: 1;
+  background: var(--accent);
+}
