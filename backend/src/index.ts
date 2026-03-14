@@ -28,7 +28,7 @@ async function bootstrap() {
     await runSchemaMigrations();
 
     app.listen(PORT, () => {
-      console.log(`---> TicketEven API corriendo en http://localhost:${PORT}`);
+      console.log(`---> EventPro API corriendo en http://localhost:${PORT}`);
     });
   } catch (err) {
     console.error("No se pudo iniciar la API por error de base de datos:", err);

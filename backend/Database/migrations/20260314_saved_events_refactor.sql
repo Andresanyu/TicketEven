@@ -1,4 +1,4 @@
--- TicketEven migration: unify favorites/interested into saved_events
+-- EventPro migration: unify favorites/interested into saved_events
 -- Safe to run multiple times (idempotent)
 
 BEGIN;
