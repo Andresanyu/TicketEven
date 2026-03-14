@@ -1,123 +1,158 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>EventPro — Reportes</title>
-<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/reports.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>EventPro — Reportes</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/reports.css">
 </head>
 <body>
 
-<aside class="sidebar">
-  <div class="logo">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-      <circle cx="12" cy="12" r="10"/>
-      <path d="M12 6v6l4 2"/>
-    </svg>
-    EventPro
-  </div>
+  <!-- ══════════════════════════════════
+       SIDEBAR — clon exacto de categories.html
+       (solo cambia: active en "Reportes")
+  ══════════════════════════════════ -->
+  <aside class="sidebar">
 
-  <div class="nav-section-label">Gestionar</div>
+    <div class="sidebar-logo">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="12" cy="12" r="10"/>
+        <path d="M12 6v6l4 2"/>
+      </svg>
+      EventPro
+    </div>
 
-  <a href="register_event.html" class="nav-item">
-    <span class="nav-dot"></span>
-    Eventos
-  </a>
-  <a href="edit_event.html" class="nav-item nav-sub">
-    <span class="nav-sub-dot"></span>
-    Editar
-  </a>
-  <a href="disable_event.html" class="nav-item nav-sub">
-    <span class="nav-sub-dot"></span>
-    Inactivar
-  </a>
+    <nav class="sidebar-nav">
+      <span class="nav-section-label">Principal</span>
 
-  <a href="register_category.html" class="nav-item">
-    <span class="nav-dot"></span>
-    Categorías
-  </a>
-  <a href="edit_category.html" class="nav-item nav-sub">
-    <span class="nav-sub-dot"></span>
-    Editar
-  </a>
-  <a href="disable_category.html" class="nav-item nav-sub">
-    <span class="nav-sub-dot"></span>
-    Eliminar
-  </a>
+      <a href="admin_dashboard.html" class="nav-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="3" y="3" width="7" height="7" rx="1"/>
+          <rect x="14" y="3" width="7" height="7" rx="1"/>
+          <rect x="3" y="14" width="7" height="7" rx="1"/>
+          <rect x="14" y="14" width="7" height="7" rx="1"/>
+        </svg>
+        Inicio
+      </a>
 
-  <div class="nav-section-label" style="margin-top:8px;">Analítica</div>
+      <a href="events.html" class="nav-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="3" y="4" width="18" height="18" rx="2"/>
+          <line x1="16" y1="2" x2="16" y2="6"/>
+          <line x1="8"  y1="2" x2="8"  y2="6"/>
+          <line x1="3"  y1="10" x2="21" y2="10"/>
+          <line x1="12" y1="14" x2="12" y2="18"/>
+          <line x1="10" y1="16" x2="14" y2="16"/>
+        </svg>
+        Eventos
+      </a>
 
-  <a href="reports.html" class="nav-item active">
-    <span class="nav-dot"></span>
-    Reportes
-  </a>
-</aside>
+      <a href="categories.html" class="nav-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M3 7h7M3 12h7M3 17h7"/>
+          <rect x="13" y="5" width="8" height="4" rx="1"/>
+          <rect x="13" y="10" width="8" height="4" rx="1"/>
+          <rect x="13" y="15" width="8" height="4" rx="1"/>
+        </svg>
+        Categorías
+      </a>
 
-<main class="main">
+      <a href="reports.html" class="nav-item active">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="18" y1="20" x2="18" y2="10"/>
+          <line x1="12" y1="20" x2="12" y2="4"/>
+          <line x1="6"  y1="20" x2="6"  y2="14"/>
+          <polyline points="2 20 22 20"/>
+        </svg>
+        Reportes
+        <span class="nav-active-bar"></span>
+      </a>
+    </nav>
 
-  <div class="page-header">
-    <div>
-      <h1 class="page-title">Reportes<span>.</span></h1>
-      <div class="breadcrumb">
-        <a href="#">Analítica</a>
-        &rsaquo;
-        Guardados &amp; Usuarios
+    <div class="sidebar-footer">
+      <div class="sidebar-admin">
+        <div class="admin-avatar" id="sidebarAvatar">A</div>
+        <div class="admin-info">
+          <span class="admin-name" id="sidebarName">Administrador</span>
+          <span class="admin-role">Admin</span>
+        </div>
       </div>
     </div>
 
-    <div class="filter-bar">
-      <button class="panel-action" id="refreshBtn">
+  </aside>
+
+  <!-- ══════════════════════════════════
+       CONTENIDO PRINCIPAL
+  ══════════════════════════════════ -->
+  <main class="main">
+
+    <!-- ── Page Header — mismas clases que categories.html ── -->
+    <header class="page-header">
+      <div class="page-header-left">
+        <p class="page-eyebrow">
+          <a href="admin_dashboard.html" class="breadcrumb-link">Panel</a>
+          <span class="breadcrumb-sep">›</span>
+          Reportes
+        </p>
+        <h1 class="page-title">Reportes de Popularidad<span class="title-dot">.</span></h1>
+      </div>
+
+      <!-- Botón secundario (mismo tamaño/posición que btn-primary, pero estilo ghost-accent) -->
+      <button class="btn-secondary" id="refreshBtn">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <polyline points="1 4 1 10 7 10"/>
           <path d="M3.51 15a9 9 0 1 0 .49-4.12"/>
         </svg>
         Actualizar
       </button>
+    </header>
+
+    <!-- ════════════════════════════════════════
+         CONTENIDO INTERNO — NO MODIFICADO
+         (stat-card + tabla completa con barras)
+    ════════════════════════════════════════ -->
+
+    <!-- STATS -->
+    <div class="stats-row">
+      <div class="stat-card red">
+        <div class="stat-label">Evento más popular</div>
+        <div class="stat-value" id="statTop" style="font-size:16px;line-height:1.3;">—</div>
+        <div class="stat-sub" id="statTopCount"></div>
+      </div>
     </div>
+
+    <!-- FULL TABLE -->
+    <div class="grid-full panel">
+      <div class="panel-header">
+        <div class="panel-title">Todos los guardados</div>
+        <span id="totalCount" style="font-size:11px;color:var(--text-muted);">— registros</span>
+      </div>
+      <table class="fav-table">
+        <thead>
+          <tr>
+            <th>Evento</th><th>Categoría</th><th>Guardados</th>
+          </tr>
+        </thead>
+        <tbody id="fullBody">
+          <tr class="loading-row">
+            <td colspan="3"><span class="spinner-sm"></span>Cargando popularidad…</td>
+          </tr>
+        </tbody>
+      </table>
+      <div class="panel-footer">
+        <span class="page-info" id="pageInfo">—</span>
+        <div class="page-btns" id="pageBtns"></div>
+      </div>
+    </div>
+
+  </main>
+
+  <div class="toast" id="toast">
+    <div class="toast-dot"></div>
+    <span id="toastMsg"></span>
   </div>
 
-  <!-- STATS -->
-  <div class="stats-row">
-    <div class="stat-card red">
-      <div class="stat-label">Evento más popular</div>
-      <div class="stat-value" id="statTop" style="font-size:16px;line-height:1.3;">—</div>
-      <div class="stat-sub" id="statTopCount"></div>
-    </div>
-  </div>
-
-  <!-- RANKING + CHART -->
-  <!-- FULL TABLE -->
-  <div class="grid-full panel">
-    <div class="panel-header">
-      <div class="panel-title">Todos los guardados</div>
-      <span id="totalCount" style="font-size:11px;color:var(--text-muted);">— registros</span>
-    </div>
-    <table class="fav-table">
-      <thead>
-        <tr>
-          <th>Evento</th><th>Categoría</th><th>Guardados</th>
-        </tr>
-      </thead>
-      <tbody id="fullBody">
-        <tr class="loading-row">
-          <td colspan="3"><span class="spinner-sm"></span>Cargando popularidad…</td>
-        </tr>
-      </tbody>
-    </table>
-    <div class="panel-footer">
-      <span class="page-info" id="pageInfo">—</span>
-      <div class="page-btns" id="pageBtns"></div>
-    </div>
-  </div>
-
-</main>
-
-<div class="toast" id="toast">
-  <div class="toast-dot"></div>
-  <span id="toastMsg"></span>
-</div>
-
-<script type="module" src="js/reports.js"></script>
+  <script type="module" src="js/reports.js"></script>
 </body>
 </html>

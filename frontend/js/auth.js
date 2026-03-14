@@ -70,7 +70,7 @@ export async function handleLogin(email, password) {
   const data = await api.post("/users/login", { email, password });
   Auth.saveToken(data.token);
   if (Auth.getRol() === "admin") {
-    window.location.href = "/frontend/admin-dashboard.html";
+    window.location.href = "/frontend/admin_dashboard.html";
   } else {
     window.location.href = "/frontend/index.html";
   }
