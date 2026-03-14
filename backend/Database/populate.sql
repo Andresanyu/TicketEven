@@ -35,7 +35,7 @@ VALUES
 
 INSERT INTO usuarios (nombre, email, password_hash, rol, activo)
 VALUES 
-('Juan Pérez', 'juan.perez@email.com', '$2b$10$abc123hashsimulado1', 'externo', true),
+('Juan Pérez', 'juan.perez@email.com', '$2b$10$zku3bZSfXzL0e1MCnCSJNuFQOwcmWFF98Rt/yvyGwZrPRiQf8.xvO', 'externo', true),
 ('María Gómez', 'maria.gomez@email.com', '$2b$10$abc123hashsimulado2', 'externo', true),
 ('Carlos López', 'carlos.lopez@email.com', '$2b$10$abc123hashsimulado3', 'externo', true),
 ('Admin Principal', 'admin@email.com', '$2b$10$zku3bZSfXzL0e1MCnCSJNuFQOwcmWFF98Rt/yvyGwZrPRiQf8.xvO', 'admin', true),
