@@ -49,3 +49,9 @@ VALUES
 (2, 3),
 (3, 2),
 (3, 4);
+
+INSERT INTO tipos_entrada (nombre)
+VALUES
+('General'),
+('VIP')
+ON CONFLICT (nombre) DO NOTHING;

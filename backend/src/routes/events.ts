@@ -1,5 +1,6 @@
 import { Router, Request, Response } from "express";
-import { EventUpsertInput } from "../models/types";
+import { PoolClient } from "pg";
+import { EventTicketTypeInput, EventUpsertInput } from "../models/types";
 import { pool } from "../config/database";
 import { authenticateToken, authorizeAdmin, AuthRequest } from "../middlewares/auth";
 
@@ -14,10 +15,95 @@ const EVENT_SELECT_QUERY = `
     e.valor,
     e.descripcion,
     e.imagen_url,
-    e.activo
+    e.activo,
+    COALESCE((
+      SELECT json_agg(
+        json_build_object(
+          'tipo_entrada_id', ett.tipo_entrada_id,
+          'nombre', te.nombre,
+          'aforo', ett.aforo
+        )
+        ORDER BY te.nombre ASC
+      )
+      FROM eventos_tipos_entrada ett
+      JOIN tipos_entrada te ON te.id = ett.tipo_entrada_id
+      WHERE ett.evento_id = e.id
+    ), '[]'::json) AS entradas
   FROM eventos e
   LEFT JOIN categorias c ON c.id = e.categoria_id
 `;
+
+function parseEntradas(value: unknown, required: boolean): { entradas: EventTicketTypeInput[] | null; error?: string } {
+  if (value === undefined || value === null) {
+    if (required) {
+      return { entradas: null, error: "El campo entradas es requerido" };
+    }
+    return { entradas: null };
+  }
+
+  if (!Array.isArray(value)) {
+    return { entradas: null, error: "El campo entradas debe ser un arreglo" };
+  }
+
+  if (required && value.length === 0) {
+    return { entradas: null, error: "Debe enviar al menos un tipo de entrada" };
+  }
+
+  const ids = new Set<number>();
+  const entradas: EventTicketTypeInput[] = [];
+
+  for (const item of value) {
+    const tipoEntradaId = Number((item as any)?.tipo_entrada_id);
+    const aforo = Number((item as any)?.aforo);
+
+    if (!Number.isInteger(tipoEntradaId) || tipoEntradaId <= 0) {
+      return { entradas: null, error: "Cada entrada debe incluir un tipo_entrada_id entero válido" };
+    }
+
+    if (!Number.isInteger(aforo) || aforo < 0) {
+      return { entradas: null, error: "Cada entrada debe incluir un aforo entero mayor o igual a 0" };
+    }
+
+    if (ids.has(tipoEntradaId)) {
+      return { entradas: null, error: "No se permiten tipos de entrada repetidos en el mismo evento" };
+    }
+
+    ids.add(tipoEntradaId);
+    entradas.push({ tipo_entrada_id: tipoEntradaId, aforo });
+  }
+
+  return { entradas };
+}
+
+async function validateTicketTypeIds(client: PoolClient, entradas: EventTicketTypeInput[]): Promise<number[]> {
+  const ids = Array.from(new Set(entradas.map((entrada) => entrada.tipo_entrada_id)));
+  if (ids.length === 0) {
+    return [];
+  }
+
+  const result = await client.query("SELECT id FROM tipos_entrada WHERE id = ANY($1::int[])", [ids]);
+  const existingIds = new Set(result.rows.map((row) => Number(row.id)));
+
+  return ids.filter((id) => !existingIds.has(id));
+}
+
+async function replaceEventTicketTypes(
+  client: PoolClient,
+  eventId: number,
+  entradas: EventTicketTypeInput[]
+): Promise<void> {
+  await client.query("DELETE FROM eventos_tipos_entrada WHERE evento_id = $1", [eventId]);
+
+  for (const entrada of entradas) {
+    await client.query(
+      `
+        INSERT INTO eventos_tipos_entrada (evento_id, tipo_entrada_id, aforo)
+        VALUES ($1, $2, $3)
+      `,
+      [eventId, entrada.tipo_entrada_id, entrada.aforo]
+    );
+  }
+}
 
 function parseCategoriaId(value: unknown): number | null {
   if (value === undefined || value === null || value === "") return null;
@@ -128,7 +214,7 @@ router.post("/:id/save", authenticateToken, async (req: AuthRequest, res: Respon
 });
 
 router.post("/", authenticateToken, authorizeAdmin, async (req: Request, res: Response) => {
-  const { nombre, categoria_id, fecha, valor, descripcion, imagen_url, activo } = req.body as EventUpsertInput;
+  const { nombre, categoria_id, fecha, valor, descripcion, imagen_url, activo, entradas } = req.body as EventUpsertInput;
 
   if (!nombre || !String(nombre).trim()) {
     return res.status(400).json({ error: "El campo nombre es requerido" });
@@ -151,8 +237,25 @@ router.post("/", authenticateToken, authorizeAdmin, async (req: Request, res: Re
     return res.status(400).json({ error: "El campo fecha es inválido" });
   }
 
+  const parsedEntradas = parseEntradas(entradas, true);
+  if (parsedEntradas.error) {
+    return res.status(400).json({ error: parsedEntradas.error });
+  }
+
+  const client = await pool.connect();
+
   try {
-    const insertResult = await pool.query(
+    await client.query("BEGIN");
+
+    const invalidTicketTypeIds = await validateTicketTypeIds(client, parsedEntradas.entradas ?? []);
+    if (invalidTicketTypeIds.length > 0) {
+      await client.query("ROLLBACK");
+      return res.status(400).json({
+        error: `Tipos de entrada no válidos: ${invalidTicketTypeIds.join(", ")}`,
+      });
+    }
+
+    const insertResult = await client.query(
       `
         INSERT INTO eventos (nombre, categoria_id, fecha, valor, descripcion, imagen_url, activo)
         VALUES ($1, $2, $3, $4, $5, $6, $7)
@@ -169,11 +272,19 @@ router.post("/", authenticateToken, authorizeAdmin, async (req: Request, res: Re
       ]
     );
 
-    const createdEvent = await pool.query(`${EVENT_SELECT_QUERY} WHERE e.id = $1`, [insertResult.rows[0].id]);
+    const eventId = Number(insertResult.rows[0].id);
+    await replaceEventTicketTypes(client, eventId, parsedEntradas.entradas ?? []);
+
+    await client.query("COMMIT");
+
+    const createdEvent = await pool.query(`${EVENT_SELECT_QUERY} WHERE e.id = $1`, [eventId]);
     res.status(201).json(createdEvent.rows[0]);
   } catch (err) {
+    await client.query("ROLLBACK");
     console.error("Error inserting event:", err);
     res.status(500).json({ error: "Error al crear el evento" });
+  } finally {
+    client.release();
   }
 });
 
@@ -183,7 +294,7 @@ router.put("/:id", authenticateToken, authorizeAdmin, async (req: Request, res: 
     return res.status(400).json({ error: "ID de evento inválido" });
   }
 
-  const { nombre, categoria_id, fecha, valor, descripcion, imagen_url, activo } = req.body as EventUpsertInput;
+  const { nombre, categoria_id, fecha, valor, descripcion, imagen_url, activo, entradas } = req.body as EventUpsertInput;
 
   if (!nombre || !String(nombre).trim()) {
     return res.status(400).json({ error: "El campo nombre es requerido" });
@@ -204,8 +315,17 @@ router.put("/:id", authenticateToken, authorizeAdmin, async (req: Request, res: 
     return res.status(400).json({ error: "El campo fecha es inválido" });
   }
 
+  const parsedEntradas = parseEntradas(entradas, false);
+  if (parsedEntradas.error) {
+    return res.status(400).json({ error: parsedEntradas.error });
+  }
+
+  const client = await pool.connect();
+
   try {
-    const updateResult = await pool.query(
+    await client.query("BEGIN");
+
+    const updateResult = await client.query(
       `
         UPDATE eventos
         SET
@@ -232,14 +352,32 @@ router.put("/:id", authenticateToken, authorizeAdmin, async (req: Request, res: 
     );
 
     if (updateResult.rowCount === 0) {
+      await client.query("ROLLBACK");
       return res.status(404).json({ error: "Evento no encontrado" });
     }
+
+    if (parsedEntradas.entradas !== null) {
+      const invalidTicketTypeIds = await validateTicketTypeIds(client, parsedEntradas.entradas);
+      if (invalidTicketTypeIds.length > 0) {
+        await client.query("ROLLBACK");
+        return res.status(400).json({
+          error: `Tipos de entrada no válidos: ${invalidTicketTypeIds.join(", ")}`,
+        });
+      }
+
+      await replaceEventTicketTypes(client, id, parsedEntradas.entradas);
+    }
+
+    await client.query("COMMIT");
 
     const updatedEvent = await pool.query(`${EVENT_SELECT_QUERY} WHERE e.id = $1`, [id]);
     res.json(updatedEvent.rows[0]);
   } catch (err) {
+    await client.query("ROLLBACK");
     console.error("Error updating event:", err);
     res.status(500).json({ error: "Error al actualizar el evento" });
+  } finally {
+    client.release();
   }
 });
 

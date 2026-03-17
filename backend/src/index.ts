@@ -5,6 +5,7 @@ import express from "express";
 import cors from "cors";
 import eventsRouter from "./routes/events";
 import categoriesRouter from "./routes/categories";
+import ticketTypesRouter from "./routes/ticket-types";
 import usersRouter from "./routes/users";
 import { connectDatabase, runSchemaMigrations } from "./config/database";
 
@@ -16,6 +17,7 @@ app.use(express.json());
 
 app.use("/api/events", eventsRouter);
 app.use("/api/categories", categoriesRouter);
+app.use("/api/ticket-types", ticketTypesRouter);
 app.use("/api/users", usersRouter);
 
 app.get("/api/health", (_req, res) => {
