@@ -30,6 +30,22 @@ export async function connectDatabase(): Promise<void> {
 
 export async function runSchemaMigrations(): Promise<void> {
   await pool.query(`
+    CREATE TABLE IF NOT EXISTS tipos_entrada (
+      id SERIAL PRIMARY KEY,
+      nombre VARCHAR(100) NOT NULL UNIQUE
+    )
+  `);
+
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS eventos_tipos_entrada (
+      evento_id INTEGER NOT NULL REFERENCES eventos(id) ON DELETE CASCADE,
+      tipo_entrada_id INTEGER NOT NULL REFERENCES tipos_entrada(id) ON DELETE RESTRICT,
+      aforo INTEGER NOT NULL CHECK (aforo >= 0),
+      PRIMARY KEY (evento_id, tipo_entrada_id)
+    )
+  `);
+
+  await pool.query(`
     CREATE TABLE IF NOT EXISTS saved_events (
       user_id INTEGER REFERENCES usuarios(id) ON DELETE CASCADE,
       event_id INTEGER REFERENCES eventos(id) ON DELETE CASCADE,
