@@ -7,7 +7,6 @@ import eventsRouter from "./routes/events";
 import categoriesRouter from "./routes/categories";
 import ticketTypesRouter from "./routes/ticket-types";
 import usersRouter from "./routes/users";
-import ticketTypesRouter from "./routes/ticketTypes";
 import { connectDatabase, runSchemaMigrations } from "./config/database";
 
 const app = express();
