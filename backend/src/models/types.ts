@@ -7,6 +7,16 @@ export interface EventResponse {
   descripcion: string | null;
   imagen_url: string | null;
   activo: boolean | null;
+  entradas: EventTicketTypeResponse[];
+}
+
+export interface EventTicketTypeInput {
+  tipo_entrada_id: number;
+  aforo: number;
+}
+
+export interface EventTicketTypeResponse extends EventTicketTypeInput {
+  nombre: string;
 }
 
 export interface EventUpsertInput {
@@ -17,6 +27,12 @@ export interface EventUpsertInput {
   descripcion?: string | null;
   imagen_url?: string | null;
   activo?: boolean | null;
+  entradas?: EventTicketTypeInput[];
+}
+
+export interface TicketTypeResponse {
+  id: number;
+  nombre: string;
 }
 
 export interface UserResponse {

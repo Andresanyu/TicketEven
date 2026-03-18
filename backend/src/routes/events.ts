@@ -1,5 +1,6 @@
 import { Router, Request, Response } from "express";
-import { EventUpsertInput } from "../models/types";
+import { PoolClient } from "pg";
+import { EventTicketTypeInput, EventUpsertInput } from "../models/types";
 import { pool } from "../config/database";
 import { authenticateToken, authorizeAdmin, AuthRequest } from "../middlewares/auth";
 
@@ -14,10 +15,95 @@ const EVENT_SELECT_QUERY = `
     e.valor,
     e.descripcion,
     e.imagen_url,
-    e.activo
+    e.activo,
+    COALESCE((
+      SELECT json_agg(
+        json_build_object(
+          'tipo_entrada_id', ett.tipo_entrada_id,
+          'nombre', te.nombre,
+          'aforo', ett.aforo
+        )
+        ORDER BY te.nombre ASC
+      )
+      FROM eventos_tipos_entrada ett
+      JOIN tipos_entrada te ON te.id = ett.tipo_entrada_id
+      WHERE ett.evento_id = e.id
+    ), '[]'::json) AS entradas
   FROM eventos e
   LEFT JOIN categorias c ON c.id = e.categoria_id
 `;
+
+function parseEntradas(value: unknown, required: boolean): { entradas: EventTicketTypeInput[] | null; error?: string } {
+  if (value === undefined || value === null) {
+    if (required) {
+      return { entradas: null, error: "El campo entradas es requerido" };
+    }
+    return { entradas: null };
+  }
+
+  if (!Array.isArray(value)) {
+    return { entradas: null, error: "El campo entradas debe ser un arreglo" };
+  }
+
+  if (required && value.length === 0) {
+    return { entradas: null, error: "Debe enviar al menos un tipo de entrada" };
+  }
+
+  const ids = new Set<number>();
+  const entradas: EventTicketTypeInput[] = [];
+
+  for (const item of value) {
+    const tipoEntradaId = Number((item as any)?.tipo_entrada_id);
+    const aforo = Number((item as any)?.aforo);
+
+    if (!Number.isInteger(tipoEntradaId) || tipoEntradaId <= 0) {
+      return { entradas: null, error: "Cada entrada debe incluir un tipo_entrada_id entero válido" };
+    }
+
+    if (!Number.isInteger(aforo) || aforo < 0) {
+      return { entradas: null, error: "Cada entrada debe incluir un aforo entero mayor o igual a 0" };
+    }
+
+    if (ids.has(tipoEntradaId)) {
+      return { entradas: null, error: "No se permiten tipos de entrada repetidos en el mismo evento" };
+    }
+
+    ids.add(tipoEntradaId);
+    entradas.push({ tipo_entrada_id: tipoEntradaId, aforo });
+  }
+
+  return { entradas };
+}
+
+async function validateTicketTypeIds(client: PoolClient, entradas: EventTicketTypeInput[]): Promise<number[]> {
+  const ids = Array.from(new Set(entradas.map((entrada) => entrada.tipo_entrada_id)));
+  if (ids.length === 0) {
+    return [];
+  }
+
+  const result = await client.query("SELECT id FROM tipos_entrada WHERE id = ANY($1::int[])", [ids]);
+  const existingIds = new Set(result.rows.map((row) => Number(row.id)));
+
+  return ids.filter((id) => !existingIds.has(id));
+}
+
+async function replaceEventTicketTypes(
+  client: PoolClient,
+  eventId: number,
+  entradas: EventTicketTypeInput[]
+): Promise<void> {
+  await client.query("DELETE FROM eventos_tipos_entrada WHERE evento_id = $1", [eventId]);
+
+  for (const entrada of entradas) {
+    await client.query(
+      `
+        INSERT INTO eventos_tipos_entrada (evento_id, tipo_entrada_id, aforo)
+        VALUES ($1, $2, $3)
+      `,
+      [eventId, entrada.tipo_entrada_id, entrada.aforo]
+    );
+  }
+}
 
 function parseCategoriaId(value: unknown): number | null {
   if (value === undefined || value === null || value === "") return null;
