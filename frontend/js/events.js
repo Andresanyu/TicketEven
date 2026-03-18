@@ -7,9 +7,12 @@ const state = {
   events: [],
   filtered: [],
   categories: [],
+  ticketTypes: [],
   modalMode: 'create',
   editingId: null,
 };
+
+let entradasSeleccionadas = [];
 
 const els = {
   sidebarName: document.getElementById('sidebarName'),
@@ -43,6 +46,16 @@ const els = {
   errCategoria: document.getElementById('err-categoria'),
   imgPreview: document.getElementById('imgPreview'),
   imgHint: document.getElementById('imgHint'),
+  selectTipoEntrada: document.getElementById('selectTipoEntrada'),
+  inputAforo: document.getElementById('inputAforo'),
+  btnAgregarEntrada: document.getElementById('btnAgregarEntrada'),
+  nuevoTipoWrap: document.getElementById('nuevoTipoWrap'),
+  inputNuevoTipo: document.getElementById('inputNuevoTipo'),
+  btnGuardarTipo: document.getElementById('btnGuardarTipo'),
+  entradasError: document.getElementById('entradasError'),
+  entradasList: document.getElementById('entradasList'),
+  entradasEmpty: document.getElementById('entradasEmpty'),
+  entradasBadge: document.getElementById('entradasBadge'),
 };
 
 const todayIso = () => new Date().toISOString().split('T')[0];
@@ -181,6 +194,8 @@ function formatFecha(fechaIso) {
 }
 
 function normalizeEvent(raw) {
+  const entradasRaw = Array.isArray(raw?.entradas) ? raw.entradas : [];
+
   return {
     id: Number(raw?.id),
     nombre: String(raw?.nombre ?? '').trim(),
@@ -191,7 +206,200 @@ function normalizeEvent(raw) {
     descripcion: String(raw?.descripcion ?? '').trim(),
     imagen_url: String(raw?.imagen_url ?? '').trim(),
     activo: raw?.activo !== false,
+    entradas: entradasRaw
+      .map((entrada) => ({
+        tipo_entrada_id: Number(entrada?.tipo_entrada_id),
+        nombre: String(entrada?.nombre ?? '').trim(),
+        aforo: Number(entrada?.aforo),
+      }))
+      .filter((entrada) => Number.isInteger(entrada.tipo_entrada_id) && entrada.tipo_entrada_id > 0 && Number.isInteger(entrada.aforo) && entrada.aforo >= 0),
   };
+}
+
+function clearEntradasError() {
+  if (!els.entradasError) return;
+  els.entradasError.textContent = '';
+  els.entradasError.classList.add('hidden');
+}
+
+function showEntradasError(message) {
+  if (!els.entradasError) return;
+  els.entradasError.textContent = message;
+  els.entradasError.classList.remove('hidden');
+}
+
+function renderEntradasList() {
+  if (!els.entradasList || !els.entradasEmpty || !els.entradasBadge) return;
+
+  els.entradasBadge.textContent = String(entradasSeleccionadas.length);
+
+  if (!entradasSeleccionadas.length) {
+    els.entradasList.innerHTML = '';
+    els.entradasList.classList.add('hidden');
+    els.entradasEmpty.classList.remove('hidden');
+    return;
+  }
+
+  els.entradasEmpty.classList.add('hidden');
+  els.entradasList.classList.remove('hidden');
+  els.entradasList.innerHTML = entradasSeleccionadas
+    .map(
+      (entrada) => `
+      <li class="entrada-item" data-id="${entrada.tipo_entrada_id}">
+        <div class="entrada-item-left">
+          <span class="entrada-tipo">${escapeHtml(entrada.nombre)}</span>
+          <span class="entrada-sep">·</span>
+          <span class="entrada-aforo">${entrada.aforo.toLocaleString('es-CO')} entradas</span>
+        </div>
+        <button type="button" class="btn-remove-entrada" data-action="remove-entry" data-id="${entrada.tipo_entrada_id}" title="Eliminar">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="3 6 5 6 21 6"/>
+            <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+            <path d="M10 11v6M14 11v6"/>
+            <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
+          </svg>
+        </button>
+      </li>`
+    )
+    .join('');
+}
+
+function resetEntradasSection() {
+  entradasSeleccionadas = [];
+  clearEntradasError();
+  renderEntradasList();
+
+  if (els.selectTipoEntrada) els.selectTipoEntrada.value = '';
+  if (els.inputAforo) els.inputAforo.value = '';
+  if (els.inputNuevoTipo) els.inputNuevoTipo.value = '';
+  els.nuevoTipoWrap?.classList.add('hidden');
+}
+
+async function loadTicketTypes(selectedId = null) {
+  try {
+    const data = await api.get('/ticket-types', Auth.authOptions());
+    console.log('Respuesta del backend (ticket-types):', data);
+
+    // Manejar respuestas posibles: array directo o envuelto en objeto
+    let typesArray = [];
+    if (Array.isArray(data)) {
+      typesArray = data;
+    } else if (data && typeof data === 'object' && Array.isArray(data.tipos)) {
+      // Si viene envuelto como { tipos: [...] }
+      typesArray = data.tipos;
+    } else if (data && typeof data === 'object' && Array.isArray(data.data)) {
+      // Si viene envuelto como { data: [...] }
+      typesArray = data.data;
+    }
+
+    state.ticketTypes = typesArray
+      .map((t) => ({ id: Number(t.id), nombre: String(t.nombre || '').trim() }))
+      .filter((t) => Number.isInteger(t.id) && t.id > 0 && t.nombre);
+
+    console.log('Tipos de entrada procesados en state:', state.ticketTypes);
+
+    if (!els.selectTipoEntrada) return;
+
+    els.selectTipoEntrada.innerHTML = '<option value="">— Tipo de entrada —</option>';
+
+    state.ticketTypes.forEach((type) => {
+      const option = document.createElement('option');
+      option.value = String(type.id); // Siempre string en HTML
+      option.textContent = type.nombre;
+      els.selectTipoEntrada.appendChild(option);
+    });
+
+    const createOption = document.createElement('option');
+    createOption.value = 'new';
+    createOption.textContent = '+ Crear nuevo tipo...';
+    els.selectTipoEntrada.appendChild(createOption);
+
+    if (selectedId != null) {
+      els.selectTipoEntrada.value = String(selectedId);
+    }
+  } catch (err) {
+    console.error('Error cargando tipos de entrada:', err);
+    await notifyError('Error de tipos de entrada', 'No se pudieron cargar los tipos de entrada.');
+  }
+}
+
+function fillEntradasFromEvent(eventData) {
+  entradasSeleccionadas = Array.isArray(eventData?.entradas)
+    ? eventData.entradas
+        .map((entrada) => ({
+          tipo_entrada_id: Number(entrada.tipo_entrada_id),
+          nombre: String(entrada.nombre || '').trim(),
+          aforo: Number(entrada.aforo),
+        }))
+        .filter((entrada) => Number.isInteger(entrada.tipo_entrada_id) && entrada.tipo_entrada_id > 0 && Number.isInteger(entrada.aforo) && entrada.aforo >= 0)
+    : [];
+
+  clearEntradasError();
+  renderEntradasList();
+}
+
+function addEntradaToList() {
+  const selectedRaw = String(els.selectTipoEntrada?.value ?? '').trim();
+  const aforoRaw = String(els.inputAforo?.value ?? '').trim();
+
+  console.log('DEBUG addEntradaToList - selectedRaw:', selectedRaw, 'aforoRaw:', aforoRaw);
+
+  if (!selectedRaw || selectedRaw === 'new') {
+    showEntradasError('Selecciona un tipo de entrada valido.');
+    return;
+  }
+
+  const tipoEntradaId = Number(selectedRaw);
+  console.log('DEBUG - tipoEntradaId parseado:', tipoEntradaId, 'es integer:', Number.isInteger(tipoEntradaId));
+  console.log('DEBUG - state.ticketTypes actual:', state.ticketTypes);
+
+  if (!Number.isInteger(tipoEntradaId) || tipoEntradaId <= 0) {
+    showEntradasError('El tipo de entrada seleccionado no es valido.');
+    return;
+  }
+
+  const aforo = Number(aforoRaw);
+  if (!Number.isInteger(aforo) || aforo <= 0) {
+    showEntradasError('Ingresa un aforo entero mayor a 0.');
+    return;
+  }
+
+  // Búsqueda robusta comparando números
+  const selectedType = state.ticketTypes.find((type) => {
+    const typeId = Number(type.id);
+    console.log('DEBUG - Comparando typeId:', typeId, 'con tipoEntradaId:', tipoEntradaId, 'son iguales:', typeId === tipoEntradaId);
+    return typeId === tipoEntradaId;
+  });
+
+  if (!selectedType) {
+    console.error('Tipo no encontrado. tipoEntradaId:', tipoEntradaId, 'tipos disponibles:', state.ticketTypes);
+    showEntradasError('No se encontro el tipo de entrada seleccionado.');
+    return;
+  }
+
+  clearEntradasError();
+
+  const existing = entradasSeleccionadas.find((entrada) => entrada.tipo_entrada_id === tipoEntradaId);
+  if (existing) {
+    existing.aforo += aforo;
+  } else {
+    entradasSeleccionadas.push({
+      tipo_entrada_id: tipoEntradaId,
+      nombre: selectedType.nombre,
+      aforo,
+    });
+  }
+
+  console.log('DEBUG - Entrada agregada. entradasSeleccionadas:', entradasSeleccionadas);
+  renderEntradasList();
+  if (els.selectTipoEntrada) els.selectTipoEntrada.value = '';
+  if (els.inputAforo) els.inputAforo.value = '';
+}
+
+function removeEntrada(tipoEntradaId) {
+  const id = Number(tipoEntradaId);
+  entradasSeleccionadas = entradasSeleccionadas.filter((entrada) => entrada.tipo_entrada_id !== id);
+  renderEntradasList();
 }
 
 function renderCount() {
@@ -284,6 +492,10 @@ function toEventPayload() {
     descripcion: descripcion || null,
     imagen_url: imagenUrl || null,
     activo,
+    entradas: entradasSeleccionadas.map((entrada) => ({
+      tipo_entrada_id: entrada.tipo_entrada_id,
+      aforo: entrada.aforo,
+    })),
   };
 }
 
@@ -338,6 +550,7 @@ function resetForm() {
   if (els.modalValor) els.modalValor.value = '';
   if (els.modalEstado) els.modalEstado.value = 'true';
   renderImagePreview('');
+  resetEntradasSection();
   clearValidationErrors();
 }
 
@@ -359,9 +572,21 @@ function openCreateModal() {
   setTimeout(() => els.modalTitulo?.focus(), 60);
 }
 
-function openEditModal(eventId) {
+async function openEditModal(eventId) {
   const id = Number(eventId);
-  const eventData = state.events.find((ev) => ev.id === id);
+  if (!id) return;
+
+  let eventData = state.events.find((ev) => ev.id === id);
+
+  try {
+    const detailed = await api.get(`/events/${id}`, Auth.authOptions());
+    eventData = normalizeEvent(detailed);
+  } catch (err) {
+    console.error(err);
+    await notifyError('Error de evento', 'No se pudo cargar la informacion completa del evento.');
+    return;
+  }
+
   if (!eventData) return;
 
   state.modalMode = 'edit';
@@ -385,6 +610,7 @@ function openEditModal(eventId) {
   if (els.modalValor) els.modalValor.value = eventData.valor == null ? '' : String(eventData.valor);
   if (els.modalEstado) els.modalEstado.value = String(eventData.activo);
   renderImagePreview(eventData.imagen_url);
+  fillEntradasFromEvent(eventData);
 
   clearValidationErrors();
   if (els.modalEyebrow) els.modalEyebrow.textContent = `Editando #${String(id).padStart(2, '0')}`;
@@ -412,6 +638,12 @@ async function saveEvent() {
     if (String(payload.fecha || '').split('T')[0] < todayIso()) {
       await notifyError('Fecha invalida', 'No se pueden crear eventos en fechas pasadas.');
     }
+    return;
+  }
+
+  if (!payload.entradas.length) {
+    showEntradasError('Agrega al menos un tipo de entrada con aforo.');
+    await notifyError('Entradas requeridas', 'Debes agregar al menos un tipo de entrada antes de guardar.');
     return;
   }
 
@@ -495,7 +727,7 @@ function handleTableClick(event) {
   if (!id) return;
 
   if (action === 'edit') {
-    openEditModal(id);
+    void openEditModal(id);
     return;
   }
 
@@ -523,6 +755,48 @@ function bindEvents() {
 
   els.modalImagen?.addEventListener('input', () => renderImagePreview(els.modalImagen?.value));
 
+  els.selectTipoEntrada?.addEventListener('change', () => {
+    const isNewType = String(els.selectTipoEntrada?.value ?? '') === 'new';
+    els.nuevoTipoWrap?.classList.toggle('hidden', !isNewType);
+
+    if (!isNewType && els.inputNuevoTipo) {
+      els.inputNuevoTipo.value = '';
+    }
+
+    clearEntradasError();
+  });
+
+  els.btnGuardarTipo?.addEventListener('click', async () => {
+    const nombre = String(els.inputNuevoTipo?.value ?? '').trim();
+    if (!nombre) {
+      showEntradasError('Ingresa un nombre para el nuevo tipo de entrada.');
+      return;
+    }
+
+    try {
+      const created = await api.post('/ticket-types', { nombre }, Auth.authOptions());
+      const newId = Number(created?.id);
+
+      await loadTicketTypes(Number.isInteger(newId) ? newId : null);
+
+      if (els.inputNuevoTipo) els.inputNuevoTipo.value = '';
+      els.nuevoTipoWrap?.classList.add('hidden');
+      clearEntradasError();
+      await notifySuccess('Tipo de entrada creado correctamente');
+    } catch (err) {
+      console.error(err);
+      await notifyError('Error al crear tipo', err?.message || 'No fue posible crear el tipo de entrada.');
+    }
+  });
+
+  els.btnAgregarEntrada?.addEventListener('click', addEntradaToList);
+
+  els.entradasList?.addEventListener('click', (event) => {
+    const trigger = event.target.closest('button[data-action="remove-entry"][data-id]');
+    if (!trigger) return;
+    removeEntrada(Number(trigger.dataset.id));
+  });
+
   document.addEventListener('keydown', (event) => {
     if (event.key === 'Escape') closeModal();
   });
@@ -533,6 +807,7 @@ setAdminIdentity();
 
 async function init() {
   await loadCategories();
+  await loadTicketTypes();
   await loadEvents();
 }
 

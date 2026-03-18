@@ -10,6 +10,16 @@ INSERT INTO categorias (nombre) VALUES
     ('Conferencia')
 ON CONFLICT (nombre) DO NOTHING;
 
+INSERT INTO tipos_entrada (nombre) VALUES 
+('Entrada General'),
+('VIP'),
+('Estudiante'),
+('Niño'),
+('Adulto Mayor'),
+('Grupo (10+)'),
+('Invitado Especial')
+ON CONFLICT (nombre) DO NOTHING;
+
 INSERT INTO eventos (nombre, categoria_id, fecha, valor, descripcion, imagen_url, activo)
 VALUES 
     ('Concierto Rock Local', 2, '2026-03-15 20:00:00', 45000, 'Gran concierto de bandas locales.', 'https://picsum.photos/id/117/300/200', true),
@@ -49,3 +59,71 @@ VALUES
 (2, 3),
 (3, 2),
 (3, 4);
+
+-- Vincular eventos con tipos de entrada (eventos_tipos_entrada)
+INSERT INTO eventos_tipos_entrada (evento_id, tipo_entrada_id, aforo)
+VALUES 
+    -- Concierto Rock Local (evento 1): General y VIP
+    (1, 1, 300),   -- General: 300 entradas
+    (1, 2, 50),    -- VIP: 50 entradas
+    -- Obra de Teatro: Hamlet (evento 2): General, Estudiante y VIP
+    (2, 1, 150),   -- General: 150 entradas
+    (2, 3, 80),    -- Estudiante: 80 entradas
+    (2, 2, 30),    -- VIP: 30 entradas
+    -- Final de Microfútbol (evento 3): General y Grupo
+    (3, 1, 200),   -- General: 200 entradas
+    (3, 6, 100),   -- Grupo (10+): 100 entradas
+    -- Exposición Acuarelas (evento 4): General, Estudiante y Niño (libre acceso)
+    (4, 1, 500),   -- General: 500 entradas
+    (4, 3, 200),   -- Estudiante: 200 entradas
+    (4, 4, 150),   -- Niño: 150 entradas
+    -- Tech Meetup Tunja (evento 5): General y Estudiante
+    (5, 1, 100),   -- General: 100 entradas
+    (5, 3, 100),   -- Estudiante: 100 entradas
+    -- Stand Up: Noche de Risas (evento 6): General y VIP
+    (6, 1, 250),   -- General: 250 entradas
+    (6, 2, 40),    -- VIP: 40 entradas
+    -- Festival Gastronómico (evento 7): General, Familia y Grupo
+    (7, 1, 400),   -- General: 400 entradas
+    (7, 6, 150),   -- Grupo (10+): 150 entradas
+    -- Jazz en el Parque (evento 8): General (libre acceso)
+    (8, 1, 1000),  -- General: 1000 entradas (al aire libre)
+    -- Musical Infantil (evento 9): General, Niño y Adulto Mayor
+    (9, 1, 180),   -- General: 180 entradas
+    (9, 4, 100),   -- Niño: 100 entradas
+    (9, 5, 50),    -- Adulto Mayor: 50 entradas
+    -- Maratón 10K (evento 10): General y Adulto Mayor
+    (10, 1, 500),  -- General: 500 entradas
+    (10, 5, 100),  -- Adulto Mayor: 100 entradas
+    -- Taller de Fotografía (evento 11): Estudiante y General
+    (11, 3, 40),   -- Estudiante: 40 entradas
+    (11, 1, 20),   -- General: 20 entradas
+    -- Hackathon Universitaria (evento 12): Estudiante (libre acceso)
+    (12, 3, 200),  -- Estudiante: 200 entradas
+    -- Monólogo: Vida Godín (evento 13): General y VIP
+    (13, 1, 300),  -- General: 300 entradas
+    (13, 2, 50),   -- VIP: 50 entradas
+    -- Feria del Libro (evento 14): General, Estudiante y Niño
+    (14, 1, 400),  -- General: 400 entradas
+    (14, 3, 150),  -- Estudiante: 150 entradas
+    (14, 4, 100),  -- Niño: 100 entradas
+    -- Recital de Piano (evento 15): General y VIP
+    (15, 1, 200),  -- General: 200 entradas
+    (15, 2, 80),   -- VIP: 80 entradas
+    -- Títeres: El Bosque (evento 16): Niño (evento inactivo)
+    (16, 4, 120),  -- Niño: 120 entradas
+    -- Torneo de Ajedrez (evento 17): General y Estudiante
+    (17, 1, 100),  -- General: 100 entradas
+    (17, 3, 80),   -- Estudiante: 80 entradas
+    -- Museo de Historia (evento 18): General, Estudiante y Niño (libre acceso)
+    (18, 1, 800),  -- General: 800 entradas
+    (18, 3, 300),  -- Estudiante: 300 entradas
+    (18, 4, 200),  -- Niño: 200 entradas
+    -- Conferencia IA 2026 (evento 19): General, Estudiante y VIP
+    (19, 1, 200),  -- General: 200 entradas
+    (19, 3, 150),  -- Estudiante: 150 entradas
+    (19, 2, 100),  -- VIP: 100 entradas
+    -- Fiesta de Fin de Año (evento 20): General y VIP
+    (20, 1, 500),  -- General: 500 entradas
+    (20, 2, 100)   -- VIP: 100 entradas
+ON CONFLICT (evento_id, tipo_entrada_id) DO NOTHING;

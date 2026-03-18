@@ -30,3 +30,19 @@ CREATE TABLE saved_events (
     saved_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (user_id, event_id)
 );
+
+CREATE TABLE tipos_entrada (
+    id SERIAL PRIMARY KEY,
+    nombre VARCHAR(100) NOT NULL UNIQUE
+);
+
+CREATE TABLE eventos_tipos_entrada (
+    id SERIAL PRIMARY KEY,
+    evento_id INTEGER NOT NULL REFERENCES eventos(id) ON DELETE CASCADE,
+    tipo_entrada_id INTEGER NOT NULL REFERENCES tipos_entrada(id) ON DELETE CASCADE,
+    aforo INTEGER NOT NULL CHECK (aforo >= 0),
+    UNIQUE(evento_id, tipo_entrada_id)
+);
+
+CREATE INDEX idx_eventos_tipos_entrada_evento_id ON eventos_tipos_entrada(evento_id);
+CREATE INDEX idx_eventos_tipos_entrada_tipo_entrada_id ON eventos_tipos_entrada(tipo_entrada_id);
