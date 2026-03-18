@@ -284,6 +284,105 @@
           </div>
 
         </div>
+        <!-- ── Sección de entradas — span full width del grid ── -->
+<div class="entradas-section">
+ 
+  <!-- Subtítulo de sección -->
+  <div class="entradas-header">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <path d="M2 12l3-9h14l3 9"/>
+      <rect x="2" y="12" width="20" height="7" rx="2"/>
+      <line x1="12" y1="12" x2="12" y2="19"/>
+      <circle cx="7"  cy="15.5" r="1" fill="currentColor" stroke="none"/>
+      <circle cx="17" cy="15.5" r="1" fill="currentColor" stroke="none"/>
+    </svg>
+    Tipos de Entrada y Aforo
+    <span class="entradas-badge" id="entradasBadge">0</span>
+  </div>
+ 
+  <!-- Fila de controles -->
+  <div class="entradas-controls">
+ 
+    <!-- Select tipo de entrada -->
+    <div class="entradas-field entradas-field--type">
+      <div class="select-wrap">
+        <!--
+          👉 Tu JS llenará las <option> desde la API /entry-types.
+             La opción value="new" SIEMPRE debe quedar al final.
+        -->
+        <select id="selectTipoEntrada" class="field-input field-select entradas-select">
+          <option value="">— Tipo de entrada —</option>
+          <option value="1">General</option>
+          <option value="2">VIP</option>
+          <option value="3">Estudiante</option>
+          <option value="new">+ Crear nuevo tipo…</option>
+        </select>
+        <svg class="select-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="6 9 12 15 18 9"/>
+        </svg>
+      </div>
+    </div>
+ 
+    <!-- Input aforo -->
+    <div class="entradas-field entradas-field--aforo">
+      <input
+        type="number"
+        id="inputAforo"
+        class="field-input"
+        placeholder="Aforo"
+        min="1"
+        max="999999"
+      >
+    </div>
+ 
+    <!-- Botón agregar -->
+    <button type="button" class="btn-add-entrada" id="btnAgregarEntrada">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <line x1="12" y1="5" x2="12" y2="19"/>
+        <line x1="5"  y1="12" x2="19" y2="12"/>
+      </svg>
+      Agregar
+    </button>
+ 
+  </div><!-- /entradas-controls -->
+ 
+  <!-- Input nuevo tipo (oculto por defecto) -->
+  <div class="nuevo-tipo-wrap hidden" id="nuevoTipoWrap">
+    <input
+      type="text"
+      id="inputNuevoTipo"
+      class="field-input"
+      placeholder="Nombre del nuevo tipo de entrada"
+      maxlength="60"
+    >
+    <button type="button" class="btn-guardar-tipo" id="btnGuardarTipo">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <polyline points="20 6 9 17 4 12"/>
+      </svg>
+      Guardar tipo
+    </button>
+  </div>
+ 
+  <!-- Error inline de la sección -->
+  <span class="entradas-error hidden" id="entradasError"></span>
+ 
+  <!-- Lista / "carrito" de entradas agregadas -->
+  <div class="entradas-list-wrap" id="entradasListWrap">
+    <!-- Estado vacío (visible mientras no hay ítems) -->
+    <div class="entradas-empty" id="entradasEmpty">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2">
+        <path d="M2 12l3-9h14l3 9"/>
+        <rect x="2" y="12" width="20" height="7" rx="2"/>
+        <line x1="12" y1="12" x2="12" y2="19"/>
+      </svg>
+      Aún no has agregado tipos de entrada
+    </div>
+ 
+    <!-- La lista se llena dinámicamente con JS -->
+    <ul class="entradas-list hidden" id="entradasList"></ul>
+  </div>
+ 
+</div><!-- /entradas-section -->
       </div><!-- /modal-body -->
 
       <!-- Footer -->

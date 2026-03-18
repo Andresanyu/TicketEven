@@ -37,8 +37,12 @@ CREATE TABLE tipos_entrada (
 );
 
 CREATE TABLE eventos_tipos_entrada (
+    id SERIAL PRIMARY KEY,
     evento_id INTEGER NOT NULL REFERENCES eventos(id) ON DELETE CASCADE,
-    tipo_entrada_id INTEGER NOT NULL REFERENCES tipos_entrada(id) ON DELETE RESTRICT,
+    tipo_entrada_id INTEGER NOT NULL REFERENCES tipos_entrada(id) ON DELETE CASCADE,
     aforo INTEGER NOT NULL CHECK (aforo >= 0),
-    PRIMARY KEY (evento_id, tipo_entrada_id)
+    UNIQUE(evento_id, tipo_entrada_id)
 );
+
+CREATE INDEX idx_eventos_tipos_entrada_evento_id ON eventos_tipos_entrada(evento_id);
+CREATE INDEX idx_eventos_tipos_entrada_tipo_entrada_id ON eventos_tipos_entrada(tipo_entrada_id);

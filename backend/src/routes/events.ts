@@ -163,11 +163,28 @@ router.get("/:id", async (req: Request, res: Response) => {
   }
 
   try {
-    const result = await pool.query(`${EVENT_SELECT_QUERY} WHERE e.id = $1`, [id]);
-    if (result.rowCount === 0) {
+    const eventResult = await pool.query(`${EVENT_SELECT_QUERY} WHERE e.id = $1`, [id]);
+    if (eventResult.rowCount === 0) {
       return res.status(404).json({ error: "Evento no encontrado" });
     }
-    res.json(result.rows[0]);
+
+    const event = eventResult.rows[0];
+
+    // Fetch associated ticket entries
+    const entradasResult = await pool.query(
+      `SELECT
+        ete.tipo_entrada_id,
+        tt.nombre,
+        ete.aforo
+      FROM eventos_tipos_entrada ete
+      INNER JOIN tipos_entrada tt ON tt.id = ete.tipo_entrada_id
+      WHERE ete.evento_id = $1
+      ORDER BY ete.tipo_entrada_id ASC`,
+      [id]
+    );
+
+    event.entradas = entradasResult.rows;
+    res.json(event);
   } catch (err) {
     console.error("Error fetching event by id:", err);
     res.status(500).json({ error: "Error al obtener el evento" });
@@ -214,7 +231,7 @@ router.post("/:id/save", authenticateToken, async (req: AuthRequest, res: Respon
 });
 
 router.post("/", authenticateToken, authorizeAdmin, async (req: Request, res: Response) => {
-  const { nombre, categoria_id, fecha, valor, descripcion, imagen_url, activo, entradas } = req.body as EventUpsertInput;
+  const { nombre, categoria_id, fecha, valor, descripcion, imagen_url, activo, entradas } = req.body as EventUpsertInput & { entradas?: any[] };
 
   if (!nombre || !String(nombre).trim()) {
     return res.status(400).json({ error: "El campo nombre es requerido" });
@@ -231,30 +248,36 @@ router.post("/", authenticateToken, authorizeAdmin, async (req: Request, res: Re
   }
 
   const normalizedActivo = activo === undefined ? true : Boolean(activo);
-  const normalizedFecha = fecha ? new Date(fecha) : null;
+  const normalizedFecha = fecha ? String(fecha) : null;
 
-  if (normalizedFecha && Number.isNaN(normalizedFecha.getTime())) {
-    return res.status(400).json({ error: "El campo fecha es inválido" });
+  // Validate entradas array
+  const entradasArray = Array.isArray(entradas) ? entradas : [];
+  const validatedEntradas: Array<{ tipo_entrada_id: number; aforo: number }> = [];
+  
+  for (const entrada of entradasArray) {
+    const tipoEntradaId = Number(entrada?.tipo_entrada_id);
+    const aforo = Number(entrada?.aforo);
+    
+    if (!Number.isInteger(tipoEntradaId) || tipoEntradaId <= 0) {
+      return res.status(400).json({ error: "Invalid tipo_entrada_id in entradas array" });
+    }
+    
+    if (!Number.isInteger(aforo) || aforo < 0) {
+      return res.status(400).json({ error: "Invalid aforo in entradas array" });
+    }
+    
+    validatedEntradas.push({ tipo_entrada_id: tipoEntradaId, aforo });
   }
 
-  const parsedEntradas = parseEntradas(entradas, true);
-  if (parsedEntradas.error) {
-    return res.status(400).json({ error: parsedEntradas.error });
+  if (validatedEntradas.length === 0) {
+    return res.status(400).json({ error: "At least one entrada is required" });
   }
 
   const client = await pool.connect();
-
   try {
     await client.query("BEGIN");
 
-    const invalidTicketTypeIds = await validateTicketTypeIds(client, parsedEntradas.entradas ?? []);
-    if (invalidTicketTypeIds.length > 0) {
-      await client.query("ROLLBACK");
-      return res.status(400).json({
-        error: `Tipos de entrada no válidos: ${invalidTicketTypeIds.join(", ")}`,
-      });
-    }
-
+    // Insert event
     const insertResult = await client.query(
       `
         INSERT INTO eventos (nombre, categoria_id, fecha, valor, descripcion, imagen_url, activo)
@@ -272,17 +295,50 @@ router.post("/", authenticateToken, authorizeAdmin, async (req: Request, res: Re
       ]
     );
 
-    const eventId = Number(insertResult.rows[0].id);
-    await replaceEventTicketTypes(client, eventId, parsedEntradas.entradas ?? []);
+    const eventId = insertResult.rows[0].id;
+
+    // Insert entradas
+    for (const entrada of validatedEntradas) {
+      await client.query(
+        `INSERT INTO eventos_tipos_entrada (evento_id, tipo_entrada_id, aforo)
+         VALUES ($1, $2, $3)`,
+        [eventId, entrada.tipo_entrada_id, entrada.aforo]
+      );
+    }
 
     await client.query("COMMIT");
 
-    const createdEvent = await pool.query(`${EVENT_SELECT_QUERY} WHERE e.id = $1`, [eventId]);
-    res.status(201).json(createdEvent.rows[0]);
-  } catch (err) {
-    await client.query("ROLLBACK");
-    console.error("Error inserting event:", err);
-    res.status(500).json({ error: "Error al crear el evento" });
+    // Fetch created event with entradas
+    const entradasResult = await client.query(
+      `SELECT
+        ete.tipo_entrada_id,
+        tt.nombre,
+        ete.aforo
+      FROM eventos_tipos_entrada ete
+      INNER JOIN tipos_entrada tt ON tt.id = ete.tipo_entrada_id
+      WHERE ete.evento_id = $1
+      ORDER BY ete.tipo_entrada_id ASC`,
+      [eventId]
+    );
+
+    const createdEvent = await client.query(`${EVENT_SELECT_QUERY} WHERE e.id = $1`, [eventId]);
+    if (!createdEvent.rows[0]) {
+      throw new Error("Failed to fetch created event");
+    }
+
+    const result = createdEvent.rows[0];
+    result.entradas = entradasResult.rows;
+
+    res.status(201).json(result);
+  } catch (err: any) {
+    try {
+      await client.query("ROLLBACK");
+    } catch (rollbackErr) {
+      console.error("Error during ROLLBACK:", rollbackErr);
+    }
+    console.error("Error creating event:", err?.message || err);
+    console.error("Full error:", err);
+    res.status(500).json({ error: "Error al crear el evento", details: err?.message });
   } finally {
     client.release();
   }
@@ -294,7 +350,7 @@ router.put("/:id", authenticateToken, authorizeAdmin, async (req: Request, res: 
     return res.status(400).json({ error: "ID de evento inválido" });
   }
 
-  const { nombre, categoria_id, fecha, valor, descripcion, imagen_url, activo, entradas } = req.body as EventUpsertInput;
+  const { nombre, categoria_id, fecha, valor, descripcion, imagen_url, activo, entradas } = req.body as EventUpsertInput & { entradas?: any[] };
 
   if (!nombre || !String(nombre).trim()) {
     return res.status(400).json({ error: "El campo nombre es requerido" });
@@ -310,21 +366,36 @@ router.put("/:id", authenticateToken, authorizeAdmin, async (req: Request, res: 
     return res.status(400).json({ error: "El campo valor debe ser numérico" });
   }
 
-  const normalizedFecha = fecha ? new Date(fecha) : null;
-  if (normalizedFecha && Number.isNaN(normalizedFecha.getTime())) {
-    return res.status(400).json({ error: "El campo fecha es inválido" });
+  const normalizedFecha = fecha ? String(fecha) : null;
+
+  // Validate entradas array
+  const entradasArray = Array.isArray(entradas) ? entradas : [];
+  const validatedEntradas: Array<{ tipo_entrada_id: number; aforo: number }> = [];
+  
+  for (const entrada of entradasArray) {
+    const tipoEntradaId = Number(entrada?.tipo_entrada_id);
+    const aforo = Number(entrada?.aforo);
+    
+    if (!Number.isInteger(tipoEntradaId) || tipoEntradaId <= 0) {
+      return res.status(400).json({ error: "Invalid tipo_entrada_id in entradas array" });
+    }
+    
+    if (!Number.isInteger(aforo) || aforo < 0) {
+      return res.status(400).json({ error: "Invalid aforo in entradas array" });
+    }
+    
+    validatedEntradas.push({ tipo_entrada_id: tipoEntradaId, aforo });
   }
 
-  const parsedEntradas = parseEntradas(entradas, false);
-  if (parsedEntradas.error) {
-    return res.status(400).json({ error: parsedEntradas.error });
+  if (validatedEntradas.length === 0) {
+    return res.status(400).json({ error: "At least one entrada is required" });
   }
 
   const client = await pool.connect();
-
   try {
     await client.query("BEGIN");
 
+    // Update event
     const updateResult = await client.query(
       `
         UPDATE eventos
@@ -356,26 +427,47 @@ router.put("/:id", authenticateToken, authorizeAdmin, async (req: Request, res: 
       return res.status(404).json({ error: "Evento no encontrado" });
     }
 
-    if (parsedEntradas.entradas !== null) {
-      const invalidTicketTypeIds = await validateTicketTypeIds(client, parsedEntradas.entradas);
-      if (invalidTicketTypeIds.length > 0) {
-        await client.query("ROLLBACK");
-        return res.status(400).json({
-          error: `Tipos de entrada no válidos: ${invalidTicketTypeIds.join(", ")}`,
-        });
-      }
+    // Delete old entradas
+    await client.query("DELETE FROM eventos_tipos_entrada WHERE evento_id = $1", [id]);
 
-      await replaceEventTicketTypes(client, id, parsedEntradas.entradas);
+    // Insert new entradas
+    for (const entrada of validatedEntradas) {
+      await client.query(
+        `INSERT INTO eventos_tipos_entrada (evento_id, tipo_entrada_id, aforo)
+         VALUES ($1, $2, $3)`,
+        [id, entrada.tipo_entrada_id, entrada.aforo]
+      );
     }
 
     await client.query("COMMIT");
 
-    const updatedEvent = await pool.query(`${EVENT_SELECT_QUERY} WHERE e.id = $1`, [id]);
-    res.json(updatedEvent.rows[0]);
-  } catch (err) {
-    await client.query("ROLLBACK");
-    console.error("Error updating event:", err);
-    res.status(500).json({ error: "Error al actualizar el evento" });
+    // Fetch updated event with entradas
+    const entradasResult = await client.query(
+      `SELECT
+        ete.tipo_entrada_id,
+        tt.nombre,
+        ete.aforo
+      FROM eventos_tipos_entrada ete
+      INNER JOIN tipos_entrada tt ON tt.id = ete.tipo_entrada_id
+      WHERE ete.evento_id = $1
+      ORDER BY ete.tipo_entrada_id ASC`,
+      [id]
+    );
+
+    const updatedEvent = await client.query(`${EVENT_SELECT_QUERY} WHERE e.id = $1`, [id]);
+    const result = updatedEvent.rows[0];
+    result.entradas = entradasResult.rows;
+
+    res.json(result);
+  } catch (err: any) {
+    try {
+      await client.query("ROLLBACK");
+    } catch (rollbackErr) {
+      console.error("Error during ROLLBACK:", rollbackErr);
+    }
+    console.error("Error updating event:", err?.message || err);
+    console.error("Full error:", err);
+    res.status(500).json({ error: "Error al actualizar el evento", details: err?.message });
   } finally {
     client.release();
   }

@@ -549,3 +549,250 @@ a { text-decoration: none; color: inherit; }
   .modal-col + .modal-col { margin-top: 18px; }
   .modal-header, .modal-body, .modal-footer { padding-left: 18px; padding-right: 18px; }
 }
+
+/* ══════════════════════════════════════════════════════
+   RF-18 · Tipos de Entrada y Aforo
+   Pega esto al final de events_admin.css
+   ══════════════════════════════════════════════════════ */
+
+/*
+  La .entradas-section está dentro de .modal-body que usa
+  grid-template-columns: 1fr 1fr. Para que ocupe el ancho
+  completo del modal (ambas columnas) usamos grid-column: 1 / -1.
+*/
+
+/* ── Contenedor general ── */
+.entradas-section {
+  grid-column: 1 / -1;           /* span full width del grid de 2 cols */
+  border-top: 1px solid var(--border);
+  padding-top: 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+/* ── Subtítulo de sección ── */
+.entradas-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: 'Syne', sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1.1px;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.entradas-header svg {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+  color: var(--accent-dim);
+}
+
+/* Badge contador */
+.entradas-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 999px;
+  background: rgba(198,241,53,.12);
+  color: var(--accent);
+  font-size: 10px;
+  font-weight: 700;
+  font-family: 'Syne', sans-serif;
+  border: 1px solid rgba(198,241,53,.2);
+  line-height: 1;
+}
+
+/* ── Fila de controles ── */
+.entradas-controls {
+  display: grid;
+  grid-template-columns: 1fr 120px auto;
+  gap: 10px;
+  align-items: center;
+}
+
+.entradas-field { display: flex; flex-direction: column; }
+
+/* Reusa .field-input de events_admin.css — sin CSS extra necesario */
+
+/* Botón "Agregar" — outline verde neón */
+.btn-add-entrada {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  background: transparent;
+  color: var(--accent);
+  border: 1px solid rgba(198,241,53,.4);
+  border-radius: 9px;
+  padding: 10px 16px;
+  font-family: 'Syne', sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background .18s, border-color .18s, box-shadow .18s, transform .15s;
+}
+.btn-add-entrada svg { width: 13px; height: 13px; flex-shrink: 0; }
+.btn-add-entrada:hover {
+  background: rgba(198,241,53,.08);
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(198,241,53,.07);
+  transform: translateY(-1px);
+}
+.btn-add-entrada:active { transform: translateY(0); }
+
+/* ── Input nuevo tipo (oculto por defecto) ── */
+.nuevo-tipo-wrap {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  animation: fadeUp .2s ease both;
+}
+
+.nuevo-tipo-wrap .field-input { flex: 1; }
+
+/* Botón "Guardar tipo" — pequeño y sutil */
+.btn-guardar-tipo {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--accent);
+  color: #111210;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-family: 'Syne', sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background .18s, transform .15s;
+}
+.btn-guardar-tipo svg { width: 12px; height: 12px; flex-shrink: 0; }
+.btn-guardar-tipo:hover { background: #d4ff3d; transform: translateY(-1px); }
+.btn-guardar-tipo:active { transform: translateY(0); }
+
+/* ── Error inline ── */
+.entradas-error {
+  font-size: 11.5px;
+  color: var(--red);
+  line-height: 1.3;
+}
+
+/* ── Zona de la lista / "carrito" ── */
+.entradas-list-wrap {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  overflow: hidden;
+  min-height: 64px;
+  background: var(--bg-card-2);
+}
+
+/* Estado vacío */
+.entradas-empty {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 16px 18px;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+.entradas-empty svg {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  opacity: .45;
+}
+
+/* Lista de ítems */
+.entradas-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+/* Cada ítem del carrito */
+.entrada-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 11px 16px;
+  border-bottom: 1px solid var(--border);
+  transition: background .14s;
+  animation: fadeUp .2s ease both;
+}
+.entrada-item:last-child { border-bottom: none; }
+.entrada-item:hover { background: rgba(198,241,53,.03); }
+
+.entrada-item-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.entrada-tipo {
+  font-family: 'Syne', sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.entrada-sep {
+  color: var(--text-muted);
+  font-size: 14px;
+  flex-shrink: 0;
+}
+
+.entrada-aforo {
+  font-size: 12px;
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+
+/* Botón eliminar ítem */
+.btn-remove-entrada {
+  width: 28px;
+  height: 28px;
+  border-radius: 7px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text-muted);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background .15s, color .15s, border-color .15s, transform .15s;
+}
+.btn-remove-entrada svg { width: 12px; height: 12px; }
+.btn-remove-entrada:hover {
+  background: var(--red-subtle);
+  color: var(--red);
+  border-color: rgba(224,92,92,.3);
+  transform: scale(1.08);
+}
+
+/* ── Ajuste responsive: una columna en móvil ── */
+@media (max-width: 700px) {
+  .entradas-controls {
+    grid-template-columns: 1fr 90px;
+    grid-template-rows: auto auto;
+  }
+  /* El botón "Agregar" ocupa la segunda fila completa */
+  .btn-add-entrada {
+    grid-column: 1 / -1;
+    justify-content: center;
+  }
+}
