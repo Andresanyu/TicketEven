@@ -1,4 +1,4 @@
-import { Router, Request, Response } from "express";
+/* import { Router, Request, Response } from "express";
 import { PoolClient } from "pg";
 import { EventTicketTypeInput, EventUpsertInput } from "../models/types";
 import { pool } from "../config/database";
@@ -528,3 +528,5 @@ router.delete("/:id", authenticateToken, authorizeAdmin, async (req: Request, re
 });
 
 export default router;
+
+*/
