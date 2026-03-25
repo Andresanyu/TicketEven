@@ -1,6 +1,6 @@
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
-import { IUserRepository } from "./User.repository.interface";
+import { IUserRepository } from "./user.repository.interface";
 import { User, UserRow, SavedEventRow } from "./user.types";
 
 const SALT_ROUNDS = 10;

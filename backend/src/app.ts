@@ -3,7 +3,7 @@ import cors from "cors";
 import eventsRouter from "./routes/events";
 import categoriesRouter from "./routes/categories";
 import ticketTypesRouter from "./routes/ticket-types";
-import usersRouter from "./users/User.routes";
+import usersRouter from "./users/user.routes";
 
 const app = express();
 
