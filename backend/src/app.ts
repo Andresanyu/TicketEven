@@ -1,7 +1,7 @@
 import express from "express";
 import cors from "cors";
 import eventsRouter from "./routes/events";
-import categoriesRouter from "./routes/categories";
+import categoriesRouter from "./categories/category.routes";
 import ticketTypesRouter from "./routes/ticket-types";
 import usersRouter from "./users/user.routes";
 
