@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { UserService, NotFoundError, ConflictError, UnauthorizedError, ForbiddenError } from "./User.service";
+import { UserService, NotFoundError, ConflictError, UnauthorizedError, ForbiddenError } from "./user.service";
 import { AuthRequest } from "../middlewares/auth";
 
 export class UserController {

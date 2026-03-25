@@ -1,5 +1,5 @@
 import { Pool } from "pg";
-import { IUserRepository } from "./User.repository.interface";
+import { IUserRepository } from "./user.repository.interface";
 import { UserRow, SavedEventRow, CreateUserDTO } from "./user.types";
 
 const USERS_SELECT = `
