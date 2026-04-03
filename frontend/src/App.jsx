@@ -3,6 +3,7 @@ import Events from './components/Events';
 import AdminDashboard from './components/AdminDashboard';
 import Categories from './components/Categories';
 import EventDetail from './components/EventDetail';
+import Favorites from './components/Favorites';
 
 function App() {
   return (
@@ -15,6 +16,7 @@ function App() {
       <Route path="/admin_dashboard.html" element={<AdminDashboard />} />
       <Route path="/categories.html" element={<Categories />} />
       <Route path="/event_card.html" element={<EventDetail />} />
+      <Route path="/favorites.html" element={<Favorites />} />
       
       {/* Una ruta "comodín" por si alguien entra a una URL que no existe */}
       <Route path="*" element={<Sidebar activeItem="inicio" />} />
