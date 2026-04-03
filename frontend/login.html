@@ -7,41 +7,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500&family=Syne:wght@700;800&display=swap" rel="stylesheet"/>
   <link rel="stylesheet" href="css/auth.css"/>
-</head>
-<body>
-  <div class="card">
-
-    <div class="logo">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
-      </svg>
-      EventPro
-    </div>
-
-    <h1>Bienvenido</h1>
-    <p class="subtitle">¿No tienes cuenta? <a href="register.html">Regístrate</a></p>
-
-    <div class="alert error" id="alert"></div>
-
-    <div class="field">
-      <label for="email">Correo electrónico</label>
-      <input type="email" id="email" placeholder="tu@correo.com" autocomplete="email"/>
-      <span class="field-error" id="email-error">Ingresa un correo válido</span>
-    </div>
-
-    <div class="field">
-      <label for="password">Contraseña</label>
-      <input type="password" id="password" placeholder="••••••••" autocomplete="current-password"/>
-      <span class="field-error" id="password-error">La contraseña es obligatoria</span>
-    </div>
-
-    <button class="btn-submit" id="btn-login">
-      <div class="btn-spinner"></div>
-      <span class="btn-label">Iniciar sesión</span>
-    </button>
-
-  </div>
-
-  <script type="module" src="js/login.js"></script>
+</head><body>
+  <div id="root"></div>
+  <script type="module" src="/src/main.jsx"></script>
 </body>
 </html>
