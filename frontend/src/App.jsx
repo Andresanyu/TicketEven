@@ -5,6 +5,7 @@ import Categories from './components/Categories';
 import EventDetail from './components/EventDetail';
 import Favorites from './components/Favorites';
 import PublicEvents from './components/PublicEvents';
+import Login from './components/Login';
 
 function App() {
   return (
@@ -19,7 +20,8 @@ function App() {
       <Route path="/event_card.html" element={<EventDetail />} />
       <Route path="/favorites.html" element={<Favorites />} />
       <Route path="/index.html" element={<PublicEvents />} /> 
-      
+      <Route path="/login.html" element={<Login />} />
+
       {/* Una ruta "comodín" por si alguien entra a una URL que no existe */}
       <Route path="*" element={<Sidebar activeItem="inicio" />} />
     </Routes>
