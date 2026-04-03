@@ -6,6 +6,7 @@ import EventDetail from './components/EventDetail';
 import Favorites from './components/Favorites';
 import PublicEvents from './components/PublicEvents';
 import Login from './components/Login';
+<Route path="/register.html" element={<Register />} />
 
 function App() {
   return (
@@ -21,6 +22,7 @@ function App() {
       <Route path="/favorites.html" element={<Favorites />} />
       <Route path="/index.html" element={<PublicEvents />} /> 
       <Route path="/login.html" element={<Login />} />
+      <Route path="/register.html" element={<Register />} />
 
       {/* Una ruta "comodín" por si alguien entra a una URL que no existe */}
       <Route path="*" element={<Sidebar activeItem="inicio" />} />
