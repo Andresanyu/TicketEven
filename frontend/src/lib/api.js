@@ -53,7 +53,6 @@ export const api = {
   },
 
   async post(path, body, options = {}) {
-    console.log("POST", path, body);
     let lastError;
 
     for (const base of BASE_CANDIDATES) {

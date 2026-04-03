@@ -7,12 +7,15 @@
 // ─────────────────────────────────────────────────────────────
 
 import { useState } from "react";
-import { handleLogin } from "../js/auth.js";
+import { Link, useNavigate } from "react-router-dom";
+import "../../css/auth.css";
+import { handleLogin, Auth } from "../lib/auth.js";
 
 // ── Regex de validación de email (igual que el original) ──────
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export default function Login() {
+  const navigate = useNavigate();
 
   // ── Estado de los campos ──────────────────────────────────
   const [email,    setEmail]    = useState("");
@@ -63,8 +66,7 @@ export default function Login() {
     setLoading(true);
     try {
       await handleLogin(email.trim(), password);
-      // 👉 Redirección compatible con el enrutamiento actual
-      window.location.href = "/admin_dashboard.html";
+      navigate(Auth.getRol() === "admin" ? "/admin-dashboard" : "/");
     } catch (err) {
       showAlert(err.message);
     } finally {
@@ -100,7 +102,7 @@ export default function Login() {
       <h1>Bienvenido</h1>
       <p className="subtitle">
         ¿No tienes cuenta?{" "}
-        <a href="register.html">Regístrate</a>
+        <Link to="/register">Regístrate</Link>
       </p>
 
       {/* Alert de error global */}

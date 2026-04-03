@@ -1,0 +1,1 @@
+export { Auth, handleLogin, handleRegister } from "../src/lib/auth.js";

@@ -1,6 +1,8 @@
 import { useState, useEffect, useCallback } from "react";
-import api from "./api.js";
-import { Auth } from "./auth.js";
+import { Link, useNavigate } from "react-router-dom";
+import "../../css/favorites.css";
+import api from "../lib/api.js";
+import { Auth } from "../lib/auth.js";
 import Sidebar from "./Sidebar.jsx";
 
 // ── Helpers ──────────────────────────────────────────────────
@@ -63,6 +65,7 @@ function FavRow({ fav }) {
 // ── Componente principal ─────────────────────────────────────
 
 export default function Favorites() {
+  const navigate = useNavigate();
   const [favs, setFavs]       = useState([]);
   const [loading, setLoading] = useState(true);
   const [toast, setToast]     = useState({ visible: false, msg: "", type: "success" });
@@ -75,7 +78,14 @@ export default function Favorites() {
 
   // ── Fetch ──────────────────────────────────────────────────
   useEffect(() => {
-    Auth.requireAdmin();
+    if (!Auth.isLoggedIn()) {
+      navigate("/login");
+      return;
+    }
+    if (Auth.getRol() !== "admin") {
+      navigate("/");
+      return;
+    }
 
     async function init() {
       try {
@@ -85,6 +95,7 @@ export default function Favorites() {
         console.error("Error cargando favoritos:", err);
         if (err?.status === 401 || err?.message?.includes("401")) {
           Auth.logout();
+          navigate("/login");
         } else {
           showToast("Error al cargar los favoritos.", "error");
         }
@@ -94,7 +105,11 @@ export default function Favorites() {
     }
 
     init();
-  }, [showToast]);
+  }, [showToast, navigate]);
+
+  if (!Auth.isLoggedIn() || Auth.getRol() !== "admin") {
+    return null;
+  }
 
   // ── Contador ───────────────────────────────────────────────
   const counterLabel = loading
@@ -114,7 +129,7 @@ export default function Favorites() {
               Eventos <span>Favoritos</span>
             </h1>
             <div className="breadcrumb">
-              <a href="#">Inicio</a>
+              <Link to="/">Inicio</Link>
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <polyline points="9 18 15 12 9 6" />
               </svg>

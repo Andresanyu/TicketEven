@@ -1,7 +1,8 @@
 import { useState, useEffect, useCallback, useRef } from "react";
-import { Link } from "react-router-dom";
-import api from "./api.js";
-import { Auth } from "./auth.js";
+import { Link, useNavigate } from "react-router-dom";
+import "../../css/reports.css";
+import api from "../lib/api.js";
+import { Auth } from "../lib/auth.js";
 import Sidebar from "./Sidebar.jsx";
 
 // ── Constantes ───────────────────────────────────────────────
@@ -83,6 +84,7 @@ function PaginationButtons({ currentPage, totalPages, onPageChange }) {
 // ── Componente principal ─────────────────────────────────────
 
 export default function Reports() {
+  const navigate = useNavigate();
   const [popularity, setPopularity] = useState([]);
   const [loading, setLoading]       = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
@@ -121,12 +123,16 @@ export default function Reports() {
 
   useEffect(() => {
     if (!Auth.isLoggedIn()) {
-      window.location.href = "/login";
+      navigate("/login");
       return;
     }
     loadReport();
     return () => { if (toastTimer.current) clearTimeout(toastTimer.current); };
-  }, [loadReport]);
+  }, [loadReport, navigate]);
+
+  if (!Auth.isLoggedIn()) {
+    return null;
+  }
 
   // ── Derivados ────────────────────────────────────────────
   const top      = popularity[0] ?? null;
@@ -153,7 +159,7 @@ export default function Reports() {
         <header className="page-header">
           <div className="page-header-left">
             <p className="page-eyebrow">
-              <Link to="/admin" className="breadcrumb-link">Panel</Link>
+              <Link to="/admin-dashboard" className="breadcrumb-link">Panel</Link>
               <span className="breadcrumb-sep">›</span>
               Reportes
             </p>

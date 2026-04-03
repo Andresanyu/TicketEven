@@ -10,12 +10,11 @@
 // ─────────────────────────────────────────────────────────────
 
 import { useState, useEffect, useRef } from "react";
-import api      from "./api.js";
-import { Auth } from "./auth.js";
+import { Link, useNavigate } from "react-router-dom";
+import "../../css/categories.css";
+import api      from "../lib/api.js";
+import { Auth } from "../lib/auth.js";
 import Sidebar  from "./Sidebar.jsx";
-
-// Guardia de admin (igual que el JS original)
-Auth.requireAdmin("./login.html");
 
 // ── Helpers puros ─────────────────────────────────────────────
 function normalizeCategory(raw) {
@@ -30,6 +29,7 @@ function normalizeCategory(raw) {
 // COMPONENTE PRINCIPAL
 // ══════════════════════════════════════════════════════════════
 export default function Categories() {
+  const navigate = useNavigate();
 
   // ── Identidad del admin ───────────────────────────────────
   const [adminName,    setAdminName]    = useState("Administrador");
@@ -63,6 +63,15 @@ export default function Categories() {
   // INIT: identidad + carga de datos
   // ─────────────────────────────────────────────────────────
   useEffect(() => {
+    if (!Auth.isLoggedIn()) {
+      navigate("/login");
+      return;
+    }
+    if (Auth.getRol() !== "admin") {
+      navigate("/");
+      return;
+    }
+
     const payload = Auth.getPayload() || {};
     const name    = payload.nombre || payload.name || payload.username || payload.sub || "Administrador";
     setAdminName(name);
@@ -70,7 +79,11 @@ export default function Categories() {
 
     void loadCategories();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [navigate]);
+
+  if (!Auth.isLoggedIn() || Auth.getRol() !== "admin") {
+    return null;
+  }
 
   // ── Foco automático al abrir el modal ────────────────────
   useEffect(() => {
@@ -218,7 +231,7 @@ export default function Categories() {
         <header className="page-header" style={{ "--delay": "0ms" }}>
           <div className="page-header-left">
             <p className="page-eyebrow">
-              <a href="admin_dashboard.html" className="breadcrumb-link">Panel</a>
+              <Link to="/admin-dashboard" className="breadcrumb-link">Panel</Link>
               <span className="breadcrumb-sep">›</span>
               Categorías
             </p>

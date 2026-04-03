@@ -13,12 +13,11 @@
 // ─────────────────────────────────────────────────────────────
 
 import { useState, useEffect, useCallback, useRef } from "react";
-import api      from "../js/api.js";   // 👉 ajusta la ruta si cambia
-import { Auth } from "../js/auth.js";  // 👉 ajusta la ruta si cambia
-import Sidebar  from ".Sidebar.jsx";
-
-// ── Guardia de admin (igual que Auth.requireAdmin en vanilla) ─
-Auth.requireAdmin("/login.html");
+import { Link, useNavigate } from "react-router-dom";
+import "../../css/events_admin.css";
+import api      from "../lib/api.js";
+import { Auth } from "../lib/auth.js";
+import Sidebar  from "./Sidebar.jsx";
 
 // ── Constantes ────────────────────────────────────────────────
 const SWAL_BASE = {
@@ -116,6 +115,7 @@ async function askConfirm(title, text) {
 // COMPONENTE PRINCIPAL
 // ══════════════════════════════════════════════════════════════
 export default function Events() {
+  const navigate = useNavigate();
 
   // ── Estado de la tabla ────────────────────────────────────
   const [events,     setEvents]     = useState([]);
@@ -150,6 +150,20 @@ export default function Events() {
 
   // Ref para el foco del modal
   const tituloRef = useRef(null);
+
+  useEffect(() => {
+    if (!Auth.isLoggedIn()) {
+      navigate("/login");
+      return;
+    }
+    if (Auth.getRol() !== "admin") {
+      navigate("/");
+    }
+  }, [navigate]);
+
+  if (!Auth.isLoggedIn() || Auth.getRol() !== "admin") {
+    return null;
+  }
 
   // ── Identidad del admin ───────────────────────────────────
   useEffect(() => {
@@ -447,7 +461,7 @@ export default function Events() {
         <header className="page-header">
           <div className="page-header-left">
             <p className="page-eyebrow">
-              <a href="admin_dashboard.html" className="breadcrumb-link">Panel</a>
+              <Link to="/admin-dashboard" className="breadcrumb-link">Panel</Link>
               <span className="breadcrumb-sep">›</span>
               Eventos
             </p>
