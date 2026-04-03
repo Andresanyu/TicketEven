@@ -1,8 +1,22 @@
-/* import { Router, Request, Response } from "express";
+import { Router, Request, Response } from "express";
 import { PoolClient } from "pg";
-import { EventTicketTypeInput, EventUpsertInput } from "../models/types";
 import { pool } from "../config/database";
 import { authenticateToken, authorizeAdmin, AuthRequest } from "../middlewares/auth";
+
+interface EventTicketTypeInput {
+  tipo_entrada_id: number;
+  aforo: number;
+}
+
+interface EventUpsertInput {
+  nombre: string;
+  categoria_id?: number | string | null;
+  fecha?: string | null;
+  valor?: number | string | null;
+  descripcion?: string | null;
+  imagen_url?: string | null;
+  activo?: boolean | null;
+}
 
 const router = Router();
 
@@ -528,5 +542,3 @@ router.delete("/:id", authenticateToken, authorizeAdmin, async (req: Request, re
 });
 
 export default router;
-
-*/

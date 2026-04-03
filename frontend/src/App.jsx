@@ -1,12 +1,12 @@
 import { Routes, Route } from 'react-router-dom';
-import Sidebar from './components/Sidebar';
+import Events from './components/Events';
 
 function App() {
   return (
     <Routes>
       {/* Dependiendo de la URL en la que estemos, React Router iluminará el botón correcto */}
       <Route path="/admin_dashboard.html" element={<Sidebar activeItem="inicio" />} />
-      <Route path="/events.html" element={<Sidebar activeItem="eventos" />} />
+      <Route path="/events.html" element={<Events />} />
       <Route path="/categories.html" element={<Sidebar activeItem="categorias" />} />
       <Route path="/reports.html" element={<Sidebar activeItem="reportes" />} />
       
