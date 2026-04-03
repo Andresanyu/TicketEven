@@ -8,61 +8,7 @@
   <link rel="stylesheet" href="css/saved_event.css">
 </head>
 <body>
-
-  <!-- NAVBAR -->
-  <nav class="navbar">
-    <a href="index.html" class="nav-logo">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <circle cx="12" cy="12" r="10"/>
-        <path d="M12 6v6l4 2"/>
-      </svg>
-      EventPro
-    </a>
-    <a href="index.html" class="nav-back">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <line x1="19" y1="12" x2="5" y2="12"/>
-        <polyline points="12 19 5 12 12 5"/>
-      </svg>
-      Volver a eventos
-    </a>
-  </nav>
-
-  <main class="saved-wrap">
-
-    <!-- CABECERA -->
-    <div class="saved-header">
-      <div class="saved-header-left">
-        <!-- Avatar del usuario -->
-        <div class="saved-avatar" id="savedAvatar">
-          <span id="savedInitial">J</span>
-        </div>
-        <div class="saved-header-info">
-          <!-- Nombre del usuario — lo rellena el JS -->
-          <h1 class="saved-title">
-            Guardados de <span id="savedUserName">…</span>
-          </h1>
-          <p class="saved-subtitle" id="savedSubtitle">Cargando eventos…</p>
-        </div>
-      </div>
-    </div>
-
-    <!-- ESTADO: sin guardados -->
-    <div class="empty-state hidden" id="emptyState">
-      <div class="empty-icon">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2">
-          <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/>
-        </svg>
-      </div>
-      <p class="empty-title">Aún no tienes eventos guardados</p>
-      <p class="empty-hint">Explora los eventos y guarda los que mas te gusten.</p>
-      <a href="index.html" class="btn-explore">Ver todos los eventos</a>
-    </div>
-
-    <!-- LISTA DE GUARDADOS -->
-    <ul class="saved-list" id="savedList"></ul>
-
-  </main>
-
-  <script type="module" src="js/saved_event.js"></script>
+  <div id="root"></div>
+  <script type="module" src="/src/main.jsx"></script>
 </body>
 </html>

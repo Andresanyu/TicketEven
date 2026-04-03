@@ -8,6 +8,7 @@ import PublicEvents from './components/PublicEvents';
 import Login from './components/Login';
 import Register from './components/Register';
 import Reports from './components/Reports';
+import SavedEvents from './components/SavedEvents';
 
 function App() {
   return (
@@ -25,6 +26,7 @@ function App() {
       <Route path="/login.html" element={<Login />} />
       <Route path="/register.html" element={<Register />} />
       <Route path="/reports.html" element={<Reports />} />
+      <Route path="/saved_events.html" element={<SavedEvents />} />
 
       {/* Una ruta "comodín" por si alguien entra a una URL que no existe */}
       <Route path="*" element={<Sidebar activeItem="inicio" />} />
