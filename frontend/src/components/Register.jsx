@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { handleRegister } from "./auth.js";
+import "../../css/auth.css";
+import { handleRegister, Auth } from "../lib/auth.js";
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -41,7 +42,7 @@ export default function Register() {
     setLoading(true);
     try {
       await handleRegister(nombre.trim(), email.trim(), password);
-      navigate("/login");
+      navigate(Auth.getRol() === "admin" ? "/admin-dashboard" : "/");
     } catch (err) {
       setAlert(err.message);
     } finally {

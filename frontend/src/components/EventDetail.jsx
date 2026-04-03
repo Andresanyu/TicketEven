@@ -1,7 +1,8 @@
 import { useState, useEffect, useCallback } from "react";
-import { useSearchParams, Link } from "react-router-dom";
-import api from "./api.js";
-import { Auth } from "./auth.js";
+import { useSearchParams, Link, useNavigate } from "react-router-dom";
+import "../../css/event_card.css";
+import api from "../lib/api.js";
+import { Auth } from "../lib/auth.js";
 
 function formatDate(isoString) {
   if (!isoString) return "Sin fecha";
@@ -28,6 +29,7 @@ function formatPrice(value) {
 }
 
 export default function EventDetail() {
+  const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const eventId = searchParams.get("id");
 
@@ -103,7 +105,7 @@ export default function EventDetail() {
     if (!eventId || saveLoading) return;
 
     if (!Auth.isLoggedIn()) {
-      window.location.href = "login.html";
+      navigate("/login");
       return;
     }
 
@@ -127,7 +129,7 @@ export default function EventDetail() {
     } finally {
       setSaveLoading(false);
     }
-  }, [eventId, saveLoading]);
+  }, [eventId, saveLoading, navigate]);
 
   const imgUrl = event
     ? event.imagen_url ?? event.imagen ?? event.imagen_promotional ?? null

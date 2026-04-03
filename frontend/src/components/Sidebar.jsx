@@ -1,3 +1,5 @@
+import { Link } from "react-router-dom";
+
 // Sidebar.jsx
 // ─────────────────────────────────────────────────────────────
 // Uso:
@@ -11,7 +13,7 @@ const NAV_ITEMS = [
   {
     key:   "inicio",
     label: "Inicio",
-    href:  "admin_dashboard.html",
+    href:  "/admin-dashboard",
     icon: (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
         <rect x="3"  y="3"  width="7" height="7" rx="1" />
@@ -24,7 +26,7 @@ const NAV_ITEMS = [
   {
     key:   "eventos",
     label: "Eventos",
-    href:  "events.html",
+    href:  "/events",
     icon: (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
         <rect x="3" y="4" width="18" height="18" rx="2" />
@@ -39,7 +41,7 @@ const NAV_ITEMS = [
   {
     key:   "categorias",
     label: "Categorías",
-    href:  "categories.html",
+    href:  "/categories",
     icon: (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
         <path d="M3 7h7M3 12h7M3 17h7" />
@@ -52,7 +54,7 @@ const NAV_ITEMS = [
   {
     key:   "reportes",
     label: "Reportes",
-    href:  "reports.html",
+    href:  "/reports",
     icon: (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
         <line x1="18" y1="20" x2="18" y2="10" />
@@ -88,15 +90,15 @@ export default function Sidebar({
         {NAV_ITEMS.map(({ key, label, href, icon }) => {
           const isActive = activeItem === key;
           return (
-            <a
+            <Link
               key={key}
-              href={href}
+              to={href}
               className={`nav-item${isActive ? " active" : ""}`}
             >
               {icon}
               {label}
               {isActive && <span className="nav-active-bar" />}
-            </a>
+            </Link>
           );
         })}
       </nav>

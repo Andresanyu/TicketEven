@@ -13,23 +13,17 @@ import SavedEvents from './components/SavedEvents';
 function App() {
   return (
     <Routes>
-      {/* Dependiendo de la URL en la que estemos, React Router iluminará el botón correcto */}
-      <Route path="/admin_dashboard.html" element={<Sidebar activeItem="inicio" />} />
-      <Route path="/events.html" element={<Events />} />
-      <Route path="/categories.html" element={<Sidebar activeItem="categorias" />} />
-      <Route path="/reports.html" element={<Sidebar activeItem="reportes" />} />
-      <Route path="/admin_dashboard.html" element={<AdminDashboard />} />
-      <Route path="/categories.html" element={<Categories />} />
-      <Route path="/event_card.html" element={<EventDetail />} />
-      <Route path="/favorites.html" element={<Favorites />} />
-      <Route path="/index.html" element={<PublicEvents />} /> 
-      <Route path="/login.html" element={<Login />} />
-      <Route path="/register.html" element={<Register />} />
-      <Route path="/reports.html" element={<Reports />} />
-      <Route path="/saved_events.html" element={<SavedEvents />} />
-
-      {/* Una ruta "comodín" por si alguien entra a una URL que no existe */}
-      <Route path="*" element={<Sidebar activeItem="inicio" />} />
+      <Route path="/" element={<PublicEvents />} />
+      <Route path="/login" element={<Login />} />
+      <Route path="/register" element={<Register />} />
+      <Route path="/admin-dashboard" element={<AdminDashboard />} />
+      <Route path="/events" element={<Events />} />
+      <Route path="/categories" element={<Categories />} />
+      <Route path="/event" element={<EventDetail />} />
+      <Route path="/favorites" element={<Favorites />} />
+      <Route path="/reports" element={<Reports />} />
+      <Route path="/saved-events" element={<SavedEvents />} />
+      <Route path="*" element={<PublicEvents />} />
     </Routes>
   );
 }

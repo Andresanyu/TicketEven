@@ -1,7 +1,8 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-import { Link } from "react-router-dom";
-import api from "./api.js";
-import { Auth } from "./auth.js";
+import { Link, useNavigate } from "react-router-dom";
+import "../../css/styles.css";
+import api from "../lib/api.js";
+import { Auth } from "../lib/auth.js";
 
 // ── Constantes ───────────────────────────────────────────────
 
@@ -118,6 +119,7 @@ function EventCard({ ev }) {
 // ── Componente principal ─────────────────────────────────────
 
 export default function PublicEvents() {
+  const navigate = useNavigate();
   const [allEvents, setAllEvents]       = useState([]);
   const [sortKey, setSortKey]           = useState("default");
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
@@ -188,7 +190,8 @@ export default function PublicEvents() {
   const handleLogout = useCallback((e) => {
     e.stopPropagation();
     Auth.logout();
-  }, []);
+    navigate("/");
+  }, [navigate]);
 
   // ── Render ────────────────────────────────────────────────
   return (
@@ -232,7 +235,7 @@ export default function PublicEvents() {
                   </div>
                   <hr className="ud-sep" />
                   <Link
-                    to="/saved"
+                    to="/saved-events"
                     className="ud-item ud-saved"
                     id="savedBtn"
                     onClick={(e) => e.stopPropagation()}

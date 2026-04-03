@@ -9,18 +9,17 @@
 // ─────────────────────────────────────────────────────────────
 
 import { useState, useEffect } from "react";
-import { Auth }  from "./auth.js";   // 👉 ajusta la ruta si cambia
+import { Link, useNavigate } from "react-router-dom";
+import "../../css/admin_dashboard.css";
+import { Auth }  from "../lib/auth.js";
 import Sidebar   from "./Sidebar.jsx";
-
-// Guardia de admin (igual que el JS original)
-Auth.requireAdmin("./login.html");
 
 // ── Tarjetas de navegación rápida ────────────────────────────
 // Array de datos para que el JSX no quede repetitivo
 const CARDS = [
   {
     key:      "eventos",
-    href:     "events.html",
+    href:     "/events",
     delay:    "0ms",
     title:    "Gestión de Eventos",
     subtitle: "Administra, crea y edita los eventos del sistema",
@@ -37,7 +36,7 @@ const CARDS = [
   },
   {
     key:      "categorias",
-    href:     "categories.html",
+    href:     "/categories",
     delay:    "80ms",
     title:    "Gestión de Categorías",
     subtitle: "Administra las categorías para clasificar eventos",
@@ -52,7 +51,7 @@ const CARDS = [
   },
   {
     key:      "reportes",
-    href:     "reports.html",
+    href:     "/reports",
     delay:    "160ms",
     title:    "Reportes de Popularidad",
     subtitle: "Visualiza qué eventos son los más guardados por los usuarios",
@@ -83,6 +82,7 @@ function ArrowIcon() {
 // COMPONENTE PRINCIPAL
 // ══════════════════════════════════════════════════════════════
 export default function AdminDashboard() {
+  const navigate = useNavigate();
 
   // ── Nombre del admin y su inicial (desde el JWT) ──────────
   const [adminName,    setAdminName]    = useState("Administrador");
@@ -92,7 +92,15 @@ export default function AdminDashboard() {
   const [currentDate, setCurrentDate] = useState("");
 
   useEffect(() => {
-    // ── Fecha (equivale al bloque dateEl del JS original) ──
+    if (!Auth.isLoggedIn()) {
+      navigate("/login");
+      return;
+    }
+    if (Auth.getRol() !== "admin") {
+      navigate("/");
+      return;
+    }
+
     setCurrentDate(
       new Date().toLocaleDateString("es-CO", {
         weekday: "long",
@@ -102,14 +110,17 @@ export default function AdminDashboard() {
       })
     );
 
-    // ── Identidad del admin (equivale al bloque payload del JS original) ──
     const payload = Auth.getPayload() || {};
     const name    = payload.nombre || payload.name || payload.username || payload.sub || "Administrador";
     const initial = name.trim().charAt(0).toUpperCase() || "A";
 
     setAdminName(name);
     setAdminInitial(initial);
-  }, []); // [] → ejecuta solo al montar, igual que el JS original que corre una sola vez
+  }, [navigate]);
+
+  if (!Auth.isLoggedIn() || Auth.getRol() !== "admin") {
+    return null;
+  }
 
   // ── Render ────────────────────────────────────────────────
   return (
@@ -150,9 +161,9 @@ export default function AdminDashboard() {
 
           <div className="cards-grid">
             {CARDS.map(({ key, href, delay, title, subtitle, icon }) => (
-              <a
+              <Link
                 key={key}
-                href={href}
+                to={href}
                 className="dash-card"
                 style={{ "--delay": delay }}
               >
@@ -170,7 +181,7 @@ export default function AdminDashboard() {
                 <div className="card-arrow">
                   <ArrowIcon />
                 </div>
-              </a>
+              </Link>
             ))}
           </div>
         </section>

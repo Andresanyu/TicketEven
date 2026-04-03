@@ -29,15 +29,12 @@ export const Auth = {
 
   logout() {
     this.removeToken();
-    window.location.href = "/frontend/login.html";
   },
 
-  // Devuelve el options listo para pasar a api.get/post/etc.
   authOptions() {
     return { headers: { "Authorization": `Bearer ${this.getToken()}` } };
   },
 
-  // Decodifica el payload del JWT sin verificar firma (solo para leer el rol en cliente)
   getPayload() {
     const token = this.getToken();
     if (!token) return null;
@@ -52,31 +49,25 @@ export const Auth = {
     return this.getPayload()?.rol ?? null;
   },
 
-  requireAuth(redirectTo = "./login.html") {
-    if (!this.isLoggedIn()) {
-      window.location.href = redirectTo;
-    }
+  requireAuth() {
+    return this.isLoggedIn();
   },
 
-  requireAdmin(redirectTo = "./index.html") {
-    this.requireAuth();
-    if (this.getRol() !== "admin") {
-      window.location.href = redirectTo;
-    }
-  }
+  requireAdmin() {
+    return this.isLoggedIn() && this.getRol() === "admin";
+  },
 };
 
 export async function handleLogin(email, password) {
   const data = await api.post("/users/login", { email, password });
-  Auth.saveToken(data.token);
-  if (Auth.getRol() === "admin") {
-    window.location.href = "/frontend/admin_dashboard.html";
-  } else {
-    window.location.href = "/frontend/index.html";
+  if (!data?.token) {
+    throw new Error("La respuesta del servidor no incluyó token");
   }
+  Auth.saveToken(data.token);
+  return data;
 }
 
 export async function handleRegister(nombre, email, password) {
   await api.post("/users/register", { nombre, email, password });
-  await handleLogin(email, password);
+  return handleLogin(email, password);
 }

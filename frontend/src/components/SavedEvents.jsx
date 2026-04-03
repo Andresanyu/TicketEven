@@ -1,7 +1,8 @@
 import { useState, useEffect, useCallback } from "react";
-import { Link } from "react-router-dom";
-import api from "./api.js";
-import { Auth } from "./auth.js";
+import { Link, useNavigate } from "react-router-dom";
+import "../../css/saved_event.css";
+import api from "../lib/api.js";
+import { Auth } from "../lib/auth.js";
 
 // ── Helper ───────────────────────────────────────────────────
 
@@ -58,6 +59,7 @@ function SavedItem({ fav, index, onRemove }) {
 // ── Componente principal ─────────────────────────────────────
 
 export default function SavedEvents() {
+  const navigate = useNavigate();
   const [savedEvents, setSavedEvents] = useState([]);
   const [userName, setUserName]       = useState("…");
   const [initial, setInitial]         = useState("U");
@@ -84,7 +86,7 @@ export default function SavedEvents() {
 
   useEffect(() => {
     if (!Auth.isLoggedIn()) {
-      window.location.href = "/login";
+      navigate("/login");
       return;
     }
 
@@ -93,7 +95,11 @@ export default function SavedEvents() {
     setInitial(name.trim().charAt(0).toUpperCase() || "U");
 
     loadSavedEvents();
-  }, [loadSavedEvents]);
+  }, [loadSavedEvents, navigate]);
+
+  if (!Auth.isLoggedIn()) {
+    return null;
+  }
 
   // Sincroniza el subtítulo cuando cambia la lista
   useEffect(() => {
