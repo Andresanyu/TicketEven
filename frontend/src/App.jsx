@@ -1,5 +1,6 @@
 import { Routes, Route } from 'react-router-dom';
 import Events from './components/Events';
+import AdminDashboard from './components/AdminDashboard';
 
 function App() {
   return (
@@ -9,6 +10,7 @@ function App() {
       <Route path="/events.html" element={<Events />} />
       <Route path="/categories.html" element={<Sidebar activeItem="categorias" />} />
       <Route path="/reports.html" element={<Sidebar activeItem="reportes" />} />
+      <Route path="/admin_dashboard.html" element={<AdminDashboard />} />
       
       {/* Una ruta "comodín" por si alguien entra a una URL que no existe */}
       <Route path="*" element={<Sidebar activeItem="inicio" />} />
