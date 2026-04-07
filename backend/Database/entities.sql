@@ -12,7 +12,6 @@ CREATE TABLE eventos (
     descripcion TEXT DEFAULT 'Sin descripción',
     imagen_url VARCHAR(255),
     activo BOOLEAN DEFAULT true,
-    aforo INTEGER NOT NULL CHECK (aforo >= 0)
 );
 
 CREATE TABLE usuarios (
@@ -42,8 +41,23 @@ CREATE TABLE eventos_tipos_entrada (
     evento_id INTEGER NOT NULL REFERENCES eventos(id) ON DELETE CASCADE,
     tipo_entrada_id INTEGER NOT NULL REFERENCES tipos_entrada(id) ON DELETE CASCADE,
     aforo INTEGER NOT NULL CHECK (aforo >= 0),
+    precio NUMERIC NOT NULL CHECK (precio >= 0),
     UNIQUE(evento_id, tipo_entrada_id)
 );
+
+CREATE TABLE compras (
+    id SERIAL PRIMARY KEY,
+    usuario_id INTEGER NOT NULL REFERENCES usuarios(id) ON DELETE CASCADE,
+    evento_tipo_entrada_id INTEGER NOT NULL REFERENCES eventos_tipos_entrada(id) ON DELETE CASCADE,
+    cantidad INTEGER NOT NULL CHECK (cantidad > 0),
+    total NUMERIC NOT NULL,
+    fecha_compra TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    estado VARCHAR(20) NOT NULL DEFAULT 'completada' CHECK (estado IN ('completada', 'cancelada'))
+);
+
+CREATE INDEX idx_compras_usuario_id ON compras(usuario_id);
+CREATE INDEX idx_compras_evento_tipo_entrada_id ON compras(evento_tipo_entrada_id);
+CREATE INDEX idx_eventos_tipos_entrada_evento_id ON eventos_tipos_entrada(evento_id);
 
 CREATE INDEX idx_eventos_tipos_entrada_evento_id ON eventos_tipos_entrada(evento_id);
 CREATE INDEX idx_eventos_tipos_entrada_tipo_entrada_id ON eventos_tipos_entrada(tipo_entrada_id);
