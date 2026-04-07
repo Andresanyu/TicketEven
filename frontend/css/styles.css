@@ -113,8 +113,8 @@
     min-height: 100vh;
   }
 
-  /* main sin sidebar debe ocupar todo el ancho */
-  body > #root > main.main {
+  /* main público (PublicEvents) ocupa todo el ancho sin sidebar */
+  main.public-main {
     margin-left: 0;
     width: 100%;
     max-width: 100%;
