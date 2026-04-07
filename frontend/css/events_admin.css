@@ -348,7 +348,8 @@ a { text-decoration: none; color: inherit; }
   position: fixed; inset: 0;
   background: rgba(0,0,0,.7);
   backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px);
-  z-index: 100;
+  z-index: 1000;
+  pointer-events: all;
   display: flex; align-items: center; justify-content: center;
   padding: 20px;
   animation: backdropIn .2s ease;
@@ -417,6 +418,7 @@ a { text-decoration: none; color: inherit; }
   gap: 0 32px;
   padding: 24px 28px 20px;
   flex: 1;
+  overflow-y: auto;
 }
 
 /* Cuerpo de columna única (modal de confirmación) */

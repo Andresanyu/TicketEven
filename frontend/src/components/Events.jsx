@@ -469,7 +469,7 @@ export default function Events() {
               Gestión de Eventos<span className="title-dot">.</span>
             </h1>
           </div>
-          <button className="btn-primary" id="btnNuevo" onClick={openCreateModal}>
+          <button className="btn-primary" id="btnNuevo" onClick={openCreateModal} disabled={modalOpen}>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
               <line x1="12" y1="5"  x2="12" y2="19" />
               <line x1="5"  y1="12" x2="19" y2="12" />
@@ -586,7 +586,7 @@ export default function Events() {
         id="modalBackdrop"
         onClick={(e) => { if (e.target.id === "modalBackdrop") closeModal(); }}
       >
-        <div className="modal" id="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+        <div className="modal" id="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle" onClick={(e) => e.stopPropagation()}>
 
           {/* Cabecera */}
           <div className="modal-header">
