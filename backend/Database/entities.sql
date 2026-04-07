@@ -11,7 +11,8 @@ CREATE TABLE eventos (
     valor NUMERIC,
     descripcion TEXT DEFAULT 'Sin descripción',
     imagen_url VARCHAR(255),
-    activo BOOLEAN DEFAULT true
+    activo BOOLEAN DEFAULT true,
+    aforo INTEGER NOT NULL CHECK (aforo >= 0)
 );
 
 CREATE TABLE usuarios (
