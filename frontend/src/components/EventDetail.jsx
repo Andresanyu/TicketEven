@@ -151,6 +151,8 @@ export default function EventDetail() {
     ? event.descripcion ?? event.descripcion_evento ?? event.detalle ?? "Sin descripción."
     : "";
 
+  const entradas = event?.entradas ?? [];
+
   return (
     <>
       {/* Navbar */}
@@ -250,6 +252,28 @@ export default function EventDetail() {
               <div className="article-label">Sobre este evento</div>
               <p className="detail-description" id="detailDescription">{desc}</p>
             </article>
+
+            {entradas.length > 0 && (
+              <section className="entries-section">
+                <div className="article-label">Tipos de entrada</div>
+                <div className="entries-list">
+                  {entradas.map((entrada) => (
+                    <div className="entry-row" key={entrada.tipo_entrada_id}>
+                      <span className="entry-name">{entrada.nombre}</span>
+                      <span className="entry-aforo">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                          <circle cx="9" cy="7" r="4"/>
+                          <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                          <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                        </svg>
+                        {entrada.aforo} disponibles
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </section>
+            )}
 
             <aside className="save-panel">
               <button
