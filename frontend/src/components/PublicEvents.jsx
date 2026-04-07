@@ -195,7 +195,7 @@ export default function PublicEvents() {
 
   // ── Render ────────────────────────────────────────────────
   return (
-    <main className="main">
+    <main className="main public-main">
 
       {/* Page header */}
       <div className="page-header">
