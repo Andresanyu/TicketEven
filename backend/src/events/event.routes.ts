@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { pool } from "../config/database";
 import { authenticateToken, authorizeAdmin } from "../middlewares/auth";
+import { checkEventActive } from "../middlewares/checkEventActive";
 import { EventRepository } from "./event.repository";
 import { EventService } from "./event.service";
 import { EventController } from "./event.controller";
