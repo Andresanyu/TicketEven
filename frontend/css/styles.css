@@ -24,6 +24,8 @@
     flex: 1 1 auto;
     min-width: 0;
     max-width: none;
+    display: flex;
+    flex-direction: column;
   }
 
   body {
@@ -109,6 +111,13 @@
     flex: 1;
     padding: 44px 48px;
     min-height: 100vh;
+  }
+
+  /* main sin sidebar debe ocupar todo el ancho */
+  body > #root > main.main {
+    margin-left: 0;
+    width: 100%;
+    max-width: 100%;
   }
 
   .page-header {
