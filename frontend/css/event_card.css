@@ -15,7 +15,7 @@
   --text-secondary:#7a7f72;
   --text-muted:    #4a4f42;
   --nav-h:         58px;
-  --body-max:      1100px;
+  --body-max:      100%;
   --radius:        12px;
 }
 
@@ -27,6 +27,15 @@ body {
   font-family: 'DM Sans', sans-serif;
   min-height: 100vh;
   -webkit-font-smoothing: antialiased;
+}
+
+/* Garantiza que la vista de detalle use todo el viewport */
+.detail-wrap,
+.navbar,
+.state-wrap {
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 a { text-decoration: none; color: inherit; }
@@ -116,9 +125,9 @@ a { text-decoration: none; color: inherit; }
 
 /* ── Contenedor ── */
 .detail-wrap {
-  max-width: var(--body-max);
-  margin: 0 auto;
-  padding: 40px 32px 80px;
+  max-width: 100%;
+  margin: 0;
+  padding: 40px 48px 80px;
   animation: fadeUp .45s ease both;
 }
 
@@ -140,7 +149,7 @@ a { text-decoration: none; color: inherit; }
 .hero-media {
   position: relative;
   width: 100%;
-  height: 420px;
+  height: 480px;
   overflow: hidden;
 }
 
@@ -236,7 +245,7 @@ a { text-decoration: none; color: inherit; }
 /* ── Cuerpo ── */
 .detail-body {
   display: grid;
-  grid-template-columns: 1fr 320px;
+  grid-template-columns: 1fr 300px;
   gap: 24px;
   align-items: start;
 }
