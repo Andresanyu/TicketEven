@@ -3,9 +3,16 @@ import { Link, useNavigate } from "react-router-dom";
 import "../../css/purchases.css";
 import api from "../lib/api.js";
 import { Auth } from "../lib/auth.js";
-import Sidebar from "./Sidebar.jsx";
 
-// ── Helpers ──────────────────────────────────────────────────────────────────
+// ── Helpers ───────────────────────────────────────────────────
+
+function getUserName() {
+  const payload = Auth.getPayload();
+  return (
+    payload?.nombre || payload?.name ||
+    payload?.username || payload?.sub || "Usuario"
+  );
+}
 
 function formatDate(dateStr) {
   if (!dateStr) return "—";
@@ -24,9 +31,9 @@ function formatPrice(value) {
   }).format(value);
 }
 
-// ── Tarjeta de compra ─────────────────────────────────────────────────────────
+// ── Tarjeta de compra ─────────────────────────────────────────
 
-function PurchaseCard({ purchase }) {
+function PurchaseItem({ purchase, index }) {
   const {
     evento_nombre,
     tipo_entrada_nombre,
@@ -37,76 +44,57 @@ function PurchaseCard({ purchase }) {
   } = purchase;
 
   return (
-    <div className="purchase-card">
-      {/* Ícono */}
-      <div className="purchase-icon">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
-          <path d="M2 9a1 1 0 0 1 1-1h18a1 1 0 0 1 1 1v1a2 2 0 0 0 0 4v1a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1v-1a2 2 0 0 0 0-4V9z"/>
-        </svg>
-      </div>
-
-      {/* Info */}
-      <div className="purchase-info">
-        <span className="purchase-event">{evento_nombre ?? "Sin nombre"}</span>
-        <div className="purchase-meta">
-          {/* Tipo de entrada */}
-          <span className="purchase-badge tipo">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <circle cx="12" cy="12" r="10"/>
-              <path d="M12 6v6l4 2"/>
-            </svg>
-            {tipo_entrada_nombre ?? "—"}
-          </span>
-
-          {/* Cantidad */}
-          <span className="purchase-badge">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-              <circle cx="9" cy="7" r="4"/>
-            </svg>
-            {cantidad} {cantidad === 1 ? "entrada" : "entradas"}
-          </span>
-
-          {/* Fecha */}
-          <span className="purchase-badge">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <rect x="3" y="4" width="18" height="18" rx="2"/>
-              <line x1="16" y1="2" x2="16" y2="6"/>
-              <line x1="8"  y1="2" x2="8"  y2="6"/>
-              <line x1="3"  y1="10" x2="21" y2="10"/>
-            </svg>
-            {formatDate(fecha_compra)}
-          </span>
-
-          {/* Estado */}
-          <span className={`purchase-estado ${estado}`}>
-            {estado === "completada" ? "✓ Completada" : "✕ Cancelada"}
-          </span>
+    <li
+      className="purchase-item"
+      style={{ animationDelay: `${index * 50}ms` }}
+    >
+      <div className="purchase-item-left">
+        <span className="purchase-num">{String(index + 1).padStart(2, "0")}</span>
+        <div className="purchase-info">
+          <span className="purchase-name">{evento_nombre ?? "Sin nombre"}</span>
+          <div className="purchase-meta">
+            <span className="purchase-badge tipo">{tipo_entrada_nombre ?? "—"}</span>
+            <span className="purchase-badge">{cantidad} {cantidad === 1 ? "entrada" : "entradas"}</span>
+            <span className="purchase-badge">{formatDate(fecha_compra)}</span>
+            <span className={`purchase-estado ${estado}`}>
+              {estado === "completada" ? "✓ Completada" : "✕ Cancelada"}
+            </span>
+          </div>
         </div>
       </div>
-
-      {/* Total */}
-      <div className="purchase-right">
+      <div className="purchase-item-right">
         <span className="purchase-total">{formatPrice(total)}</span>
-        <span className="purchase-qty">
-          {formatPrice(total / cantidad)} × {cantidad}
-        </span>
+        <span className="purchase-unit">{formatPrice(total / cantidad)} × {cantidad}</span>
       </div>
-    </div>
+    </li>
   );
 }
 
-// ── Componente principal ──────────────────────────────────────────────────────
+// ── Componente principal ──────────────────────────────────────
 
 export default function PurchaseHistory() {
   const navigate = useNavigate();
   const [purchases, setPurchases] = useState([]);
+  const [userName, setUserName]   = useState("…");
+  const [initial, setInitial]     = useState("U");
+  const [subtitle, setSubtitle]   = useState("Cargando compras…");
   const [loading, setLoading]     = useState(true);
-  const [toast, setToast]         = useState({ visible: false, msg: "", type: "success" });
 
-  const showToast = useCallback((msg, type = "success") => {
-    setToast({ visible: true, msg, type });
-    setTimeout(() => setToast((prev) => ({ ...prev, visible: false })), 3200);
+  const loadPurchases = useCallback(async () => {
+    setSubtitle("Cargando compras…");
+    setLoading(true);
+    try {
+      const data = await api.get("/purchases", Auth.authOptions());
+      const list = Array.isArray(data) ? data : [];
+      setPurchases(list);
+      setSubtitle(buildSubtitle(list.length));
+    } catch (err) {
+      console.error("Error cargando compras:", err);
+      setPurchases([]);
+      setSubtitle("No se pudieron cargar las compras");
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
   useEffect(() => {
@@ -115,100 +103,97 @@ export default function PurchaseHistory() {
       return;
     }
 
-    async function init() {
-      try {
-        const data = await api.get("/purchases", Auth.authOptions());
-        setPurchases(Array.isArray(data) ? data : []);
-      } catch (err) {
-        if (err?.status === 401) {
-          Auth.logout();
-          navigate("/login");
-        } else {
-          showToast("Error al cargar el historial de compras.", "error");
-        }
-      } finally {
-        setLoading(false);
-      }
-    }
+    const name = getUserName();
+    setUserName(name);
+    setInitial(name.trim().charAt(0).toUpperCase() || "U");
 
-    init();
-  }, [navigate, showToast]);
+    loadPurchases();
+  }, [loadPurchases, navigate]);
+
+  useEffect(() => {
+    if (!loading) setSubtitle(buildSubtitle(purchases.length));
+  }, [purchases.length, loading]);
 
   if (!Auth.isLoggedIn()) return null;
 
+  const isEmpty      = !loading && purchases.length === 0;
   const totalGastado = purchases
     .filter((p) => p.estado === "completada")
     .reduce((acc, p) => acc + Number(p.total), 0);
 
   return (
     <>
-      <Sidebar activeItem="compras" />
+      {/* Navbar */}
+      <nav className="navbar">
+        <Link to="/" className="nav-logo">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <circle cx="12" cy="12" r="10" />
+            <path d="M12 6v6l4 2" />
+          </svg>
+          EventPro
+        </Link>
+        <Link to="/" className="nav-back">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <line x1="19" y1="12" x2="5" y2="12" />
+            <polyline points="12 19 5 12 12 5" />
+          </svg>
+          Volver a eventos
+        </Link>
+      </nav>
 
-      <main className="main">
-        {/* Header */}
-        <div className="page-header">
-          <div>
-            <h1 className="page-title">
-              Mis <span>Compras</span>
-            </h1>
-            <div className="breadcrumb">
-              <Link to="/">Inicio</Link>
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <polyline points="9 18 15 12 9 6" />
-              </svg>
-              Historial de compras
+      <main className="purchase-wrap">
+
+        {/* Cabecera */}
+        <div className="purchase-header">
+          <div className="purchase-header-left">
+            <div className="purchase-avatar">
+              <span>{initial}</span>
+            </div>
+            <div className="purchase-header-info">
+              <h1 className="purchase-title">
+                Compras de <span>{userName}</span>
+              </h1>
+              <p className="purchase-subtitle">{subtitle}</p>
             </div>
           </div>
-          <div className="counter">
-            <strong>{loading ? "—" : purchases.length}</strong>{" "}
-            {purchases.length === 1 ? "compra" : "compras"} ·{" "}
-            <strong>{loading ? "—" : formatPrice(totalGastado)}</strong> en total
-          </div>
+          {!loading && purchases.length > 0 && (
+            <div className="purchase-summary">
+              Total gastado: <strong>{formatPrice(totalGastado)}</strong>
+            </div>
+          )}
         </div>
 
-        {/* Cargando */}
-        {loading && (
-          <div className="state-box">
-            <div className="spinner-lg"></div>
-            <span>Cargando historial…</span>
-          </div>
-        )}
-
-        {/* Sin compras */}
-        {!loading && purchases.length === 0 && (
-          <div className="state-box">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.4">
-              <path d="M2 9a1 1 0 0 1 1-1h18a1 1 0 0 1 1 1v1a2 2 0 0 0 0 4v1a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1v-1a2 2 0 0 0 0-4V9z"/>
-            </svg>
-            <p>Aún no has comprado ninguna entrada.</p>
-            <Link to="/" style={{
-              marginTop: "8px",
-              padding: "9px 20px",
-              border: "1px solid #2a2d29",
-              borderRadius: "8px",
-              fontSize: "13px",
-              color: "#7a7f72",
-            }}>
-              Ver eventos disponibles
-            </Link>
+        {/* Estado vacío */}
+        {isEmpty && (
+          <div className="empty-state">
+            <div className="empty-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.2">
+                <path d="M2 9a1 1 0 0 1 1-1h18a1 1 0 0 1 1 1v1a2 2 0 0 0 0 4v1a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1v-1a2 2 0 0 0 0-4V9z"/>
+              </svg>
+            </div>
+            <p className="empty-title">Aún no tienes compras</p>
+            <p className="empty-hint">Explora los eventos y compra tus entradas favoritas.</p>
+            <Link to="/" className="btn-explore">Ver todos los eventos</Link>
           </div>
         )}
 
         {/* Lista */}
-        {!loading && purchases.length > 0 && (
-          <div className="purchase-list">
-            {purchases.map((purchase) => (
-              <PurchaseCard key={purchase.id} purchase={purchase} />
+        {!isEmpty && (
+          <ul className="purchase-list">
+            {purchases.map((purchase, index) => (
+              <PurchaseItem key={purchase.id} purchase={purchase} index={index} />
             ))}
-          </div>
+          </ul>
         )}
-      </main>
 
-      {/* Toast */}
-      <div className={`toast${toast.type === "error" ? " error" : ""}${toast.visible ? " show" : ""}`}>
-        <span className="toast-dot"></span>
-        <span>{toast.msg}</span>
-      </div>
+      </main>
     </>
   );
+}
+
+// ── Util ──────────────────────────────────────────────────────
+
+function buildSubtitle(count) {
+  if (count === 0) return "No tienes compras registradas";
+  return `${count} compra${count !== 1 ? "s" : ""} registrada${count !== 1 ? "s" : ""}`;
 }
