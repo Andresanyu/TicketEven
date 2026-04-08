@@ -95,10 +95,38 @@ function normalizeEvent(raw) {
 }
 
 // ── Wrappers de SweetAlert2 ───────────────────────────────────
-const notifySuccess = (title)             => window.Swal.fire({ ...SWAL_BASE, icon: "success", title });
-const notifyError   = (title, text = "")  => window.Swal.fire({ ...SWAL_BASE, icon: "error",   title, text });
+function getSwalInstance() {
+  if (typeof window !== "undefined" && window.Swal?.fire) return window.Swal;
+  return null;
+}
+
+const notifySuccess = (title) => {
+  const swal = getSwalInstance();
+  if (!swal) {
+    console.warn("SweetAlert2 no está disponible. Mostrando fallback nativo.");
+    window.alert(title);
+    return Promise.resolve();
+  }
+  return swal.fire({ ...SWAL_BASE, icon: "success", title });
+};
+
+const notifyError = (title, text = "") => {
+  const swal = getSwalInstance();
+  if (!swal) {
+    console.warn("SweetAlert2 no está disponible. Mostrando fallback nativo.");
+    window.alert(text ? `${title}\n${text}` : title);
+    return Promise.resolve();
+  }
+  return swal.fire({ ...SWAL_BASE, icon: "error", title, text });
+};
+
 async function askConfirm(title, text) {
-  const result = await window.Swal.fire({
+  const swal = getSwalInstance();
+  if (!swal) {
+    return window.confirm(text ? `${title}\n\n${text}` : title);
+  }
+
+  const result = await swal.fire({
     ...SWAL_BASE,
     icon: "warning",
     title,
