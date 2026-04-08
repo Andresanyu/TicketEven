@@ -49,7 +49,7 @@ export default function CapacityReport() {
   }
 
   const maxIssued = report
-    ? Math.max(...report.entries.map((e) => e.issued), 1)
+    ? Math.max(...report.entries.map((e) => e.vendidas), 1)
     : 1;
 
   return (
@@ -96,14 +96,14 @@ export default function CapacityReport() {
               </thead>
               <tbody>
                 {report.entries.map((entry) => {
-                  const pct = Math.round((entry.issued / entry.available) * 100);
+                  const pct = Math.round((entry.vendidas / entry.aforo_total) * 100);
                   const barColor = pct >= 90 ? "#e05c5c" : pct >= 60 ? "#f5a623" : "var(--accent)";
                   return (
                     <tr key={entry.ticket_type_id}>
-                      <td className="cr-type-name">{entry.type_name}</td>
-                      <td className="cr-num">{entry.available}</td>
-                      <td className="cr-num">{entry.issued}</td>
-                      <td className="cr-num cr-remaining">{entry.remaining}</td>
+                      <td className="cr-type-name">{entry.tipo_entrada}</td>
+                      <td className="cr-num">{entry.aforo_total}</td>
+                      <td className="cr-num">{entry.vendidas}</td>
+                      <td className="cr-num cr-remaining">{entry.disponibles}</td>
                       <td className="cr-bar-cell">
                         <div className="cr-bar-wrap">
                           <div

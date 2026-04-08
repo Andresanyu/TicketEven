@@ -91,16 +91,3 @@ INSERT INTO compras (usuario_id, evento_tipo_entrada_id, cantidad, total, estado
 (2, 11, 1, 20000,  'completada'),  -- María: 1x General Tech Meetup
 (1, 13, 2, 50000,  'completada'),  -- Juan: 2x General Stand Up
 (3, 19, 1, 30000,  'cancelada');   -- Carlos: 1x General Musical Infantil (cancelada)
-
--- Test tickets for RF-20 report development
-INSERT INTO tickets (event_id, ticket_type_id, user_id, quantity) VALUES
-(1, 1, 1, 2),
-(1, 1, 2, 3),
-(1, 2, 1, 1),
-(1, 2, 3, 2),
-(2, 1, 1, 3),
-(2, 1, 2, 1),
-(2, 3, 1, 2),
-(2, 2, 3, 1),
-(3, 1, 2, 4),
-(3, 6, 1, 10);
