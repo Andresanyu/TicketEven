@@ -18,3 +18,8 @@ export interface PurchaseDetailRow extends PurchaseRow {
   tipo_entrada_nombre: string;
   precio_unitario: number;
 }
+
+export interface PurchaseWithQR extends PurchaseDetailRow {
+  qr_code: string;       // base64 data URL
+  fecha_evento: Date | null;
+}
