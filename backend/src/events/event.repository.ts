@@ -21,9 +21,11 @@ const EVENT_SELECT_QUERY = `
         COALESCE((
             SELECT json_agg(
                 json_build_object(
+                    'id',              ett.id,
                     'tipo_entrada_id', ett.tipo_entrada_id,
                     'nombre',          te.nombre,
-                    'aforo',           ett.aforo
+                    'aforo',           ett.aforo,
+                    'precio',          ett.precio
                 )
                 ORDER BY te.nombre ASC
             )
@@ -37,9 +39,11 @@ const EVENT_SELECT_QUERY = `
 
 const ENTRADAS_SELECT_QUERY = `
     SELECT
+        ete.id,
         ete.tipo_entrada_id,
         tt.nombre,
-        ete.aforo
+        ete.aforo,
+        ete.precio
     FROM eventos_tipos_entrada ete
     INNER JOIN tipos_entrada tt ON tt.id = ete.tipo_entrada_id
     WHERE ete.evento_id = $1
@@ -53,9 +57,9 @@ async function insertEntradas(
 ): Promise<void> {
     for (const entrada of entradas) {
         await client.query(
-            `INSERT INTO eventos_tipos_entrada (evento_id, tipo_entrada_id, aforo)
-             VALUES ($1, $2, $3)`,
-            [eventId, entrada.tipo_entrada_id, entrada.aforo]
+            `INSERT INTO eventos_tipos_entrada (evento_id, tipo_entrada_id, aforo, precio)
+             VALUES ($1, $2, $3, $4)`,
+            [eventId, entrada.tipo_entrada_id, entrada.aforo, entrada.precio]
         );
     }
 }

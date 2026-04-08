@@ -46,3 +46,17 @@ export interface PopularityReport {
     total_saves: number;
     total_users: number;
 }
+
+export interface EventTicketTypeRow {
+    id: number;  
+    tipo_entrada_id: number;
+    nombre: string;
+    aforo: number;
+    precio: number;    
+}
+
+export interface EventTicketTypeInput {
+    tipo_entrada_id: number;
+    aforo: number;
+    precio: number;
+}

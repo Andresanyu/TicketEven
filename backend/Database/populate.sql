@@ -45,88 +45,52 @@ VALUES
 
 INSERT INTO usuarios (nombre, email, password_hash, rol, activo)
 VALUES 
-('Juan Pérez', 'juan.perez@email.com', '$2b$10$zku3bZSfXzL0e1MCnCSJNuFQOwcmWFF98Rt/yvyGwZrPRiQf8.xvO', 'externo', true),
-('María Gómez', 'maria.gomez@email.com', '$2b$10$abc123hashsimulado2', 'externo', true),
-('Carlos López', 'carlos.lopez@email.com', '$2b$10$abc123hashsimulado3', 'externo', true),
-('Admin Principal', 'admin@email.com', '$2b$10$zku3bZSfXzL0e1MCnCSJNuFQOwcmWFF98Rt/yvyGwZrPRiQf8.xvO', 'admin', true),
-('Usuario Inactivo', 'inactivo@email.com', '$2b$10$abc123hashsimulado4', 'externo', false);
+('Juan Pérez',      'juan.perez@email.com',  '$2b$10$zku3bZSfXzL0e1MCnCSJNuFQOwcmWFF98Rt/yvyGwZrPRiQf8.xvO', 'externo', true),
+('María Gómez',    'maria.gomez@email.com',  '$2b$10$zku3bZSfXzL0e1MCnCSJNuFQOwcmWFF98Rt/yvyGwZrPRiQf8.xvO', 'externo', true),
+('Carlos López',   'carlos.lopez@email.com', '$2b$10$zku3bZSfXzL0e1MCnCSJNuFQOwcmWFF98Rt/yvyGwZrPRiQf8.xvO', 'externo', true),
+('Admin Principal', 'admin@email.com',        '$2b$10$zku3bZSfXzL0e1MCnCSJNuFQOwcmWFF98Rt/yvyGwZrPRiQf8.xvO', 'admin',   true),
+('Usuario Inactivo','inactivo@email.com',     '$2b$10$zku3bZSfXzL0e1MCnCSJNuFQOwcmWFF98Rt/yvyGwZrPRiQf8.xvO', 'externo', false);
 
-INSERT INTO saved_events (user_id, event_id)
-VALUES
-(1, 1),
-(1, 2),
-(2, 1),
-(2, 3),
-(3, 2),
-(3, 4);
+INSERT INTO saved_events (user_id, event_id) VALUES
+(1, 1), (1, 2), (2, 1), (2, 3), (3, 2), (3, 4);
 
--- Vincular eventos con tipos de entrada (eventos_tipos_entrada)
-INSERT INTO eventos_tipos_entrada (evento_id, tipo_entrada_id, aforo)
-VALUES 
-    -- Concierto Rock Local (evento 1): General y VIP
-    (1, 1, 300),   -- General: 300 entradas
-    (1, 2, 50),    -- VIP: 50 entradas
-    -- Obra de Teatro: Hamlet (evento 2): General, Estudiante y VIP
-    (2, 1, 150),   -- General: 150 entradas
-    (2, 3, 80),    -- Estudiante: 80 entradas
-    (2, 2, 30),    -- VIP: 30 entradas
-    -- Final de Microfútbol (evento 3): General y Grupo
-    (3, 1, 200),   -- General: 200 entradas
-    (3, 6, 100),   -- Grupo (10+): 100 entradas
-    -- Exposición Acuarelas (evento 4): General, Estudiante y Niño (libre acceso)
-    (4, 1, 500),   -- General: 500 entradas
-    (4, 3, 200),   -- Estudiante: 200 entradas
-    (4, 4, 150),   -- Niño: 150 entradas
-    -- Tech Meetup Tunja (evento 5): General y Estudiante
-    (5, 1, 100),   -- General: 100 entradas
-    (5, 3, 100),   -- Estudiante: 100 entradas
-    -- Stand Up: Noche de Risas (evento 6): General y VIP
-    (6, 1, 250),   -- General: 250 entradas
-    (6, 2, 40),    -- VIP: 40 entradas
-    -- Festival Gastronómico (evento 7): General, Familia y Grupo
-    (7, 1, 400),   -- General: 400 entradas
-    (7, 6, 150),   -- Grupo (10+): 150 entradas
-    -- Jazz en el Parque (evento 8): General (libre acceso)
-    (8, 1, 1000),  -- General: 1000 entradas (al aire libre)
-    -- Musical Infantil (evento 9): General, Niño y Adulto Mayor
-    (9, 1, 180),   -- General: 180 entradas
-    (9, 4, 100),   -- Niño: 100 entradas
-    (9, 5, 50),    -- Adulto Mayor: 50 entradas
-    -- Maratón 10K (evento 10): General y Adulto Mayor
-    (10, 1, 500),  -- General: 500 entradas
-    (10, 5, 100),  -- Adulto Mayor: 100 entradas
-    -- Taller de Fotografía (evento 11): Estudiante y General
-    (11, 3, 40),   -- Estudiante: 40 entradas
-    (11, 1, 20),   -- General: 20 entradas
-    -- Hackathon Universitaria (evento 12): Estudiante (libre acceso)
-    (12, 3, 200),  -- Estudiante: 200 entradas
-    -- Monólogo: Vida Godín (evento 13): General y VIP
-    (13, 1, 300),  -- General: 300 entradas
-    (13, 2, 50),   -- VIP: 50 entradas
-    -- Feria del Libro (evento 14): General, Estudiante y Niño
-    (14, 1, 400),  -- General: 400 entradas
-    (14, 3, 150),  -- Estudiante: 150 entradas
-    (14, 4, 100),  -- Niño: 100 entradas
-    -- Recital de Piano (evento 15): General y VIP
-    (15, 1, 200),  -- General: 200 entradas
-    (15, 2, 80),   -- VIP: 80 entradas
-    -- Títeres: El Bosque (evento 16): Niño (evento inactivo)
-    (16, 4, 120),  -- Niño: 120 entradas
-    -- Torneo de Ajedrez (evento 17): General y Estudiante
-    (17, 1, 100),  -- General: 100 entradas
-    (17, 3, 80),   -- Estudiante: 80 entradas
-    -- Museo de Historia (evento 18): General, Estudiante y Niño (libre acceso)
-    (18, 1, 800),  -- General: 800 entradas
-    (18, 3, 300),  -- Estudiante: 300 entradas
-    (18, 4, 200),  -- Niño: 200 entradas
-    -- Conferencia IA 2026 (evento 19): General, Estudiante y VIP
-    (19, 1, 200),  -- General: 200 entradas
-    (19, 3, 150),  -- Estudiante: 150 entradas
-    (19, 2, 100),  -- VIP: 100 entradas
-    -- Fiesta de Fin de Año (evento 20): General y VIP
-    (20, 1, 500),  -- General: 500 entradas
-    (20, 2, 100)   -- VIP: 100 entradas
+INSERT INTO eventos_tipos_entrada (evento_id, tipo_entrada_id, aforo, precio) VALUES 
+    (1, 1, 300, 45000),  (1, 2, 50,  90000),
+    (2, 1, 150, 35000),  (2, 3, 80,  20000),  (2, 2, 30,  70000),
+    (3, 1, 200, 10000),  (3, 6, 100, 8000),
+    (4, 1, 500, 0),      (4, 3, 200, 0),      (4, 4, 150, 0),
+    (5, 1, 100, 20000),  (5, 3, 100, 10000),
+    (6, 1, 250, 25000),  (6, 2, 40,  50000),
+    (7, 1, 400, 5000),   (7, 6, 150, 4000),
+    (8, 1, 1000, 0),
+    (9, 1, 180, 30000),  (9, 4, 100, 15000),  (9, 5, 50,  15000),
+    (10, 1, 500, 50000), (10, 5, 100, 50000),
+    (11, 3, 40,  60000), (11, 1, 20,  80000),
+    (12, 3, 200, 0),
+    (13, 1, 300, 40000), (13, 2, 50,  80000),
+    (14, 1, 400, 15000), (14, 3, 150, 8000),  (14, 4, 100, 5000),
+    (15, 1, 200, 60000), (15, 2, 80,  120000),
+    (16, 4, 120, 12000),
+    (17, 1, 100, 20000), (17, 3, 80,  10000),
+    (18, 1, 800, 0),     (18, 3, 300, 0),     (18, 4, 200, 0),
+    (19, 1, 200, 120000),(19, 3, 150, 60000), (19, 2, 100, 200000),
+    (20, 1, 500, 85000), (20, 2, 100, 150000)
 ON CONFLICT (evento_id, tipo_entrada_id) DO NOTHING;
+
+-- compras (usuario_id, evento_tipo_entrada_id, cantidad, total)
+-- evento_tipo_entrada_id sigue el orden del insert anterior
+-- ete id 1 = evento 1 General, id 2 = evento 1 VIP, id 3 = evento 2 General, etc.
+INSERT INTO compras (usuario_id, evento_tipo_entrada_id, cantidad, total, estado) VALUES
+(1, 1,  2, 90000,  'completada'),  -- Juan: 2x General Concierto Rock
+(1, 2,  1, 90000,  'completada'),  -- Juan: 1x VIP Concierto Rock
+(2, 1,  3, 135000, 'completada'),  -- María: 3x General Concierto Rock
+(2, 3,  2, 70000,  'completada'),  -- María: 2x General Teatro Hamlet
+(3, 2,  1, 90000,  'completada'),  -- Carlos: 1x VIP Concierto Rock
+(3, 4,  1, 20000,  'completada'),  -- Carlos: 1x Estudiante Teatro Hamlet
+(1, 6,  2, 20000,  'completada'),  -- Juan: 2x General Microfútbol
+(2, 11, 1, 20000,  'completada'),  -- María: 1x General Tech Meetup
+(1, 13, 2, 50000,  'completada'),  -- Juan: 2x General Stand Up
+(3, 19, 1, 30000,  'cancelada');   -- Carlos: 1x General Musical Infantil (cancelada)
 
 -- Test tickets for RF-20 report development
 INSERT INTO tickets (event_id, ticket_type_id, user_id, quantity) VALUES
