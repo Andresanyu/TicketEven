@@ -5,6 +5,7 @@ import categoriesRouter from "./categories/category.routes";
 import ticketTypesRouter from "./ticketTypes/ticketType.routes";
 import usersRouter from "./users/user.routes";
 import { createTicketRouter } from "./tickets/ticket.routes";
+import adminRoutes from "./admin/admin.routes";
 import { pool } from "./config/database";
 
 const app = express();
@@ -17,6 +18,7 @@ app.use("/api/categories", categoriesRouter);
 app.use("/api/ticket-types", ticketTypesRouter);
 app.use("/api/users", usersRouter);
 app.use("/api/tickets", createTicketRouter(pool));
+app.use("/api/admin", adminRoutes);
 
 app.get("/api/health", (_req, res) => {
     res.json({ status: "ok", timestamp: new Date().toISOString() });

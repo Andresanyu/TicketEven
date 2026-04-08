@@ -87,6 +87,9 @@ export default function AdminDashboard() {
   // ── Nombre del admin y su inicial (desde el JWT) ──────────
   const [adminName,    setAdminName]    = useState("Administrador");
   const [adminInitial, setAdminInitial] = useState("A");
+  const [metrics, setMetrics] = useState(null);
+  const [metricsLoading, setMetricsLoading] = useState(true);
+  const [metricsError, setMetricsError] = useState(false);
 
   // ── Fecha formateada en español ───────────────────────────
   const [currentDate, setCurrentDate] = useState("");
@@ -117,6 +120,28 @@ export default function AdminDashboard() {
     setAdminName(name);
     setAdminInitial(initial);
   }, [navigate]);
+
+  useEffect(() => {
+    const fetchMetrics = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        const res = await fetch('http://localhost:4001/api/admin/metrics', {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        if (!res.ok) throw new Error('Error');
+        const data = await res.json();
+        setMetrics(data);
+        setMetricsError(false);
+      } catch {
+        setMetricsError(true);
+      } finally {
+        setMetricsLoading(false);
+      }
+    };
+    fetchMetrics();
+    const interval = setInterval(fetchMetrics, 30000);
+    return () => clearInterval(interval);
+  }, []);
 
   if (!Auth.isLoggedIn() || Auth.getRol() !== "admin") {
     return null;
@@ -154,6 +179,81 @@ export default function AdminDashboard() {
 
         {/* Separador decorativo */}
         <div className="dash-divider" />
+
+        <section className="metrics-section">
+          <p className="cards-label">Métricas globales</p>
+          <div className="metrics-grid">
+            <div className="metric-card" style={{ "--delay": "0ms" }}>
+              <div className="metric-icon-wrap">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                  <rect x="2" y="7" width="20" height="14" rx="2"/>
+                  <path d="M16 7V5a2 2 0 0 0-4 0v2"/>
+                  <line x1="12" y1="12" x2="12" y2="16"/>
+                  <line x1="10" y1="14" x2="14" y2="14"/>
+                </svg>
+              </div>
+              <div className="metric-body">
+                <span className="metric-value">
+                  {metricsLoading ? "—" : metrics?.total_tickets ?? "—"}
+                </span>
+                <span className="metric-label">Boletas emitidas</span>
+              </div>
+            </div>
+
+            <div className="metric-card" style={{ "--delay": "60ms" }}>
+              <div className="metric-icon-wrap">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                  <rect x="3" y="4" width="18" height="18" rx="2"/>
+                  <line x1="16" y1="2" x2="16" y2="6"/>
+                  <line x1="8" y1="2" x2="8" y2="6"/>
+                  <line x1="3" y1="10" x2="21" y2="10"/>
+                  <circle cx="12" cy="16" r="2" fill="currentColor" stroke="none" opacity=".4"/>
+                </svg>
+              </div>
+              <div className="metric-body">
+                <span className="metric-value">
+                  {metricsLoading ? "—" : metrics?.active_events ?? "—"}
+                </span>
+                <span className="metric-label">Eventos activos</span>
+              </div>
+            </div>
+
+            <div className="metric-card" style={{ "--delay": "120ms" }}>
+              <div className="metric-icon-wrap">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                  <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
+                  <line x1="9" y1="14" x2="15" y2="14"/>
+                </svg>
+              </div>
+              <div className="metric-body">
+                <span className="metric-value">
+                  {metricsLoading ? "—" : metrics?.past_events ?? "—"}
+                </span>
+                <span className="metric-label">Eventos pasados</span>
+              </div>
+            </div>
+
+            <div className="metric-card" style={{ "--delay": "180ms" }}>
+              <div className="metric-icon-wrap">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                  <circle cx="9" cy="7" r="4"/>
+                  <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                  <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                </svg>
+              </div>
+              <div className="metric-body">
+                <span className="metric-value">
+                  {metricsLoading ? "—" : metrics?.total_users ?? "—"}
+                </span>
+                <span className="metric-label">Usuarios registrados</span>
+              </div>
+            </div>
+          </div>
+          {metricsError && (
+            <p className="metrics-error">No se pudieron cargar las métricas</p>
+          )}
+        </section>
 
         {/* Grid de tarjetas */}
         <section className="cards-section">
