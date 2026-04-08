@@ -1,0 +1,314 @@
+/* ══════════════════════════════════════════════════════
+   purchases.css — EventPro · Historial de Compras
+   ══════════════════════════════════════════════════════ */
+
+:root {
+  --bg:            #111210;
+  --bg-card:       #1a1c19;
+  --bg-card-2:     #1e201d;
+  --border:        #2a2d29;
+  --accent:        #c6f135;
+  --accent-dim:    #8aab1f;
+  --accent-muted:  rgba(198,241,53,.12);
+  --red:           #e05c5c;
+  --text-primary:  #e8ead4;
+  --text-secondary:#7a7f72;
+  --text-muted:    #4a4f42;
+  --sidebar-w:     230px;
+  --radius:        14px;
+}
+
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  background: var(--bg);
+  color: var(--text-primary);
+  font-family: 'DM Sans', sans-serif;
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+}
+
+a { text-decoration: none; color: inherit; }
+
+/* ── Layout ── */
+.main {
+  margin-left: var(--sidebar-w);
+  padding: 48px 52px 80px;
+  min-height: 100vh;
+}
+
+/* ── Header ── */
+.page-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 24px;
+  margin-bottom: 36px;
+  animation: fadeUp .45s ease both;
+}
+
+.page-title {
+  font-family: 'Syne', sans-serif;
+  font-size: clamp(26px, 3vw, 38px);
+  font-weight: 800;
+  letter-spacing: -1px;
+  color: var(--text-primary);
+  line-height: 1.1;
+  margin-bottom: 8px;
+}
+
+.page-title span { color: var(--accent); }
+
+.breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.breadcrumb a { color: var(--text-secondary); transition: color .2s; }
+.breadcrumb a:hover { color: var(--accent); }
+.breadcrumb svg { opacity: .5; }
+
+.counter {
+  font-size: 13px;
+  color: var(--text-secondary);
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 6px 16px;
+  white-space: nowrap;
+  margin-top: 6px;
+}
+
+.counter strong { color: var(--accent); font-weight: 700; }
+
+/* ── Estados ── */
+.state-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding: 80px 20px;
+  color: var(--text-muted);
+  font-size: 14px;
+  text-align: center;
+  animation: fadeUp .4s ease both;
+}
+
+.state-box svg {
+  width: 48px;
+  height: 48px;
+  opacity: .35;
+}
+
+.spinner-lg {
+  width: 36px;
+  height: 36px;
+  border: 3px solid var(--border);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin .75s linear infinite;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Lista de compras ── */
+.purchase-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  animation: fadeUp .45s .05s ease both;
+  animation-fill-mode: both;
+}
+
+/* ── Tarjeta de compra ── */
+.purchase-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px 24px;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 20px;
+  align-items: center;
+  transition: border-color .2s, box-shadow .2s;
+  animation: fadeUp .4s ease both;
+  animation-fill-mode: both;
+}
+
+.purchase-card:hover {
+  border-color: rgba(198,241,53,.2);
+  box-shadow: 0 4px 24px rgba(0,0,0,.3);
+}
+
+/* Ícono */
+.purchase-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  background: var(--bg-card-2);
+  border: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.purchase-icon svg {
+  width: 22px;
+  height: 22px;
+  color: var(--accent-dim);
+}
+
+/* Info */
+.purchase-info {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.purchase-event {
+  font-family: 'Syne', sans-serif;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.purchase-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+
+.purchase-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  background: var(--bg-card-2);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 3px 10px;
+}
+
+.purchase-badge svg {
+  width: 11px;
+  height: 11px;
+  flex-shrink: 0;
+}
+
+.purchase-badge.tipo { color: var(--accent-dim); border-color: rgba(198,241,53,.15); }
+
+/* Estado */
+.purchase-estado {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .3px;
+  border-radius: 20px;
+  padding: 3px 10px;
+}
+
+.purchase-estado.completada {
+  color: var(--accent);
+  background: rgba(198,241,53,.08);
+  border: 1px solid rgba(198,241,53,.2);
+}
+
+.purchase-estado.cancelada {
+  color: var(--red);
+  background: rgba(224,92,92,.08);
+  border: 1px solid rgba(224,92,92,.2);
+}
+
+/* Precio */
+.purchase-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.purchase-total {
+  font-family: 'Syne', sans-serif;
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--accent);
+  letter-spacing: -.5px;
+}
+
+.purchase-qty {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+/* ── Toast ── */
+.toast {
+  position: fixed;
+  bottom: 28px;
+  right: 28px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px 18px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+  color: var(--text-primary);
+  opacity: 0;
+  transform: translateY(10px);
+  transition: opacity .25s, transform .25s;
+  pointer-events: none;
+  z-index: 999;
+}
+
+.toast.show { opacity: 1; transform: translateY(0); }
+.toast.error { border-color: rgba(224,92,92,.35); }
+
+.toast-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--accent);
+  flex-shrink: 0;
+}
+
+.toast.error .toast-dot { background: var(--red); }
+
+/* ── Responsive ── */
+@media (max-width: 820px) {
+  .main { margin-left: 0; padding: 32px 20px 60px; }
+
+  .purchase-card {
+    grid-template-columns: auto 1fr;
+    grid-template-rows: auto auto;
+  }
+
+  .purchase-right {
+    grid-column: 2;
+    align-items: flex-start;
+  }
+}
+
+@media (max-width: 480px) {
+  .purchase-card { padding: 16px; gap: 14px; }
+  .purchase-total { font-size: 17px; }
+}

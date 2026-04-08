@@ -10,6 +10,7 @@ import Register from './components/Register';
 import CapacityReport from './components/CapacityReport';
 import Reports from './components/Reports';
 import SavedEvents from './components/SavedEvents';
+import PurchaseHistory from './components/PurchaseHistory';
 
 function App() {
   return (
@@ -26,6 +27,7 @@ function App() {
       <Route path="/capacity-report" element={<CapacityReport />} />
       <Route path="/saved-events" element={<SavedEvents />} />
       <Route path="*" element={<PublicEvents />} />
+      <Route path="/my-purchases" element={<PurchaseHistory />} />
     </Routes>
   );
 }
