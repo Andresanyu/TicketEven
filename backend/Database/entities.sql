@@ -46,3 +46,12 @@ CREATE TABLE eventos_tipos_entrada (
 
 CREATE INDEX idx_eventos_tipos_entrada_evento_id ON eventos_tipos_entrada(evento_id);
 CREATE INDEX idx_eventos_tipos_entrada_tipo_entrada_id ON eventos_tipos_entrada(tipo_entrada_id);
+
+CREATE TABLE IF NOT EXISTS tickets (
+  id               SERIAL PRIMARY KEY,
+  event_id         INTEGER NOT NULL REFERENCES eventos(id),
+  ticket_type_id   INTEGER NOT NULL REFERENCES tipos_entrada(id),
+  user_id          INTEGER REFERENCES usuarios(id),
+  quantity         INTEGER NOT NULL CHECK (quantity > 0),
+  created_at       TIMESTAMP DEFAULT NOW()
+);
