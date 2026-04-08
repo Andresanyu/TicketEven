@@ -19,8 +19,13 @@ jobs:
         with:
           node-version: '22'
 
-      - name: Verificar que existe el frontend
-        run: ls ./frontend
+      - name: Verificar dependencias frontend
+        working-directory: ./frontend
+        run: npm install
+
+      - name: Build (frontend)
+        working-directory: ./frontend
+        run: npm run build
 
       # --- BACKEND ---
       - name: Instalar dependencias (backend)
