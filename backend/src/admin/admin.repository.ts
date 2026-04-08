@@ -9,9 +9,9 @@ export interface AdminGlobalMetrics {
 
 const GLOBAL_METRICS_QUERY = `
   SELECT
-    (SELECT COALESCE(SUM(quantity), 0) FROM tickets) AS total_tickets,
-    (SELECT COUNT(*) FROM eventos WHERE activo = true) AS active_events,
-    (SELECT COUNT(*) FROM eventos WHERE fecha < NOW()) AS past_events,
+        (SELECT COALESCE(SUM(cantidad), 0) FROM compras WHERE estado = 'completada') AS total_tickets,
+        (SELECT COUNT(*) FROM eventos WHERE activo = true)  AS active_events,
+        (SELECT COUNT(*) FROM eventos WHERE fecha < NOW())  AS past_events,
     (SELECT COUNT(*) FROM usuarios WHERE activo = true) AS total_users;
 `;
 
