@@ -143,7 +143,7 @@ export default function Events() {
   const [form,         setForm]         = useState(EMPTY_FORM);
   const [imgError,     setImgError]     = useState(false);
   const [fieldErrors,  setFieldErrors]  = useState({});
-  const [entradasList, setEntradasList] = useState([]);  // [{ tipo_entrada_id, nombre, aforo }]
+  const [entradasList, setEntradasList] = useState([]);  // [{ tipo_entrada_id, nombre, aforo, precio }]
   const [entradasError,setEntradasError]= useState("");
   const [showNuevoTipo,setShowNuevoTipo]= useState(false);
   const [nuevoTipoVal, setNuevoTipoVal] = useState("");
@@ -305,6 +305,7 @@ export default function Events() {
           tipo_entrada_id: e.tipo_entrada_id,
           nombre:          e.nombre,
           aforo:           e.aforo,
+          precio:          Number(e.precio ?? 0),
         }))
       );
       setModalOpen(true);
@@ -339,6 +340,7 @@ export default function Events() {
       entradas:     entradasList.map((e) => ({
         tipo_entrada_id: e.tipo_entrada_id,
         aforo:           e.aforo,
+        precio:          Number(e.precio ?? 0),
       })),
     };
   }
@@ -419,8 +421,14 @@ export default function Events() {
     setEntradasError("");
     setEntradasList((prev) => {
       const existing = prev.find((e) => e.tipo_entrada_id === tipoId);
-      if (existing) return prev.map((e) => e.tipo_entrada_id === tipoId ? { ...e, aforo: e.aforo + aforo } : e);
-      return [...prev, { tipo_entrada_id: tipoId, nombre: tipo.nombre, aforo }];
+      if (existing) {
+        return prev.map((e) =>
+          e.tipo_entrada_id === tipoId
+            ? { ...e, aforo: e.aforo + aforo, precio: Number(e.precio ?? 0) }
+            : e
+        );
+      }
+      return [...prev, { tipo_entrada_id: tipoId, nombre: tipo.nombre, aforo, precio: 0 }];
     });
     setForm((f) => ({ ...f, tipoEntrada: "", aforo: "" }));
   }
