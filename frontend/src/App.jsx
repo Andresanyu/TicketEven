@@ -7,6 +7,7 @@ import Favorites from './components/Favorites';
 import PublicEvents from './components/PublicEvents';
 import Login from './components/Login';
 import Register from './components/Register';
+import CapacityReport from './components/CapacityReport';
 import Reports from './components/Reports';
 import SavedEvents from './components/SavedEvents';
 
@@ -22,6 +23,7 @@ function App() {
       <Route path="/event" element={<EventDetail />} />
       <Route path="/favorites" element={<Favorites />} />
       <Route path="/reports" element={<Reports />} />
+      <Route path="/capacity-report" element={<CapacityReport />} />
       <Route path="/saved-events" element={<SavedEvents />} />
       <Route path="*" element={<PublicEvents />} />
     </Routes>

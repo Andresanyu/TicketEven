@@ -127,3 +127,16 @@ VALUES
     (20, 1, 500),  -- General: 500 entradas
     (20, 2, 100)   -- VIP: 100 entradas
 ON CONFLICT (evento_id, tipo_entrada_id) DO NOTHING;
+
+-- Test tickets for RF-20 report development
+INSERT INTO tickets (event_id, ticket_type_id, user_id, quantity) VALUES
+(1, 1, 1, 2),
+(1, 1, 2, 3),
+(1, 2, 1, 1),
+(1, 2, 3, 2),
+(2, 1, 1, 3),
+(2, 1, 2, 1),
+(2, 3, 1, 2),
+(2, 2, 3, 1),
+(3, 1, 2, 4),
+(3, 6, 1, 10);
