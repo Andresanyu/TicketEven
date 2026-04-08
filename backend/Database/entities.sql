@@ -2,7 +2,6 @@ CREATE TABLE categorias (
     id SERIAL PRIMARY KEY,
     nombre VARCHAR(100) NOT NULL UNIQUE
 );
-
 CREATE TABLE eventos (
     id SERIAL PRIMARY KEY,
     nombre VARCHAR(150) NOT NULL,
@@ -11,9 +10,8 @@ CREATE TABLE eventos (
     valor NUMERIC,
     descripcion TEXT DEFAULT 'Sin descripción',
     imagen_url VARCHAR(255),
-    activo BOOLEAN DEFAULT true,
+    activo BOOLEAN DEFAULT true
 );
-
 CREATE TABLE usuarios (
     id SERIAL PRIMARY KEY,
     nombre VARCHAR(100) NOT NULL,
@@ -23,19 +21,16 @@ CREATE TABLE usuarios (
     activo BOOLEAN DEFAULT true,
     fecha_registro TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
-
 CREATE TABLE saved_events (
     user_id INTEGER REFERENCES usuarios(id) ON DELETE CASCADE,
     event_id INTEGER REFERENCES eventos(id) ON DELETE CASCADE,
     saved_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (user_id, event_id)
 );
-
 CREATE TABLE tipos_entrada (
     id SERIAL PRIMARY KEY,
     nombre VARCHAR(100) NOT NULL UNIQUE
 );
-
 CREATE TABLE eventos_tipos_entrada (
     id SERIAL PRIMARY KEY,
     evento_id INTEGER NOT NULL REFERENCES eventos(id) ON DELETE CASCADE,
@@ -44,7 +39,6 @@ CREATE TABLE eventos_tipos_entrada (
     precio NUMERIC NOT NULL CHECK (precio >= 0),
     UNIQUE(evento_id, tipo_entrada_id)
 );
-
 CREATE TABLE compras (
     id SERIAL PRIMARY KEY,
     usuario_id INTEGER NOT NULL REFERENCES usuarios(id) ON DELETE CASCADE,
@@ -54,14 +48,10 @@ CREATE TABLE compras (
     fecha_compra TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     estado VARCHAR(20) NOT NULL DEFAULT 'completada' CHECK (estado IN ('completada', 'cancelada'))
 );
-
 CREATE INDEX idx_compras_usuario_id ON compras(usuario_id);
 CREATE INDEX idx_compras_evento_tipo_entrada_id ON compras(evento_tipo_entrada_id);
 CREATE INDEX idx_eventos_tipos_entrada_evento_id ON eventos_tipos_entrada(evento_id);
-
-CREATE INDEX idx_eventos_tipos_entrada_evento_id ON eventos_tipos_entrada(evento_id);
 CREATE INDEX idx_eventos_tipos_entrada_tipo_entrada_id ON eventos_tipos_entrada(tipo_entrada_id);
-
 CREATE TABLE IF NOT EXISTS tickets (
   id               SERIAL PRIMARY KEY,
   event_id         INTEGER NOT NULL REFERENCES eventos(id),
