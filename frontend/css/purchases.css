@@ -309,3 +309,283 @@ a { text-decoration: none; color: inherit; }
   .purchase-item { flex-direction: column; align-items: flex-start; gap: 12px; }
   .purchase-item-right { align-items: flex-start; }
 }
+
+/* ══════════════════════════════════════════════════════
+   Modal de boleta
+   ══════════════════════════════════════════════════════ */
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  background: rgba(0, 0, 0, .72);
+  backdrop-filter: blur(6px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  animation: fadeIn .2s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.modal-ticket {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  width: 100%;
+  max-width: 440px;
+  overflow: hidden;
+  animation: slideUp .25s ease;
+  position: relative;
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(24px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Cabecera verde del ticket */
+.ticket-header {
+  background: var(--accent);
+  padding: 22px 28px 18px;
+  position: relative;
+}
+
+.ticket-header-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: rgba(17, 18, 16, .55);
+  margin-bottom: 4px;
+}
+
+.ticket-event-name {
+  font-family: 'Syne', sans-serif;
+  font-size: clamp(17px, 4vw, 22px);
+  font-weight: 800;
+  color: #111210;
+  line-height: 1.2;
+  letter-spacing: -.4px;
+}
+
+/* Separador tipo ticket perforado */
+.ticket-perforation {
+  display: flex;
+  align-items: center;
+  position: relative;
+  height: 0;
+  border-top: 2px dashed var(--border);
+  margin: 0 -1px;
+}
+
+.ticket-perforation::before,
+.ticket-perforation::after {
+  content: '';
+  position: absolute;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.ticket-perforation::before { left: -12px; }
+.ticket-perforation::after  { right: -12px; }
+
+/* Cuerpo del ticket */
+.ticket-body {
+  padding: 24px 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.ticket-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.ticket-row:last-of-type { border-bottom: none; }
+
+.ticket-label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: .5px;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.ticket-value {
+  font-family: 'Syne', sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-primary);
+  text-align: right;
+  max-width: 60%;
+}
+
+.ticket-value.accent { color: var(--accent); font-size: 18px; }
+
+.ticket-value.estado-completada {
+  color: var(--accent);
+  font-size: 12px;
+  background: rgba(198,241,53,.1);
+  border: 1px solid rgba(198,241,53,.25);
+  border-radius: 20px;
+  padding: 2px 10px;
+}
+
+.ticket-value.estado-cancelada {
+  color: var(--red);
+  font-size: 12px;
+  background: rgba(224,92,92,.08);
+  border: 1px solid rgba(224,92,92,.2);
+  border-radius: 20px;
+  padding: 2px 10px;
+}
+
+/* Sección del QR */
+.ticket-qr-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 20px 28px 8px;
+  border-top: 1px solid var(--border);
+}
+
+.ticket-qr-section img {
+  width: 140px;
+  height: 140px;
+  border-radius: 10px;
+  display: block;
+}
+
+.ticket-qr-id {
+  font-family: 'Syne', sans-serif;
+  font-size: 10px;
+  letter-spacing: 1.5px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+}
+
+/* Footer del modal */
+.ticket-footer {
+  display: flex;
+  gap: 10px;
+  padding: 16px 28px 24px;
+}
+
+.btn-ticket {
+  flex: 1;
+  padding: 11px 0;
+  border-radius: 10px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity .2s, transform .1s;
+  border: none;
+}
+
+.btn-ticket:active { transform: scale(.97); }
+
+.btn-ticket.primary {
+  background: var(--accent);
+  color: #111210;
+}
+
+.btn-ticket.primary:hover { opacity: .88; }
+
+.btn-ticket.secondary {
+  background: transparent;
+  color: var(--text-secondary);
+  border: 1px solid var(--border);
+}
+
+.btn-ticket.secondary:hover { border-color: var(--text-secondary); color: var(--text-primary); }
+
+/* Botón "Ver boleta" dentro del item */
+.btn-boleta {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-muted);
+  background: var(--bg-card-2);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 3px 11px;
+  cursor: pointer;
+  transition: color .2s, border-color .2s;
+  font-family: 'DM Sans', sans-serif;
+}
+
+.btn-boleta:hover {
+  color: var(--accent);
+  border-color: rgba(198,241,53,.3);
+}
+
+.btn-boleta svg { width: 11px; height: 11px; }
+
+/* Loading spinner dentro del modal */
+.ticket-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  padding: 60px 20px;
+  color: var(--text-muted);
+  font-size: 13px;
+}
+
+.ticket-spinner {
+  width: 28px;
+  height: 28px;
+  border: 2px solid var(--border);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin .7s linear infinite;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── Print ────────────────────────────────────────────── */
+@media print {
+  body > *:not(.modal-overlay) { display: none !important; }
+
+  .modal-overlay {
+    position: static;
+    background: none;
+    backdrop-filter: none;
+    padding: 0;
+    display: block;
+  }
+
+  .modal-ticket {
+    max-width: 100%;
+    border: none;
+    border-radius: 0;
+    box-shadow: none;
+    animation: none;
+  }
+
+  .ticket-footer,
+  .modal-close-btn { display: none !important; }
+
+  .ticket-header { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+
+  .ticket-qr-section img { width: 180px; height: 180px; }
+}
