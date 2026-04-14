@@ -1,9 +1,9 @@
 import { useState, useEffect, useCallback } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import "../../css/favorites.css";
-import api from "../lib/api.js";
-import { Auth } from "../lib/auth.js";
-import Sidebar from "./Sidebar.jsx";
+import api from "../services/api.js";
+import { Auth } from "../services/auth.js";
+import Sidebar from "../components/Sidebar.jsx";
 
 // ── Helpers ──────────────────────────────────────────────────
 

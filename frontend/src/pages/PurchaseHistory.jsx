@@ -1,8 +1,9 @@
 import { useState, useEffect, useCallback } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import "../../css/purchases.css";
-import api from "../lib/api.js";
-import { Auth } from "../lib/auth.js";
+import api from "../services/api.js";
+import { Auth } from "../services/auth.js";
+import { formatDate, formatPrice } from "../utils/formatters.js";
 
 // ── Helpers ───────────────────────────────────────────────────
 
@@ -12,23 +13,6 @@ function getUserName() {
     payload?.nombre || payload?.name ||
     payload?.username || payload?.sub || "Usuario"
   );
-}
-
-function formatDate(dateStr) {
-  if (!dateStr) return "—";
-  const d = new Date(dateStr);
-  if (isNaN(d)) return "—";
-  return d.toLocaleDateString("es-CO", {
-    day: "2-digit", month: "short", year: "numeric",
-  });
-}
-
-function formatPrice(value) {
-  if (!value && value !== 0) return "—";
-  if (Number(value) === 0) return "Gratis";
-  return new Intl.NumberFormat("es-CO", {
-    style: "currency", currency: "COP", minimumFractionDigits: 0,
-  }).format(value);
 }
 
 // ── Modal de boleta ───────────────────────────────────────────

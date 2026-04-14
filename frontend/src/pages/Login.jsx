@@ -9,7 +9,7 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import "../../css/auth.css";
-import { handleLogin, Auth } from "../lib/auth.js";
+import { handleLogin, Auth } from "../services/auth.js";
 
 // ── Regex de validación de email (igual que el original) ──────
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
