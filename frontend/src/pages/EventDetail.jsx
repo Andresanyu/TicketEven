@@ -3,6 +3,7 @@ import { useSearchParams, Link, useNavigate } from "react-router-dom";
 import "../../css/event_card.css";
 import api from "../services/api.js";
 import { Auth } from "../services/auth.js";
+import purchaseService from "../services/purchaseService.js";
 
 function formatDate(isoString) {
   if (!isoString) return "Sin fecha";
@@ -39,10 +40,10 @@ function PurchaseModal({ entradas, eventName, onClose, onSuccess }) {
 
     setLoading(true);
     try {
-      await api.post("/purchases", {
+      await purchaseService.createPurchase({
         evento_tipo_entrada_id: selected.id,
         cantidad,
-      }, Auth.authOptions());
+      });
 
       setFeedback({ ok: true, msg: `Compraste ${cantidad} entrada(s) para ${eventName}. ¡Disfruta el evento!` });
       onSuccess();
