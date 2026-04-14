@@ -15,6 +15,7 @@ import "../../css/categories.css";
 import api      from "../services/api.js";
 import { Auth } from "../services/auth.js";
 import Sidebar  from "../components/Sidebar.jsx";
+import useApi from "../hooks/useApi.js";
 
 // ── Helpers puros ─────────────────────────────────────────────
 function normalizeCategory(raw) {
@@ -36,9 +37,20 @@ export default function Categories() {
   const [adminInitial, setAdminInitial] = useState("A");
 
   // ── Estado de la tabla ────────────────────────────────────
-  const [categories, setCategories] = useState([]);
   const [search,     setSearch]     = useState("");
-  const [loading,    setLoading]    = useState(true);
+
+  const {
+    data: categories = [],
+    loading,
+    error,
+    refresh,
+  } = useApi(
+    async () => {
+      const data = await api.get("/categories", Auth.authOptions());
+      return Array.isArray(data) ? data.map(normalizeCategory) : [];
+    },
+    { initialData: [] }
+  );
 
   // ── Estado del modal CRUD ─────────────────────────────────
   const [modalOpen, setModalOpen] = useState(false);
@@ -60,7 +72,7 @@ export default function Categories() {
   const nombreRef = useRef(null);
 
   // ─────────────────────────────────────────────────────────
-  // INIT: identidad + carga de datos
+  // INIT: identidad
   // ─────────────────────────────────────────────────────────
   useEffect(() => {
     if (!Auth.isLoggedIn()) {
@@ -77,8 +89,6 @@ export default function Categories() {
     setAdminName(name);
     setAdminInitial(name.trim().charAt(0).toUpperCase() || "A");
 
-    void loadCategories();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [navigate]);
 
   if (!Auth.isLoggedIn() || Auth.getRol() !== "admin") {
@@ -107,22 +117,6 @@ export default function Categories() {
   const filtered = search.trim()
     ? categories.filter((c) => c.nombre.toLowerCase().includes(search.trim().toLowerCase()))
     : categories;
-
-  // ─────────────────────────────────────────────────────────
-  // CARGA DE DATOS
-  // ─────────────────────────────────────────────────────────
-  async function loadCategories() {
-    setLoading(true);
-    try {
-      const data = await api.get("/categories", Auth.authOptions());
-      setCategories(Array.isArray(data) ? data.map(normalizeCategory) : []);
-    } catch (err) {
-      console.error(err);
-      window.alert("No se pudieron cargar las categorías.");
-    } finally {
-      setLoading(false);
-    }
-  }
 
   // ─────────────────────────────────────────────────────────
   // MODAL CRUD — abrir / cerrar
@@ -174,7 +168,7 @@ export default function Categories() {
         window.alert("Categoría creada correctamente.");
       }
       closeModal();
-      await loadCategories();
+      await refresh();
     } catch (err) {
       if (err?.status === 409) {
         setFieldError("Ya existe una categoría con ese nombre.");
@@ -209,7 +203,7 @@ export default function Categories() {
       await api.delete(`/categories/${deletingId}`, Auth.authOptions());
       closeConfirm();
       window.alert("Categoría eliminada correctamente.");
-      await loadCategories();
+      await refresh();
     } catch (err) {
       console.error(err);
       closeConfirm();
@@ -270,6 +264,12 @@ export default function Categories() {
               : `${filtered.length} categoría${filtered.length !== 1 ? "s" : ""}`}
           </span>
         </div>
+
+        {error && (
+          <p className="table-count" style={{ color: "#e27272" }}>
+            {error}
+          </p>
+        )}
 
         {/* Tabla */}
         <div className="table-wrap" style={{ "--delay": "120ms" }}>
