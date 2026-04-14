@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import "../../css/auth.css";
-import { handleRegister, Auth } from "../lib/auth.js";
+import { handleRegister, Auth } from "../services/auth.js";
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 

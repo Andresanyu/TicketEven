@@ -1,16 +1,16 @@
 import { Routes, Route } from 'react-router-dom';
-import Events from './components/Events';
-import AdminDashboard from './components/AdminDashboard';
-import Categories from './components/Categories';
-import EventDetail from './components/EventDetail';
-import Favorites from './components/Favorites';
-import PublicEvents from './components/PublicEvents';
-import Login from './components/Login';
-import Register from './components/Register';
-import CapacityReport from './components/CapacityReport';
-import Reports from './components/Reports';
-import SavedEvents from './components/SavedEvents';
-import PurchaseHistory from './components/PurchaseHistory';
+import Events from './pages/Events';
+import AdminDashboard from './pages/AdminDashboard';
+import Categories from './pages/Categories';
+import EventDetail from './pages/EventDetail';
+import Favorites from './pages/Favorites';
+import PublicEvents from './pages/PublicEvents';
+import Login from './pages/Login';
+import Register from './pages/Register';
+import CapacityReport from './pages/CapacityReport';
+import Reports from './pages/Reports';
+import SavedEvents from './pages/SavedEvents';
+import PurchaseHistory from './pages/PurchaseHistory';
 
 function App() {
   return (

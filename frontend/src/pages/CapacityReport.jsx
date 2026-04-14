@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Sidebar from "../components/Sidebar.jsx";
-import api from "../lib/api.js";
-import { Auth } from "../lib/auth.js";
+import api from "../services/api.js";
+import { Auth } from "../services/auth.js";
 import "../../css/capacity_report.css";
 
 export default function CapacityReport() {

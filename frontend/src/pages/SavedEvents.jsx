@@ -1,8 +1,8 @@
 import { useState, useEffect, useCallback } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import "../../css/saved_event.css";
-import api from "../lib/api.js";
-import { Auth } from "../lib/auth.js";
+import api from "../services/api.js";
+import { Auth } from "../services/auth.js";
 
 // ── Helper ───────────────────────────────────────────────────
 

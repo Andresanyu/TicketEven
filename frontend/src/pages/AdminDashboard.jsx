@@ -11,7 +11,7 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import "../../css/admin_dashboard.css";
-import { Auth }  from "../lib/auth.js";
+import { Auth }  from "../services/auth.js";
 import Sidebar   from "../components/Sidebar.jsx";
 
 // ── Tarjetas de navegación rápida ────────────────────────────

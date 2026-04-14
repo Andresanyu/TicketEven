@@ -1,8 +1,8 @@
 import { useState, useEffect, useCallback } from "react";
 import { useSearchParams, Link, useNavigate } from "react-router-dom";
 import "../../css/event_card.css";
-import api from "../lib/api.js";
-import { Auth } from "../lib/auth.js";
+import api from "../services/api.js";
+import { Auth } from "../services/auth.js";
 
 function formatDate(isoString) {
   if (!isoString) return "Sin fecha";
