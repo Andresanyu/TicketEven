@@ -17,7 +17,7 @@ import { Link, useNavigate } from "react-router-dom";
 import "../../css/events_admin.css";
 import api      from "../lib/api.js";
 import { Auth } from "../lib/auth.js";
-import Sidebar  from "./Sidebar.jsx";
+import Sidebar  from "../components/Sidebar.jsx";
 
 // ── Constantes ────────────────────────────────────────────────
 const SWAL_BASE = {

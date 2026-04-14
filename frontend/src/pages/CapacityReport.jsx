@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import Sidebar from "./Sidebar";
+import Sidebar from "../components/Sidebar.jsx";
 import api from "../lib/api.js";
 import { Auth } from "../lib/auth.js";
 import "../../css/capacity_report.css";
