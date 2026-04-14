@@ -1,6 +1,5 @@
 import { IEventRepository } from "./event.repository.interface";
 import { EventRow, CreateEventDTO, UpdateEventDTO, PopularityReport } from "./event.types";
-import { EventNotFoundError } from "./event.repository";
 
 export class EventService {
     constructor(private readonly eventRepository: IEventRepository) {}
@@ -69,5 +68,3 @@ export class NotFoundError extends Error {
         this.name = "NotFoundError";
     }
 }
-
-export { EventNotFoundError };

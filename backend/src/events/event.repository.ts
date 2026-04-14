@@ -7,6 +7,7 @@ import {
     UpdateEventDTO,
     PopularityReport,
 } from "./event.types";
+import { EventNotFoundError } from "../utils/EventNotFoundError";
 
 const EVENT_SELECT_QUERY = `
     SELECT
@@ -275,13 +276,5 @@ export class EventRepository implements IEventRepository {
             total_saves: Number(statsResult.rows[0]?.total_saves ?? 0),
             total_users: Number(statsResult.rows[0]?.total_users ?? 0),
         };
-    }
-}
-
-// Domain errors specific to this repository
-export class EventNotFoundError extends Error {
-    constructor(message: string) {
-        super(message);
-        this.name = "EventNotFoundError";
     }
 }

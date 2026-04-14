@@ -1,8 +1,9 @@
 import { Request, Response } from "express";
-import { EventService, NotFoundError, EventNotFoundError } from "./event.service";
+import { EventService, NotFoundError } from "./event.service";
 import { AuthRequest } from "../middlewares/auth";
 import { parseEntradas, parseCategoriaId, parseValor } from "./event.parsers";
 import { CreateEventDTO, UpdateEventDTO } from "./event.types";
+import { EventNotFoundError } from "../utils/EventNotFoundError";
 
 export class EventController {
     constructor(private readonly eventService: EventService) {}
