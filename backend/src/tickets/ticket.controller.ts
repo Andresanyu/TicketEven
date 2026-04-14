@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { TicketService } from "./ticket.service";
+import { TicketService, NotFoundError } from "./ticket.service";
 
 export class TicketController {
   constructor(private readonly service: TicketService) {}
@@ -13,8 +13,12 @@ export class TicketController {
       }
       const report = await this.service.getCapacityReport(eventId);
       res.json(report);
-    } catch (err: any) {
-      res.status(err.status ?? 500).json({ message: err.message ?? "Error interno" });
+    } catch (err) {
+      if (err instanceof NotFoundError) {
+        res.status(404).json({ message: err.message });
+      } else {
+        res.status(500).json({ message: "Error interno" });
+      }
     }
   };
 }

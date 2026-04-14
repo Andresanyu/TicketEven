@@ -63,6 +63,14 @@ export class PurchaseRepository implements IPurchaseRepository {
     return result.rows;
   }
 
+  async findPrecioByEntradaId(eventoTipoEntradaId: number): Promise<number | null> {
+  const result = await this.pool.query(
+    "SELECT precio FROM eventos_tipos_entrada WHERE id = $1",
+    [eventoTipoEntradaId]
+  );
+  return result.rowCount === 0 ? null : Number(result.rows[0].precio);
+}
+
   async findById(id: number): Promise<Omit<PurchaseWithQR, "qr_code"> | null> {
     const result = await this.pool.query(
       `SELECT 

@@ -1,9 +1,10 @@
-import { AdminGlobalMetrics, AdminRepository } from "./admin.repository";
+import { IAdminRepository } from "./admin.repository.interface";
+import { AdminGlobalMetrics } from "./admin.types";
 
 export class AdminService {
-    constructor(private readonly adminRepository: AdminRepository) {}
+  constructor(private readonly adminRepository: IAdminRepository) {} // 👈
 
-    async getGlobalMetrics(): Promise<AdminGlobalMetrics> {
-        return this.adminRepository.getGlobalMetrics();
-    }
+  async getGlobalMetrics(): Promise<AdminGlobalMetrics> {
+    return this.adminRepository.getGlobalMetrics();
+  }
 }
