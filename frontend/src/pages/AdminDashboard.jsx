@@ -11,6 +11,7 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import "../../css/admin_dashboard.css";
+import api from "../services/api.js";
 import { Auth }  from "../services/auth.js";
 import Sidebar   from "../components/Sidebar.jsx";
 
@@ -124,12 +125,7 @@ export default function AdminDashboard() {
   useEffect(() => {
     const fetchMetrics = async () => {
       try {
-        const token = localStorage.getItem('token');
-        const res = await fetch('http://localhost:4001/api/admin/metrics', {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        if (!res.ok) throw new Error('Error');
-        const data = await res.json();
+        const data = await api.get("/admin/metrics", Auth.authOptions());
         setMetrics(data);
         setMetricsError(false);
       } catch {
