@@ -54,7 +54,7 @@ export default function CapacityReport() {
 
   return (
     <div style={{ display: "flex" }}>
-      <Sidebar activeItem="reportes" adminName={adminName} adminInitial={adminInitial} />
+      <Sidebar activeItem="aforo" adminName={adminName} adminInitial={adminInitial} />
 
       <main className="main cr-main">
         <div className="page-header">
@@ -96,14 +96,16 @@ export default function CapacityReport() {
               </thead>
               <tbody>
                 {report.entries.map((entry) => {
-                  const pct = Math.round((entry.vendidas / entry.aforo_total) * 100);
+                  const pct = entry.aforo_total > 0
+                    ? Math.min(Math.round((entry.vendidas / entry.aforo_total) * 100), 100)
+                    : entry.vendidas > 0 ? 100 : 0;
                   const barColor = pct >= 90 ? "#e05c5c" : pct >= 60 ? "#f5a623" : "var(--accent)";
                   return (
                     <tr key={entry.ticket_type_id}>
                       <td className="cr-type-name">{entry.tipo_entrada}</td>
                       <td className="cr-num">{entry.aforo_total}</td>
                       <td className="cr-num">{entry.vendidas}</td>
-                      <td className="cr-num cr-remaining">{entry.disponibles}</td>
+                      <td className="cr-num cr-remaining">{Math.max(entry.disponibles, 0)}</td>
                       <td className="cr-bar-cell">
                         <div className="cr-bar-wrap">
                           <div

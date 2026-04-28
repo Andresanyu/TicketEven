@@ -124,6 +124,33 @@ a { text-decoration: none; color: inherit; }
 .admin-name { font-size: 13px; font-weight: 500; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .admin-role { font-size: 11px; color: var(--accent-dim); font-weight: 600; letter-spacing: .4px; }
 
+.sidebar-logout-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: var(--text-muted);
+  font-size: 13px;
+  padding: 8px 4px;
+  border-radius: 7px;
+  margin-top: 10px;
+  transition: color .18s, background .18s;
+}
+
+.sidebar-logout-btn svg {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+}
+
+.sidebar-logout-btn:hover {
+  color: var(--red);
+  background: var(--red-subtle);
+}
+
 /* ══════════════════════════════════════════
    ÁREA PRINCIPAL
 ══════════════════════════════════════════ */

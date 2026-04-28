@@ -99,6 +99,33 @@ a { text-decoration: none; color: inherit; }
 .admin-name { font-size: 13px; font-weight: 500; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .admin-role { font-size: 11px; color: var(--accent-dim); font-weight: 600; letter-spacing: .4px; }
 
+.sidebar-logout-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: var(--text-muted);
+  font-size: 13px;
+  padding: 8px 4px;
+  border-radius: 7px;
+  margin-top: 10px;
+  transition: color .18s, background .18s;
+}
+
+.sidebar-logout-btn svg {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+}
+
+.sidebar-logout-btn:hover {
+  color: var(--red);
+  background: var(--red-subtle);
+}
+
 /* ══════════════════════════════════════════
    SWEETALERT2 (DARK THEME)
 ══════════════════════════════════════════ */
@@ -519,6 +546,15 @@ a { text-decoration: none; color: inherit; }
 .confirm-warning svg { width: 16px; height: 16px; color: var(--red); flex-shrink: 0; margin-top: 2px; }
 .confirm-warning p   { font-size: 13px; color: var(--text-secondary); line-height: 1.55; }
 
+.confirm-success {
+  display: flex; align-items: flex-start; gap: 12px;
+  background: rgba(198,241,53,.07);
+  border: 1px solid rgba(198,241,53,.2);
+  border-radius: 9px; padding: 14px 16px;
+}
+.confirm-success svg { width: 16px; height: 16px; color: var(--accent); flex-shrink: 0; margin-top: 2px; }
+.confirm-success p { font-size: 13px; color: var(--text-secondary); line-height: 1.55; }
+
 /* ══════════════════════════════════════════
    ANIMACIÓN
 ══════════════════════════════════════════ */
@@ -784,6 +820,44 @@ a { text-decoration: none; color: inherit; }
   color: var(--red);
   border-color: rgba(224,92,92,.3);
   transform: scale(1.08);
+}
+
+/* ── Toast ── */
+.toast {
+  position: fixed;
+  right: 18px;
+  bottom: 18px;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--bg-card);
+  color: var(--text-primary);
+  font-size: 13px;
+  box-shadow: 0 8px 24px rgba(0,0,0,.45);
+  opacity: 0;
+  transform: translateY(10px);
+  pointer-events: none;
+  transition: opacity .18s, transform .18s;
+}
+
+.toast-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--accent);
+}
+
+.toast.show {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.toast.error .toast-dot {
+  background: var(--red);
 }
 
 /* ── Ajuste responsive: una columna en móvil ── */

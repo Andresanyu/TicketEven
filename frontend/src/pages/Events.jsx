@@ -3,11 +3,6 @@
 // Migración de events.html + events.js a React con Vite.
 // Mantiene clases CSS, IDs y lógica idénticos al original.
 //
-// Dependencias externas que deben existir igual que antes:
-//   import api      from './api.js'
-//   import { Auth } from './auth.js'
-//   window.Swal     (cargado vía CDN o npm install sweetalert2)
-//
 // Uso:
 //   <Events />
 // ─────────────────────────────────────────────────────────────
@@ -20,20 +15,6 @@ import { Auth } from "../services/auth.js";
 import Sidebar  from "../components/Sidebar.jsx";
 import EventsTable from "../components/EventsTable.jsx";
 import EventFormModal from "../components/EventFormModal.jsx";
-
-// ── Constantes ────────────────────────────────────────────────
-const SWAL_BASE = {
-  background: "#121212",
-  color: "#eaeaea",
-  confirmButtonColor: "#c6f135",
-  customClass: {
-    popup:         "swal2-dark-popup",
-    title:         "swal2-dark-title",
-    htmlContainer: "swal2-dark-text",
-    confirmButton: "swal2-dark-confirm",
-    cancelButton:  "swal2-dark-cancel",
-  },
-};
 
 // ── Helpers puros (sin estado, sin efectos) ───────────────────
 const todayIso = () => new Date().toISOString().split("T")[0];
@@ -77,51 +58,6 @@ function normalizeEvent(raw) {
   };
 }
 
-// ── Wrappers de SweetAlert2 ───────────────────────────────────
-function getSwalInstance() {
-  if (typeof window !== "undefined" && window.Swal?.fire) return window.Swal;
-  return null;
-}
-
-const notifySuccess = (title) => {
-  const swal = getSwalInstance();
-  if (!swal) {
-    console.warn("SweetAlert2 no está disponible. Mostrando fallback nativo.");
-    window.alert(title);
-    return Promise.resolve();
-  }
-  return swal.fire({ ...SWAL_BASE, icon: "success", title });
-};
-
-const notifyError = (title, text = "") => {
-  const swal = getSwalInstance();
-  if (!swal) {
-    console.warn("SweetAlert2 no está disponible. Mostrando fallback nativo.");
-    window.alert(text ? `${title}\n${text}` : title);
-    return Promise.resolve();
-  }
-  return swal.fire({ ...SWAL_BASE, icon: "error", title, text });
-};
-
-async function askConfirm(title, text) {
-  const swal = getSwalInstance();
-  if (!swal) {
-    return window.confirm(text ? `${title}\n\n${text}` : title);
-  }
-
-  const result = await swal.fire({
-    ...SWAL_BASE,
-    icon: "warning",
-    title,
-    text,
-    showCancelButton:   true,
-    confirmButtonText:  "Confirmar",
-    cancelButtonText:   "Cancelar",
-    cancelButtonColor:  "#2f3431",
-  });
-  return Boolean(result.isConfirmed);
-}
-
 // ══════════════════════════════════════════════════════════════
 // COMPONENTE PRINCIPAL
 // ══════════════════════════════════════════════════════════════
@@ -158,6 +94,8 @@ export default function Events() {
   const [entradasError,setEntradasError]= useState("");
   const [showNuevoTipo,setShowNuevoTipo]= useState(false);
   const [nuevoTipoVal, setNuevoTipoVal] = useState("");
+  const [notification, setNotification] = useState({ visible: false, msg: "", isError: false });
+  const [confirmModal, setConfirmModal] = useState({ open: false, msg: "", onConfirm: null });
 
   useEffect(() => {
     if (!Auth.isLoggedIn()) {
@@ -203,7 +141,12 @@ export default function Events() {
 
   // ── ESC cierra el modal ────────────────────────────────────
   useEffect(() => {
-    const handler = (e) => { if (e.key === "Escape") closeModal(); };
+    const handler = (e) => {
+      if (e.key === "Escape") {
+        closeModal();
+        closeNotification();
+      }
+    };
     document.addEventListener("keydown", handler);
     return () => document.removeEventListener("keydown", handler);
   }, []);
@@ -217,7 +160,7 @@ export default function Events() {
       setEvents(Array.isArray(data) ? data.map(normalizeEvent) : []);
     } catch (err) {
       console.error(err);
-      await notifyError("Error de eventos", "No se pudieron cargar los eventos.");
+      showNotification("No se pudieron cargar los eventos.", true);
     }
   }
 
@@ -231,7 +174,7 @@ export default function Events() {
       );
     } catch (err) {
       console.error(err);
-      await notifyError("Error de categorías", "No se pudieron cargar las categorías.");
+      showNotification("No se pudieron cargar las categorías.", true);
     }
   }
 
@@ -251,7 +194,7 @@ export default function Events() {
       }
     } catch (err) {
       console.error(err);
-      await notifyError("Error de tipos de entrada", "No se pudieron cargar los tipos de entrada.");
+      showNotification("No se pudieron cargar los tipos de entrada.", true);
     }
   }
 
@@ -314,7 +257,7 @@ export default function Events() {
       setModalOpen(true);
     } catch (err) {
       console.error(err);
-      await notifyError("Error de evento", "No se pudo cargar la información completa del evento.");
+      showNotification("No se pudo cargar la información completa del evento.", true);
     }
   }
 
@@ -329,6 +272,22 @@ export default function Events() {
   function handleFormChange(field, value) {
     setForm((f) => ({ ...f, [field]: value }));
     setFieldErrors((fe) => ({ ...fe, [field]: "" }));
+  }
+
+  function showNotification(msg, isError = false) {
+    setNotification({ visible: true, msg, isError });
+  }
+
+  function closeNotification() {
+    setNotification((prev) => ({ ...prev, visible: false }));
+  }
+
+  function openConfirmModal(msg, onConfirm) {
+    setConfirmModal({ open: true, msg, onConfirm });
+  }
+
+  function closeConfirmModal() {
+    setConfirmModal({ open: false, msg: "", onConfirm: null });
   }
 
   function buildPayload() {
@@ -366,7 +325,7 @@ export default function Events() {
     if (!validateForm(payload)) return;
     if (!payload.entradas.length) {
       setEntradasError("Agrega al menos un tipo de entrada con aforo.");
-      await notifyError("Entradas requeridas", "Debes agregar al menos un tipo de entrada antes de guardar.");
+      showNotification("Debes agregar al menos un tipo de entrada antes de guardar.", true);
       return;
     }
 
@@ -374,16 +333,16 @@ export default function Events() {
     try {
       if (modalMode === "edit" && editingId) {
         await api.put(`/events/${editingId}`, payload, Auth.authOptions());
-        await notifySuccess("Evento actualizado correctamente");
+        showNotification("Evento actualizado correctamente");
       } else {
         await api.post("/events", payload, Auth.authOptions());
-        await notifySuccess("Evento creado correctamente");
+        showNotification("Evento creado correctamente");
       }
       closeModal();
       await loadEvents();
     } catch (err) {
       console.error(err);
-      await notifyError("Error al guardar", err?.message || "No fue posible guardar el evento.");
+      showNotification(err?.message || "No fue posible guardar el evento.", true);
     } finally {
       setSaving(false);
     }
@@ -393,16 +352,16 @@ export default function Events() {
   // INACTIVAR EVENTO
   // ─────────────────────────────────────────────────────────
   async function disableEvent(eventId) {
-    const ok = await askConfirm("Inactivar evento", "El evento se marcará como inactivo y dejará de mostrarse como activo.");
-    if (!ok) return;
-    try {
-      await api.patch(`/events/${eventId}`, { activo: false }, Auth.authOptions());
-      await notifySuccess("El evento ha sido inactivado");
-      await loadEvents();
-    } catch (err) {
-      console.error(err);
-      await notifyError("Error al inactivar", err?.message || "No fue posible inactivar el evento.");
-    }
+    openConfirmModal("El evento se marcará como inactivo y dejará de mostrarse como activo.", async () => {
+      try {
+        await api.patch(`/events/${eventId}`, { activo: false }, Auth.authOptions());
+        showNotification("El evento ha sido inactivado");
+        await loadEvents();
+      } catch (err) {
+        console.error(err);
+        showNotification(err?.message || "No fue posible inactivar el evento.", true);
+      }
+    });
   }
 
   // ─────────────────────────────────────────────────────────
@@ -452,10 +411,10 @@ export default function Events() {
       setNuevoTipoVal("");
       setShowNuevoTipo(false);
       setEntradasError("");
-      await notifySuccess("Tipo de entrada creado correctamente");
+      showNotification("Tipo de entrada creado correctamente");
     } catch (err) {
       console.error(err);
-      await notifyError("Error al crear tipo", err?.message || "No fue posible crear el tipo de entrada.");
+      showNotification(err?.message || "No fue posible crear el tipo de entrada.", true);
     }
   }
 
@@ -547,6 +506,84 @@ export default function Events() {
         onRemoveEntrada={removeEntrada}
         onGuardarNuevoTipo={guardarNuevoTipo}
       />
+
+      {confirmModal.open && (
+        <div className="modal-backdrop" id="confirmBackdrop" onClick={closeConfirmModal}>
+          <div className="modal modal-sm" id="confirmModal" role="dialog" aria-modal="true" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <div>
+                <p className="modal-eyebrow">Confirmación</p>
+                <h2 className="modal-title">Inactivar evento</h2>
+              </div>
+            </div>
+
+            <div className="modal-body">
+              <div className="confirm-warning">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <circle cx="12" cy="12" r="10" />
+                  <line x1="12" y1="8" x2="12" y2="12" />
+                  <line x1="12" y1="16" x2="12.01" y2="16" />
+                </svg>
+                <p>{confirmModal.msg}</p>
+              </div>
+            </div>
+
+            <div className="modal-footer">
+              <button className="btn-ghost" type="button" onClick={closeConfirmModal}>Cancelar</button>
+              <button
+                className="btn-danger"
+                type="button"
+                onClick={async () => {
+                  const handler = confirmModal.onConfirm;
+                  closeConfirmModal();
+                  if (typeof handler === "function") {
+                    await handler();
+                  }
+                }}
+              >
+                Confirmar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {notification.visible && (
+        <div className="modal-backdrop" onClick={closeNotification}>
+          <div className="modal modal-sm" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2 className="modal-title">
+                {notification.isError ? "Error" : "Éxito"}
+              </h2>
+              <button className="modal-close" onClick={closeNotification}>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <line x1="18" y1="6" x2="6" y2="18"/>
+                  <line x1="6" y1="6" x2="18" y2="18"/>
+                </svg>
+              </button>
+            </div>
+            <div className="modal-body modal-body-single">
+              <div className={notification.isError ? "confirm-warning" : "confirm-success"}>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  {notification.isError
+                    ? <><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></>
+                    : <><circle cx="12" cy="12" r="10"/><polyline points="9 12 11 14 15 10"/></>
+                  }
+                </svg>
+                <p>{notification.msg}</p>
+              </div>
+            </div>
+            <div className="modal-footer">
+              <button
+                className={notification.isError ? "btn-danger" : "btn-primary"}
+                onClick={closeNotification}
+              >
+                Aceptar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }
