@@ -172,6 +172,33 @@ a { text-decoration: none; color: inherit; }
   letter-spacing: .4px;
 }
 
+.sidebar-logout-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: var(--text-muted);
+  font-size: 13px;
+  padding: 8px 4px;
+  border-radius: 7px;
+  margin-top: 10px;
+  transition: color .18s, background .18s;
+}
+
+.sidebar-logout-btn svg {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+}
+
+.sidebar-logout-btn:hover {
+  color: var(--red);
+  background: var(--red-subtle);
+}
+
 /* ══════════════════════════════════════════
    ÁREA PRINCIPAL
 ══════════════════════════════════════════ */
@@ -245,7 +272,7 @@ a { text-decoration: none; color: inherit; }
 /* Grid de tarjetas */
 .cards-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(2, 1fr);
   gap: 20px;
 }
 
