@@ -149,7 +149,7 @@ export default function Events() {
   // Campos del formulario
   const EMPTY_FORM = {
     titulo: "", descripcion: "", fecha: "", hora: "",
-    categoria: "", imagen: "", valor: "", estado: "true",
+    categoria: "", imagen: "", precio: "", estado: "true",
   };
   const [form,         setForm]         = useState(EMPTY_FORM);
   const [imgError,     setImgError]     = useState(false);
@@ -300,9 +300,9 @@ export default function Events() {
         hora:        split.time,
         categoria:   catId,
         imagen:      eventData.imagen_url || "",
-        valor:       eventData.valor == null ? "" : String(eventData.valor),
         estado:      String(eventData.activo),
       });
+      // entradasList already set below
       setEntradasList(
         (eventData.entradas || []).map((e) => ({
           tipo_entrada_id: e.tipo_entrada_id,
@@ -336,7 +336,6 @@ export default function Events() {
       nombre:       form.titulo.trim(),
       categoria_id: form.categoria ? Number(form.categoria) : null,
       fecha:        form.fecha ? `${form.fecha}T${form.hora || "00:00"}:00` : null,
-      valor:        form.valor === "" ? null : Number(form.valor),
       descripcion:  form.descripcion.trim() || null,
       imagen_url:   form.imagen.trim() || null,
       activo:       form.estado === "true",
@@ -412,11 +411,14 @@ export default function Events() {
   function addEntrada() {
     const tipoRaw = String(form.tipoEntrada ?? "").trim();
     const aforo   = Number(form.aforo ?? "");
+    const precioRaw = form.precio;
+    const precioNum = precioRaw === "" || precioRaw == null ? 0 : Number(precioRaw);
 
     if (!tipoRaw || tipoRaw === "new") { setEntradasError("Selecciona un tipo de entrada válido."); return; }
     const tipoId = Number(tipoRaw);
     if (!Number.isInteger(tipoId) || tipoId <= 0) { setEntradasError("El tipo seleccionado no es válido."); return; }
     if (!Number.isInteger(aforo) || aforo <= 0)  { setEntradasError("Ingresa un aforo entero mayor a 0."); return; }
+    if (!Number.isFinite(precioNum) || precioNum < 0) { setEntradasError("Ingresa un precio válido (>= 0)."); return; }
 
     const tipo = ticketTypes.find((t) => Number(t.id) === tipoId);
     if (!tipo) { setEntradasError("No se encontró el tipo de entrada."); return; }
@@ -427,13 +429,13 @@ export default function Events() {
       if (existing) {
         return prev.map((e) =>
           e.tipo_entrada_id === tipoId
-            ? { ...e, aforo: e.aforo + aforo, precio: Number(e.precio ?? 0) }
+            ? { ...e, aforo: e.aforo + aforo, precio: precioNum }
             : e
         );
       }
-      return [...prev, { tipo_entrada_id: tipoId, nombre: tipo.nombre, aforo, precio: 0 }];
+      return [...prev, { tipo_entrada_id: tipoId, nombre: tipo.nombre, aforo, precio: precioNum }];
     });
-    setForm((f) => ({ ...f, tipoEntrada: "", aforo: "" }));
+    setForm((f) => ({ ...f, tipoEntrada: "", aforo: "", precio: "" }));
   }
 
   function removeEntrada(tipoId) {
