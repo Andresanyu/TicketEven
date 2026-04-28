@@ -1,10 +1,10 @@
-import { ITicketRepository } from "./ticket.repository.interface";
-import { EventCapacityReport } from "./ticket.types";
+import { ITicketRepository } from './ticket.repository.interface';
+import { EventCapacityReport } from './ticket.types';
 
 export class NotFoundError extends Error {
   constructor(message: string) {
     super(message);
-    this.name = "NotFoundError";
+    this.name = 'NotFoundError';
   }
 }
 
@@ -13,7 +13,7 @@ export class TicketService {
 
   async getCapacityReport(eventId: number): Promise<EventCapacityReport> {
     const report = await this.repo.getCapacityReportByEvent(eventId);
-    if (!report) throw new NotFoundError("Evento no encontrado");
+    if (!report) throw new NotFoundError('Evento no encontrado');
     return report;
   }
 }

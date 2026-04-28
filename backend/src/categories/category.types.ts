@@ -1,12 +1,12 @@
 export interface CategoryRow {
-    id: number;
-    nombre: string;
+  id: number;
+  nombre: string;
 }
 
 export interface CreateCategoryDTO {
-    nombre: string;
+  nombre: string;
 }
 
 export interface UpdateCategoryDTO {
-    nombre: string;
+  nombre: string;
 }

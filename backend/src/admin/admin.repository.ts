@@ -1,6 +1,6 @@
-import { Pool } from "pg";
-import { IAdminRepository } from "./admin.repository.interface";
-import { AdminGlobalMetrics } from "./admin.types";
+import { Pool } from 'pg';
+import { IAdminRepository } from './admin.repository.interface';
+import { AdminGlobalMetrics } from './admin.types';
 
 const GLOBAL_METRICS_QUERY = `
   SELECT
@@ -19,8 +19,8 @@ export class AdminRepository implements IAdminRepository {
     return {
       total_tickets: Number(row.total_tickets ?? 0),
       active_events: Number(row.active_events ?? 0),
-      past_events:   Number(row.past_events   ?? 0),
-      total_users:   Number(row.total_users   ?? 0),
+      past_events: Number(row.past_events ?? 0),
+      total_users: Number(row.total_users ?? 0),
     };
   }
 }

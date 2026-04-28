@@ -1,5 +1,5 @@
-import { Request, Response } from "express";
-import { TicketService, NotFoundError } from "./ticket.service";
+import { Request, Response } from 'express';
+import { TicketService, NotFoundError } from './ticket.service';
 
 export class TicketController {
   constructor(private readonly service: TicketService) {}
@@ -8,7 +8,7 @@ export class TicketController {
     try {
       const eventId = parseInt(req.params.eventId);
       if (isNaN(eventId)) {
-        res.status(400).json({ message: "ID de evento inválido" });
+        res.status(400).json({ message: 'ID de evento inválido' });
         return;
       }
       const report = await this.service.getCapacityReport(eventId);
@@ -17,7 +17,7 @@ export class TicketController {
       if (err instanceof NotFoundError) {
         res.status(404).json({ message: err.message });
       } else {
-        res.status(500).json({ message: "Error interno" });
+        res.status(500).json({ message: 'Error interno' });
       }
     }
   };

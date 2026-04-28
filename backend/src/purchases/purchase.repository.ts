@@ -1,18 +1,19 @@
-import { Pool } from "pg";
-import { IPurchaseRepository } from "./purchase.repository.interface";
-import { PurchaseRow, CreatePurchaseDTO, PurchaseDetailRow, PurchaseWithQR } from "./purchase.types";
+import { Pool } from 'pg';
+import { IPurchaseRepository } from './purchase.repository.interface';
+import {
+  PurchaseRow,
+  CreatePurchaseDTO,
+  PurchaseDetailRow,
+  PurchaseWithQR,
+} from './purchase.types';
 
 export class PurchaseRepository implements IPurchaseRepository {
   constructor(private readonly pool: Pool) {}
 
-  async create(
-    usuarioId: number,
-    dto: CreatePurchaseDTO,
-    total: number
-  ): Promise<PurchaseRow> {
+  async create(usuarioId: number, dto: CreatePurchaseDTO, total: number): Promise<PurchaseRow> {
     const client = await this.pool.connect();
     try {
-      await client.query("BEGIN");
+      await client.query('BEGIN');
 
       // Descuenta el aforo con bloqueo para evitar condiciones de carrera
       const aforoResult = await client.query(
@@ -24,7 +25,7 @@ export class PurchaseRepository implements IPurchaseRepository {
       );
 
       if (aforoResult.rowCount === 0) {
-        throw new Error("No hay suficiente aforo disponible.");
+        throw new Error('No hay suficiente aforo disponible.');
       }
 
       const purchaseResult = await client.query(
@@ -34,10 +35,10 @@ export class PurchaseRepository implements IPurchaseRepository {
         [usuarioId, dto.evento_tipo_entrada_id, dto.cantidad, total]
       );
 
-      await client.query("COMMIT");
+      await client.query('COMMIT');
       return purchaseResult.rows[0];
     } catch (error) {
-      await client.query("ROLLBACK");
+      await client.query('ROLLBACK');
       throw error;
     } finally {
       client.release();
@@ -64,14 +65,13 @@ export class PurchaseRepository implements IPurchaseRepository {
   }
 
   async findPrecioByEntradaId(eventoTipoEntradaId: number): Promise<number | null> {
-  const result = await this.pool.query(
-    "SELECT precio FROM eventos_tipos_entrada WHERE id = $1",
-    [eventoTipoEntradaId]
-  );
-  return result.rowCount === 0 ? null : Number(result.rows[0].precio);
-}
+    const result = await this.pool.query('SELECT precio FROM eventos_tipos_entrada WHERE id = $1', [
+      eventoTipoEntradaId,
+    ]);
+    return result.rowCount === 0 ? null : Number(result.rows[0].precio);
+  }
 
-  async findById(id: number): Promise<Omit<PurchaseWithQR, "qr_code"> | null> {
+  async findById(id: number): Promise<Omit<PurchaseWithQR, 'qr_code'> | null> {
     const result = await this.pool.query(
       `SELECT 
         c.id, c.usuario_id, c.evento_tipo_entrada_id, c.cantidad,

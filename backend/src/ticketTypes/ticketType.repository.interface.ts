@@ -1,6 +1,6 @@
-import { TicketTypeRow, CreateTicketTypeDTO } from "./ticketType.types";
+import { TicketTypeRow, CreateTicketTypeDTO } from './ticketType.types';
 
 export interface ITicketTypeRepository {
-    findAll(): Promise<TicketTypeRow[]>;
-    create(dto: CreateTicketTypeDTO): Promise<TicketTypeRow>;
+  findAll(): Promise<TicketTypeRow[]>;
+  create(dto: CreateTicketTypeDTO): Promise<TicketTypeRow>;
 }

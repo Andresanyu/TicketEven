@@ -1,31 +1,31 @@
-import dotenv from "dotenv";
-import path from "path";
-import { Pool } from "pg";
+import dotenv from 'dotenv';
+import path from 'path';
+import { Pool } from 'pg';
 
-dotenv.config({ path: path.resolve(__dirname, "../../.env") });
+dotenv.config({ path: path.resolve(__dirname, '../../.env') });
 dotenv.config();
 
 const dbPort = Number(process.env.DB_PORT ?? 5432);
 const rawDbPassword = process.env.DB_PASSWORD ?? process.env.PGPASSWORD;
 
-if (rawDbPassword === undefined || rawDbPassword === null || String(rawDbPassword).trim() === "") {
+if (rawDbPassword === undefined || rawDbPassword === null || String(rawDbPassword).trim() === '') {
   throw new Error(
-    "DB_PASSWORD no está configurado. Define DB_PASSWORD en backend/.env para conectar con PostgreSQL (Docker/local)."
+    'DB_PASSWORD no está configurado. Define DB_PASSWORD en backend/.env para conectar con PostgreSQL (Docker/local).'
   );
 }
 
 const dbPassword = String(rawDbPassword);
 
 export const pool = new Pool({
-  host: process.env.DB_HOST ?? "localhost",
+  host: process.env.DB_HOST ?? 'localhost',
   port: Number.isNaN(dbPort) ? 5432 : dbPort,
-  user: process.env.DB_USER ?? "postgres",
-  database: process.env.DB_NAME ?? "postgres",
+  user: process.env.DB_USER ?? 'postgres',
+  database: process.env.DB_NAME ?? 'postgres',
   password: dbPassword,
 });
 
 export async function connectDatabase(): Promise<void> {
-  await pool.query("SELECT 1");
+  await pool.query('SELECT 1');
 }
 
 export async function runSchemaMigrations(): Promise<void> {
@@ -54,7 +54,9 @@ export async function runSchemaMigrations(): Promise<void> {
     )
   `);
 
-  await pool.query(`
+  await pool
+    .query(
+      `
     INSERT INTO saved_events (user_id, event_id, saved_at)
     SELECT
       f.usuario_id,
@@ -62,9 +64,11 @@ export async function runSchemaMigrations(): Promise<void> {
       COALESCE(f.fecha_agregado, CURRENT_TIMESTAMP)
     FROM favoritos f
     ON CONFLICT (user_id, event_id) DO NOTHING
-  `).catch(() => {
-    // Ignora si la tabla legacy no existe en instalaciones limpias.
-  });
+  `
+    )
+    .catch(() => {
+      // Ignora si la tabla legacy no existe en instalaciones limpias.
+    });
 
   await pool.query(`
     DROP TABLE IF EXISTS favoritos
