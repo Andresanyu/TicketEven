@@ -1,6 +1,6 @@
-import { Pool } from "pg";
-import { ITicketRepository } from "./ticket.repository.interface";
-import { EventCapacityReport } from "./ticket.types";
+import { Pool } from 'pg';
+import { ITicketRepository } from './ticket.repository.interface';
+import { EventCapacityReport } from './ticket.types';
 
 const CAPACITY_REPORT_QUERY = `
   SELECT
@@ -40,7 +40,7 @@ export class TicketRepository implements ITicketRepository {
       }));
 
       return {
-        event_id:   eventResult.rows[0].id,
+        event_id: eventResult.rows[0].id,
         event_name: eventResult.rows[0].nombre,
         entries,
       };

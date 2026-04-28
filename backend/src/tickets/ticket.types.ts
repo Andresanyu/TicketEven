@@ -19,5 +19,5 @@ export interface PurchaseRow {
   cantidad: number;
   total: number;
   fecha_compra: string;
-  estado: "completada" | "cancelada";
+  estado: 'completada' | 'cancelada';
 }

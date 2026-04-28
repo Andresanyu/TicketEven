@@ -5,7 +5,7 @@ export interface PurchaseRow {
   cantidad: number;
   total: number;
   fecha_compra: Date;
-  estado: "completada" | "cancelada";
+  estado: 'completada' | 'cancelada';
 }
 
 export interface CreatePurchaseDTO {
@@ -20,6 +20,6 @@ export interface PurchaseDetailRow extends PurchaseRow {
 }
 
 export interface PurchaseWithQR extends PurchaseDetailRow {
-  qr_code: string;       // base64 data URL
+  qr_code: string; // base64 data URL
   fecha_evento: Date | null;
 }

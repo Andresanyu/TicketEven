@@ -1,6 +1,6 @@
-import { Pool } from "pg";
-import { IUserRepository } from "./user.repository.interface";
-import { UserRow, SavedEventRow, CreateUserDTO } from "./user.types";
+import { Pool } from 'pg';
+import { IUserRepository } from './user.repository.interface';
+import { UserRow, SavedEventRow, CreateUserDTO } from './user.types';
 
 const USERS_SELECT = `
     SELECT
@@ -29,69 +29,66 @@ const SAVED_EVENTS_SELECT = `
 `;
 
 export class UserRepository implements IUserRepository {
-    constructor(private readonly pool: Pool) {}
+  constructor(private readonly pool: Pool) {}
 
-    async findAll(): Promise<UserRow[]> {
-        const result = await this.pool.query(`${USERS_SELECT} ORDER BY u.id DESC`);
-        return result.rows;
-    }
+  async findAll(): Promise<UserRow[]> {
+    const result = await this.pool.query(`${USERS_SELECT} ORDER BY u.id DESC`);
+    return result.rows;
+  }
 
-    async findById(id: number): Promise<UserRow | null> {
-        const result = await this.pool.query(
-            `${USERS_SELECT} WHERE u.id = $1`,
-            [id]
-        );
-        return result.rows[0] ?? null;
-    }
+  async findById(id: number): Promise<UserRow | null> {
+    const result = await this.pool.query(`${USERS_SELECT} WHERE u.id = $1`, [id]);
+    return result.rows[0] ?? null;
+  }
 
-    async findByEmail(email: string): Promise<UserRow | null> {
-        const result = await this.pool.query(
-            `SELECT id, nombre, email, password_hash, rol, activo
+  async findByEmail(email: string): Promise<UserRow | null> {
+    const result = await this.pool.query(
+      `SELECT id, nombre, email, password_hash, rol, activo
              FROM usuarios
              WHERE email = $1`,
-            [email]
-        );
-        return result.rows[0] ?? null;
-    }
+      [email]
+    );
+    return result.rows[0] ?? null;
+  }
 
-    async create(dto: CreateUserDTO): Promise<UserRow> {
-        const result = await this.pool.query(
-            `INSERT INTO usuarios (nombre, email, password_hash, rol)
+  async create(dto: CreateUserDTO): Promise<UserRow> {
+    const result = await this.pool.query(
+      `INSERT INTO usuarios (nombre, email, password_hash, rol)
              VALUES ($1, $2, $3, 'externo')
              RETURNING id, nombre, email, rol, activo, fecha_registro`,
-            [dto.nombre, dto.email, dto.password_hash]
-        );
-        return result.rows[0];
-    }
+      [dto.nombre, dto.email, dto.password_hash]
+    );
+    return result.rows[0];
+  }
 
-    async findSavedEventsByUserId(userId: number): Promise<SavedEventRow[]> {
-        const result = await this.pool.query(
-            `${SAVED_EVENTS_SELECT}
+  async findSavedEventsByUserId(userId: number): Promise<SavedEventRow[]> {
+    const result = await this.pool.query(
+      `${SAVED_EVENTS_SELECT}
              WHERE u.id = $1
              ORDER BY se.saved_at DESC`,
-            [userId]
-        );
-        return result.rows;
-    }
+      [userId]
+    );
+    return result.rows;
+  }
 
-    async findSavedEvent(userId: number, eventId: number): Promise<{ event_id: number } | null> {
-        const result = await this.pool.query(
-            `SELECT event_id
+  async findSavedEvent(userId: number, eventId: number): Promise<{ event_id: number } | null> {
+    const result = await this.pool.query(
+      `SELECT event_id
              FROM saved_events
              WHERE user_id = $1 AND event_id = $2
              LIMIT 1`,
-            [userId, eventId]
-        );
-        return result.rows[0] ?? null;
-    }
+      [userId, eventId]
+    );
+    return result.rows[0] ?? null;
+  }
 
-    async deleteSavedEvent(userId: number, eventId: number): Promise<boolean> {
-        const result = await this.pool.query(
-            `DELETE FROM saved_events
+  async deleteSavedEvent(userId: number, eventId: number): Promise<boolean> {
+    const result = await this.pool.query(
+      `DELETE FROM saved_events
              WHERE user_id = $1 AND event_id = $2
              RETURNING event_id`,
-            [userId, eventId]
-        );
-        return (result.rowCount ?? 0) > 0;
-    }
+      [userId, eventId]
+    );
+    return (result.rowCount ?? 0) > 0;
+  }
 }
