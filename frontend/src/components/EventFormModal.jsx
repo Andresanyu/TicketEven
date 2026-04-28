@@ -175,35 +175,21 @@ export default function EventFormModal({
               </div>
             </div>
 
-            <div className="field-row">
-              <div className="field" id="field-valor">
-                <label className="field-label" htmlFor="modalValor">Precio (COP)</label>
-                <input
-                  type="number"
-                  id="modalValor"
-                  className="field-input"
-                  placeholder="0 = Gratis"
-                  min={0}
-                  value={form.valor}
-                  onChange={(e) => onFormChange("valor", e.target.value)}
-                />
-              </div>
-              <div className="field" id="field-estado">
-                <label className="field-label" htmlFor="modalEstado">Estado</label>
-                <div className="select-wrap">
-                  <select
-                    id="modalEstado"
-                    className="field-input field-select"
-                    value={form.estado}
-                    onChange={(e) => onFormChange("estado", e.target.value)}
-                  >
-                    <option value="true">Activo</option>
-                    <option value="false">Inactivo</option>
-                  </select>
-                  <svg className="select-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <polyline points="6 9 12 15 18 9" />
-                  </svg>
-                </div>
+            <div className="field" id="field-estado">
+              <label className="field-label" htmlFor="modalEstado">Estado</label>
+              <div className="select-wrap">
+                <select
+                  id="modalEstado"
+                  className="field-input field-select"
+                  value={form.estado}
+                  onChange={(e) => onFormChange("estado", e.target.value)}
+                >
+                  <option value="true">Activo</option>
+                  <option value="false">Inactivo</option>
+                </select>
+                <svg className="select-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <polyline points="6 9 12 15 18 9" />
+                </svg>
               </div>
             </div>
           </div>
@@ -260,6 +246,18 @@ export default function EventFormModal({
                 />
               </div>
 
+              <div className="entradas-field entradas-field--precio">
+                <input
+                  type="number"
+                  id="inputPrecio"
+                  className="field-input"
+                  placeholder="Precio"
+                  min={0}
+                  value={form.precio ?? ""}
+                  onChange={(e) => onFormChange("precio", e.target.value)}
+                />
+              </div>
+
               <button type="button" className="btn-add-entrada" id="btnAgregarEntrada" onClick={onAddEntrada}>
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                   <line x1="12" y1="5" x2="12" y2="19" />
@@ -308,7 +306,7 @@ export default function EventFormModal({
                       <div className="entrada-item-left">
                         <span className="entrada-tipo">{entrada.nombre}</span>
                         <span className="entrada-sep">·</span>
-                        <span className="entrada-aforo">{entrada.aforo.toLocaleString("es-CO")} entradas</span>
+                        <span className="entrada-aforo">{entrada.aforo.toLocaleString("es-CO")} entradas{` · ${entrada.precio ? `$${Number(entrada.precio).toLocaleString("es-CO")}` : " Gratis"}`}</span>
                       </div>
                       <button
                         type="button"

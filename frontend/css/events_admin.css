@@ -344,7 +344,7 @@ a { text-decoration: none; color: inherit; }
 /* ══════════════════════════════════════════
    MODAL — FONDO
 ══════════════════════════════════════════ */
-.modal-backdrop {
+#modalBackdrop {
   position: fixed; inset: 0;
   background: rgba(0,0,0,.7);
   backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px);
@@ -359,7 +359,7 @@ a { text-decoration: none; color: inherit; }
 /* ══════════════════════════════════════════
    MODAL — CAJA
 ══════════════════════════════════════════ */
-.modal {
+#modal {
   background: var(--bg-card);
   border: 1px solid var(--border);
   border-radius: 16px;
@@ -381,26 +381,26 @@ a { text-decoration: none; color: inherit; }
 }
 
 /* ── Cabecera del modal ── */
-.modal-header {
+#modal .modal-header {
   display: flex; align-items: flex-start;
   justify-content: space-between; gap: 16px;
   padding: 24px 28px 0;
   flex-shrink: 0;
 }
 
-.modal-eyebrow {
+#modal .modal-eyebrow {
   font-size: 10px; font-weight: 700; letter-spacing: 1.2px;
   text-transform: uppercase; color: var(--accent-dim);
   margin-bottom: 4px;
 }
 
-.modal-title {
+#modal .modal-title {
   font-family: 'Syne', sans-serif;
   font-size: 20px; font-weight: 700;
   color: var(--text-primary); letter-spacing: -.3px;
 }
 
-.modal-close {
+#modal .modal-close {
   width: 32px; height: 32px; border-radius: 8px;
   border: 1px solid var(--border); background: transparent;
   color: var(--text-muted);
@@ -408,11 +408,11 @@ a { text-decoration: none; color: inherit; }
   cursor: pointer; flex-shrink: 0; margin-top: 2px;
   transition: background .15s, color .15s, border-color .15s;
 }
-.modal-close svg { width: 13px; height: 13px; }
-.modal-close:hover { background: var(--red-subtle); color: var(--red); border-color: rgba(224,92,92,.25); }
+#modal .modal-close svg { width: 13px; height: 13px; }
+#modal .modal-close:hover { background: var(--red-subtle); color: var(--red); border-color: rgba(224,92,92,.25); }
 
 /* ── Cuerpo: grid dos columnas ── */
-.modal-body {
+#modal .modal-body {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 0 32px;
@@ -422,13 +422,13 @@ a { text-decoration: none; color: inherit; }
 }
 
 /* Cuerpo de columna única (modal de confirmación) */
-.modal-body-single {
+#modal .modal-body-single {
   display: flex;
   flex-direction: column;
   grid-template-columns: unset;
 }
 
-.modal-col {
+#modal .modal-col {
   display: flex;
   flex-direction: column;
   gap: 18px;
@@ -500,7 +500,7 @@ a { text-decoration: none; color: inherit; }
 }
 
 /* ── Footer del modal ── */
-.modal-footer {
+#modal .modal-footer {
   display: flex; align-items: center;
   justify-content: flex-end; gap: 10px;
   padding: 0 28px 24px;
@@ -546,10 +546,10 @@ a { text-decoration: none; color: inherit; }
 
 /* Modal a una sola columna en móvil */
 @media (max-width: 700px) {
-  .modal      { max-width: 100%; border-radius: 12px; }
-  .modal-body { grid-template-columns: 1fr; gap: 0; }
-  .modal-col + .modal-col { margin-top: 18px; }
-  .modal-header, .modal-body, .modal-footer { padding-left: 18px; padding-right: 18px; }
+  #modal      { max-width: 100%; border-radius: 12px; }
+  #modal .modal-body { grid-template-columns: 1fr; gap: 0; }
+  #modal .modal-col + .modal-col { margin-top: 18px; }
+  #modal .modal-header, #modal .modal-body, #modal .modal-footer { padding-left: 18px; padding-right: 18px; }
 }
 
 /* ══════════════════════════════════════════════════════
@@ -614,7 +614,7 @@ a { text-decoration: none; color: inherit; }
 /* ── Fila de controles ── */
 .entradas-controls {
   display: grid;
-  grid-template-columns: 1fr 120px auto;
+  grid-template-columns: 1fr 120px 120px auto;
   gap: 10px;
   align-items: center;
 }
@@ -789,7 +789,7 @@ a { text-decoration: none; color: inherit; }
 /* ── Ajuste responsive: una columna en móvil ── */
 @media (max-width: 700px) {
   .entradas-controls {
-    grid-template-columns: 1fr 90px;
+    grid-template-columns: 1fr 90px 90px;
     grid-template-rows: auto auto;
   }
   /* El botón "Agregar" ocupa la segunda fila completa */
