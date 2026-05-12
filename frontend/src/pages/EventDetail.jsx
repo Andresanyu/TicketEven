@@ -23,29 +23,46 @@ function formatPrice(value) {
 }
 
 // ── Modal de compra ──────────────────────────────────────────────────────────
-function PurchaseModal({ entradas, eventName, onClose, onSuccess }) {
+function PurchaseModal({ entradas, eventName, eventoActivo, onClose, onSuccess }) {
   const navigate = useNavigate();
-  const [selectedId, setSelectedId]   = useState(null);
-  const [cantidad, setCantidad]       = useState(1);
-  const [loading, setLoading]         = useState(false);
-  const [feedback, setFeedback]       = useState(null); // { ok, msg }
+  const [quantities, setQuantities] = useState({});
+  const [loading, setLoading]       = useState(false);
+  const [feedback, setFeedback]     = useState(null);
 
-  const selected = entradas.find((e) => e.id === selectedId);
-  const total    = selected ? selected.precio * cantidad : 0;
-  const maxQty   = selected ? Math.min(selected.aforo, 10) : 10;
+  useEffect(() => {
+    const init = {};
+    (entradas || []).forEach((ent) => { init[ent.id] = 0; });
+    setQuantities(init);
+  }, [entradas]);
+
+  const total = (entradas || []).reduce((sum, ent) => {
+    const q = Number(quantities[ent.id] || 0);
+    return sum + (Number(ent.precio || 0) * q);
+  }, 0);
+
+  const totalQty = (entradas || []).reduce(
+    (s, ent) => s + (Number(quantities[ent.id] || 0)), 0
+  );
 
   const handleConfirm = async () => {
     if (!Auth.isLoggedIn()) { navigate("/login"); return; }
-    if (!selected) return;
+    if (!eventoActivo)      { setFeedback({ ok: false, msg: "El evento no está activo." }); return; }
+    if (totalQty <= 0)       return;
 
     setLoading(true);
     try {
-      await purchaseService.createPurchase({
-        evento_tipo_entrada_id: selected.id,
-        cantidad,
+      for (const ent of entradas) {
+        const qty = Number(quantities[ent.id] || 0);
+        if (!qty) continue;
+        await purchaseService.createPurchase({
+          evento_tipo_entrada_id: ent.id,
+          cantidad: qty,
+        });
+      }
+      setFeedback({
+        ok: true,
+        msg: `Compraste ${totalQty} entrada(s) para ${eventName}. ¡Disfruta el evento!`,
       });
-
-      setFeedback({ ok: true, msg: `Compraste ${cantidad} entrada(s) para ${eventName}. ¡Disfruta el evento!` });
       onSuccess();
     } catch (err) {
       const msg =
@@ -63,7 +80,6 @@ function PurchaseModal({ entradas, eventName, onClose, onSuccess }) {
     <div className="modal-overlay" onClick={(e) => e.target === e.currentTarget && onClose()}>
       <div className="modal">
 
-        {/* Feedback final */}
         {feedback ? (
           <>
             <div className="modal-feedback">
@@ -87,24 +103,23 @@ function PurchaseModal({ entradas, eventName, onClose, onSuccess }) {
           </>
         ) : (
           <>
-            {/* Encabezado */}
             <div>
               <p className="modal-title">Confirmar compra</p>
               <p className="modal-subtitle">{eventName}</p>
             </div>
 
-            {/* Tipos de entrada */}
             <div className="modal-entries">
-              <p className="modal-qty-label">Selecciona tu entrada</p>
-              {entradas.map((entrada) => {
+              <p className="modal-qty-label">Selecciona tus entradas</p>
+
+              {(entradas || []).map((entrada) => {
+                const cap = Math.min(Number(entrada.aforo || 0), 10);
+                const qty = Number(quantities[entrada.id] || 0);
                 const sinAforo = entrada.aforo === 0;
+
                 return (
                   <div
                     key={entrada.id}
-                    className={`modal-entry-option
-                      ${selectedId === entrada.id ? "selected" : ""}
-                      ${sinAforo ? "disabled" : ""}`}
-                    onClick={() => !sinAforo && setSelectedId(entrada.id)}
+                    className={`modal-entry-option${sinAforo ? " disabled" : ""}`}
                   >
                     <div className="entry-option-left">
                       <span className="entry-option-name">{entrada.nombre}</span>
@@ -112,39 +127,52 @@ function PurchaseModal({ entradas, eventName, onClose, onSuccess }) {
                         {sinAforo ? "Sin disponibilidad" : `${entrada.aforo} disponibles`}
                       </span>
                     </div>
-                    <span className="entry-option-price">{formatPrice(entrada.precio)}</span>
+
+                    <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                      <span className="entry-option-price">{formatPrice(entrada.precio)}</span>
+
+                      <div className="qty-control">
+                        <button
+                          className="qty-btn"
+                          onClick={() =>
+                            setQuantities((prev) => ({
+                              ...prev,
+                              [entrada.id]: Math.max(0, (Number(prev[entrada.id] || 0) - 1)),
+                            }))
+                          }
+                          disabled={qty <= 0 || sinAforo}
+                        >−</button>
+                        <span className="qty-value">{qty}</span>
+                        <button
+                          className="qty-btn"
+                          onClick={() =>
+                            setQuantities((prev) => ({
+                              ...prev,
+                              [entrada.id]: Math.min(cap, (Number(prev[entrada.id] || 0) + 1)),
+                            }))
+                          }
+                          disabled={qty >= cap || sinAforo}
+                        >+</button>
+                      </div>
+                    </div>
                   </div>
                 );
               })}
             </div>
 
-            {/* Cantidad */}
-            {selected && (
-              <div className="modal-qty">
-                <p className="modal-qty-label">Cantidad</p>
-                <div className="qty-control">
-                  <button className="qty-btn" onClick={() => setCantidad((c) => Math.max(1, c - 1))} disabled={cantidad <= 1}>−</button>
-                  <span className="qty-value">{cantidad}</span>
-                  <button className="qty-btn" onClick={() => setCantidad((c) => Math.min(maxQty, c + 1))} disabled={cantidad >= maxQty}>+</button>
-                </div>
-              </div>
-            )}
-
-            {/* Total */}
-            {selected && (
+            {totalQty > 0 && (
               <div className="modal-total">
                 <span className="modal-total-label">Total a pagar</span>
                 <span className="modal-total-value">{formatPrice(total)}</span>
               </div>
             )}
 
-            {/* Acciones */}
             <div className="modal-actions">
               <button className="btn-cancel" onClick={onClose}>Cancelar</button>
               <button
                 className="btn-confirm"
                 onClick={handleConfirm}
-                disabled={!selected || loading}
+                disabled={loading || totalQty <= 0 || !eventoActivo}
               >
                 {loading ? "Procesando…" : "Confirmar compra"}
               </button>
@@ -162,16 +190,16 @@ export default function EventDetail() {
   const [searchParams] = useSearchParams();
   const eventId = searchParams.get("id");
 
-  const [event, setEvent]           = useState(null);
-  const [loading, setLoading]       = useState(true);
-  const [error, setError]           = useState(null);
-  const [saved, setSaved]           = useState(false);
-  const [saveLoading, setSaveLoading] = useState(false);
-  const [saveHint, setSaveHint]     = useState(
+  const [event, setEvent]               = useState(null);
+  const [loading, setLoading]           = useState(true);
+  const [error, setError]               = useState(null);
+  const [saved, setSaved]               = useState(false);
+  const [saveLoading, setSaveLoading]   = useState(false);
+  const [saveHint, setSaveHint]         = useState(
     Auth.isLoggedIn() ? "Haz clic para guardar este evento" : "Inicia sesión para guardar este evento"
   );
-  const [imgError, setImgError]     = useState(false);
-  const [showPurchase, setShowPurchase] = useState(false); // 👈
+  const [imgError, setImgError]         = useState(false);
+  const [showPurchase, setShowPurchase] = useState(false);
 
   useEffect(() => {
     if (!eventId) {
@@ -190,8 +218,8 @@ export default function EventDetail() {
         await initSaveState();
       } catch (err) {
         if (err?.status === 404) setError("El evento no fue encontrado.");
-        else if (err?.status) setError(`Error del servidor (${err.status}).`);
-        else setError("No se pudo conectar con el servidor. Intenta más tarde.");
+        else if (err?.status)    setError(`Error del servidor (${err.status}).`);
+        else                     setError("No se pudo conectar con el servidor. Intenta más tarde.");
         setLoading(false);
       }
     }
@@ -219,13 +247,14 @@ export default function EventDetail() {
       setSaved(isSaved);
       setSaveHint(isSaved ? "Este evento está en tus guardados" : "Haz clic para guardar este evento");
     } catch (err) {
-      setSaveHint(err?.status === 404 ? "El evento no existe o fue eliminado" : "No se pudo actualizar el guardado");
+      setSaveHint(
+        err?.status === 404 ? "El evento no existe o fue eliminado" : "No se pudo actualizar el guardado"
+      );
     } finally {
       setSaveLoading(false);
     }
   }, [eventId, saveLoading, navigate]);
 
-  // Refresca el evento tras una compra exitosa (actualiza aforo)
   const handlePurchaseSuccess = useCallback(async () => {
     try {
       const data = await api.get(`/events/${eventId}`);
@@ -234,12 +263,12 @@ export default function EventDetail() {
     } catch { /* silencioso */ }
   }, [eventId]);
 
-  const imgUrl   = event ? event.imagen_url ?? event.imagen ?? null : null;
-  const catName  = event ? event.categoria?.nombre ?? event.categoria_nombre ?? event.categoria ?? "Sin categoría" : "";
-  const fechaRaw = event ? event.fecha ?? null : null;
-  const precioRaw = event ? event.valor ?? event.precio ?? null : null;
-  const desc     = event ? event.descripcion ?? "Sin descripción." : "";
-  const entradas = event?.entradas ?? [];
+  const imgUrl       = event ? event.imagen_url ?? event.imagen ?? null : null;
+  const catName      = event ? event.categoria?.nombre ?? event.categoria_nombre ?? event.categoria ?? "Sin categoría" : "";
+  const fechaRaw     = event ? event.fecha ?? null : null;
+  const precioRaw    = event ? event.valor ?? event.precio ?? null : null;
+  const desc         = event ? event.descripcion ?? "Sin descripción." : "";
+  const entradas     = event?.entradas ?? [];
   const eventoActivo = event?.activo === true;
 
   return (
@@ -285,7 +314,12 @@ export default function EventDetail() {
           <section className="hero">
             <div className="hero-media">
               {imgUrl && !imgError ? (
-                <img src={imgUrl} alt={event.nombre} className="hero-img" onError={() => setImgError(true)} />
+                <img
+                  src={imgUrl}
+                  alt={event.nombre}
+                  className="hero-img"
+                  onError={() => setImgError(true)}
+                />
               ) : (
                 <div className="hero-placeholder">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1">
@@ -305,8 +339,9 @@ export default function EventDetail() {
                 <div className="chip">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                     <rect x="3" y="4" width="18" height="18" rx="2" />
-                    <line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" />
-                    <line x1="3" y1="10" x2="21" y2="10" />
+                    <line x1="16" y1="2" x2="16" y2="6" />
+                    <line x1="8"  y1="2" x2="8"  y2="6" />
+                    <line x1="3"  y1="10" x2="21" y2="10" />
                   </svg>
                   <span>{formatDate(fechaRaw)}</span>
                 </div>
@@ -349,9 +384,7 @@ export default function EventDetail() {
               </section>
             )}
 
-            {/* Panel lateral */}
             <aside className="save-panel">
-              {/* Botón comprar */}
               {eventoActivo && entradas.length > 0 && (
                 <button
                   className="btn-confirm"
@@ -373,13 +406,12 @@ export default function EventDetail() {
                   borderRadius: "10px",
                   fontSize: "13px",
                   color: "#e05c5c",
-                  textAlign: "center"
+                  textAlign: "center",
                 }}>
                   Este evento no está disponible
                 </div>
               )}
 
-              {/* Botón guardar */}
               <button
                 className={`btn-save${saved ? " saved" : ""}`}
                 onClick={toggleSave}
@@ -396,11 +428,11 @@ export default function EventDetail() {
         </main>
       )}
 
-      {/* Modal de compra */}
       {showPurchase && event && (
         <PurchaseModal
           entradas={entradas}
           eventName={event.nombre}
+          eventoActivo={eventoActivo}
           onClose={() => setShowPurchase(false)}
           onSuccess={handlePurchaseSuccess}
         />
