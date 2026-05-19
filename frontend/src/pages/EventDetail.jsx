@@ -411,6 +411,7 @@ function PurchaseModal({ entradas, eventName, eventoActivo, onClose, onSuccess }
                       <option value="">Seleccione una franquicia</option>
                       <option value="VISA">VISA</option>
                       <option value="MASTERCARD">MASTERCARD</option>
+                      <option value="NU">Nu</option>
                     </select>
                     {cardErrors.franquicia && <p style={errorTextStyle}>{cardErrors.franquicia}</p>}
                   </div>
