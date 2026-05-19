@@ -30,14 +30,12 @@ function PurchaseModal({ entradas, eventName, eventoActivo, onClose, onSuccess }
   const [cardData, setCardData] = useState({
     pan_number: "",
     cvv: "",
-    nombre_titular: "",
-    franquicia: "",
+    nombre_titular: ""
   });
   const [cardErrors, setCardErrors] = useState({});
   const [loading, setLoading]       = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [feedback, setFeedback]     = useState(null);
-  const franquiciaRef = useRef(null);
   const panInputRef = useRef(null);
   const cvvInputRef = useRef(null);
   const holderInputRef = useRef(null);
@@ -97,10 +95,6 @@ function PurchaseModal({ entradas, eventName, eventoActivo, onClose, onSuccess }
     const cvv = String(cardData.cvv || "");
     const holder = String(cardData.nombre_titular || "").trim();
 
-    if (!franquicia) {
-      nextErrors.franquicia = "Selecciona una franquicia";
-    }
-
     if (!/^\d{16}$/.test(cleanedPan)) {
       nextErrors.pan_number = "Número de tarjeta inválido";
     }
@@ -115,10 +109,6 @@ function PurchaseModal({ entradas, eventName, eventoActivo, onClose, onSuccess }
 
     setCardErrors(nextErrors);
 
-    if (nextErrors.franquicia) {
-      franquiciaRef.current?.focus();
-      return false;
-    }
     if (nextErrors.pan_number) {
       panInputRef.current?.focus();
       return false;
@@ -187,7 +177,7 @@ function PurchaseModal({ entradas, eventName, eventoActivo, onClose, onSuccess }
         pan_number: String(cardData.pan_number || "").replace(/\s+/g, ""),
         cvv: String(cardData.cvv || ""),
         nombre_titular: String(cardData.nombre_titular || "").trim(),
-        franquicia: String(cardData.franquicia || ""),
+        franquicia: "AUTO",
       };
 
       for (const ent of entradas) {
@@ -210,12 +200,12 @@ function PurchaseModal({ entradas, eventName, eventoActivo, onClose, onSuccess }
       const msg =
         err?.status === 503
           ? "El servicio de pagos no está disponible en este momento. Intenta de nuevo más tarde."
-          :
+          : err?.message ?? "No se pudo completar la compra. Intenta de nuevo.";
         err?.status === 402 ? (err?.data?.error ?? err?.message ?? "Pago rechazado") :
         err?.status === 403 ? "El evento no está activo." :
         err?.status === 409 ? "No hay suficiente aforo disponible." :
         err?.status === 401 ? "Debes iniciar sesión para comprar." :
-        err?.data?.error ?? "No se pudo completar la compra. Intenta de nuevo.";
+        err?.data?.error ?? err?.message ?? "No se pudo completar la compra. Intenta de nuevo.";
       setFeedback({ ok: false, msg });
       
       // Error: re-habilitar botón
@@ -389,29 +379,6 @@ function PurchaseModal({ entradas, eventName, eventoActivo, onClose, onSuccess }
                 </div>
 
                 <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-                  <div>
-                    <label style={fieldLabelStyle}>Franquicia</label>
-                    <select
-                      ref={franquiciaRef}
-                      value={cardData.franquicia}
-                      onChange={(e) => handleFranquiciaChange(e.target.value)}
-                      style={{
-                        ...inputBaseStyle,
-                        borderColor: cardErrors.franquicia ? "var(--red)" : "var(--border)",
-                      }}
-                      onFocus={(e) => {
-                        if (!cardErrors.franquicia) e.currentTarget.style.borderColor = "var(--accent)";
-                      }}
-                      onBlur={(e) => {
-                        e.currentTarget.style.borderColor = cardErrors.franquicia ? "var(--red)" : "var(--border)";
-                      }}
-                    >
-                      <option value="">Seleccione una franquicia</option>
-                      <option value="VISA">VISA</option>
-                      <option value="MASTERCARD">MASTERCARD</option>
-                    </select>
-                    {cardErrors.franquicia && <p style={errorTextStyle}>{cardErrors.franquicia}</p>}
-                  </div>
 
                   <div>
                     <label style={fieldLabelStyle}>Número de tarjeta</label>
