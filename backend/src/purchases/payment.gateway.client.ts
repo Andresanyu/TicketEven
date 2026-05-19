@@ -17,8 +17,27 @@ export async function sendPaymentToGateway(payload: {
     });
 
     const data = (await response.json()) as PaymentGatewayResponse;
-    return data;
+
+    // HTTP 402: Pago rechazado. Retorna la respuesta como está
+    // para que el service la maneje con status === 'DECLINED'
+    if (response.status === 402) {
+      return data;
+    }
+
+    // HTTP 503 o 502: Gateway/Orquestador caído
+    if (response.status === 503 || response.status === 502) {
+      throw new Error('El servicio de pagos no está disponible.');
+    }
+
+    // HTTP 200 con status APPROVED: Retorna normalmente
+    if (response.ok && response.status === 200) {
+      return data;
+    }
+
+    // Cualquier otro código: Error genérico
+    throw new Error(`Error inesperado del servicio de pagos (${response.status})`);
   } catch (error: any) {
+    // Errores de red (ECONNREFUSED, timeout, etc.) o errores lanzados arriba
     throw new Error(`Error de red al conectar con el servicio de pagos: ${error?.message ?? 'desconocido'}`);
   }
 }

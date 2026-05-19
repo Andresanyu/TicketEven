@@ -104,6 +104,11 @@ export class PurchaseController {
     const panNumber = String(tarjeta.pan_number ?? '');
     const cvv = String(tarjeta.cvv ?? '');
     const nombreTitular = String(tarjeta.nombre_titular ?? '').trim();
+    const franquicia = String(tarjeta.franquicia ?? '').trim();
+
+    if (!franquicia || (franquicia !== 'VISA' && franquicia !== 'MASTERCARD')) {
+      return { error: 'El campo tarjeta.franquicia debe ser VISA o MASTERCARD' };
+    }
 
     if (!/^\d{16}$/.test(panNumber)) {
       return { error: 'El campo tarjeta.pan_number debe tener 16 dígitos numéricos' };
@@ -125,6 +130,7 @@ export class PurchaseController {
           pan_number: panNumber,
           cvv,
           nombre_titular: nombreTitular,
+          franquicia,
         },
       },
     };

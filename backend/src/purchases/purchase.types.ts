@@ -19,6 +19,7 @@ export interface CardDataDTO {
   pan_number: string;
   cvv: string;
   nombre_titular: string;
+  franquicia: string; // "VISA" o "MASTERCARD"
 }
 
 export interface CreatePurchaseWithPaymentDTO extends CreatePurchaseDTO {
