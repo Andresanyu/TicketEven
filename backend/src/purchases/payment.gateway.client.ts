@@ -23,6 +23,11 @@ export async function sendPaymentToGateway(payload: {
 
     const data = (await response.json()) as PaymentGatewayResponse;
 
+    if (response.status === 400) {
+      const errorMsg = (data as any)?.error ?? 'Medio de pago no soportado';
+      throw new Error(errorMsg);
+    }
+
     // HTTP 402: Pago rechazado. Retorna la respuesta como está
     // para que el service la maneje con status === 'DECLINED'
     if (response.status === 402) {
@@ -41,8 +46,11 @@ export async function sendPaymentToGateway(payload: {
 
     // Cualquier otro código: Error genérico
     throw new Error(`Error inesperado del servicio de pagos (${response.status})`);
+  // ✅ Después
   } catch (error: any) {
-    // Errores de red (ECONNREFUSED, timeout, etc.) o errores lanzados arriba
+    if (error?.message && !error.message.startsWith('fetch')) {
+      throw error;
+    }
     throw new Error(`Error de red al conectar con el servicio de pagos: ${error?.message ?? 'desconocido'}`);
   }
 }

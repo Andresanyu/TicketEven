@@ -41,7 +41,11 @@ export class PurchaseService {
         monto: total,
         tarjeta: dto.tarjeta,
       });
-    } catch {
+    } catch (err: any) {
+      // Si es un error de validación (400: medio de pago no soportado, etc), propagarlo tal cual
+      if (err?.message && !err.message.startsWith('Error de red')) {
+        throw err;
+      }
       throw new PaymentGatewayUnavailableError('Error de red al conectar con el servicio de pagos.');
     }
 
