@@ -1,8 +1,8 @@
 import { Request, Response } from 'express';
 import { EventService, NotFoundError } from './event.service';
 import { AuthRequest } from '../middlewares/auth';
-import { parseEntradas, parseCategoriaId, parseValor } from './event.parsers';
-import { CreateEventDTO, UpdateEventDTO } from './event.types';
+import { parseEntradas, parseCategoriaId, parseValor, parseEstado } from './event.parsers';
+import { CreateEventDTO, UpdateEventDTO, EventoEstado } from './event.types';
 import { EventNotFoundError } from '../utils/EventNotFoundError';
 
 export class EventController {
@@ -84,7 +84,7 @@ export class EventController {
     }
   };
 
-  patchActivo = async (req: Request, res: Response): Promise<void> => {
+  patchEstado = async (req: Request, res: Response): Promise<void> => {
     const id = Number(req.params.id);
 
     if (!Number.isInteger(id) || id <= 0) {
@@ -92,15 +92,21 @@ export class EventController {
       return;
     }
 
-    const hasActivoField = Object.prototype.hasOwnProperty.call(req.body ?? {}, 'activo');
+    const hasEstadoField = Object.prototype.hasOwnProperty.call(req.body ?? {}, 'estado');
 
-    if (!hasActivoField) {
-      res.status(400).json({ error: 'El campo activo es requerido' });
+    if (!hasEstadoField) {
+      res.status(400).json({ error: 'El campo estado es requerido' });
+      return;
+    }
+
+    const estado = parseEstado(req.body.estado);
+    if (!estado) {
+      res.status(400).json({ error: 'El campo estado debe ser: activo, finalizado o inactivo' });
       return;
     }
 
     try {
-      const event = await this.eventService.patchActivo(id, Boolean(req.body.activo));
+      const event = await this.eventService.patchEstado(id, estado);
       res.json(event);
     } catch (err) {
       if (err instanceof NotFoundError) {
@@ -173,7 +179,7 @@ export class EventController {
     body: any,
     entradasRequired: boolean
   ): { dto: CreateEventDTO | UpdateEventDTO } | { error: string } {
-    const { nombre, categoria_id, fecha, valor, descripcion, imagen_url, activo, entradas } =
+    const { nombre, categoria_id, fecha, valor, descripcion, imagen_url, estado, entradas } =
       body ?? {};
 
     if (!nombre || !String(nombre).trim()) {
@@ -195,6 +201,8 @@ export class EventController {
       return { error: entradasResult.error };
     }
 
+    const normalizedEstado = parseEstado(estado) || 'activo' as EventoEstado;
+
     return {
       dto: {
         nombre: String(nombre).trim(),
@@ -203,7 +211,7 @@ export class EventController {
         valor: normalizedValor,
         descripcion: descripcion ?? null,
         imagen_url: imagen_url ?? null,
-        activo: activo === undefined ? true : Boolean(activo),
+        estado: normalizedEstado,
         entradas: entradasResult.entradas ?? [],
       },
     };

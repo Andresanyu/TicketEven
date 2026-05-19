@@ -10,6 +10,7 @@ CREATE TABLE eventos (
     valor NUMERIC,
     descripcion TEXT DEFAULT 'Sin descripción',
     imagen_url VARCHAR(255),
+    estado VARCHAR(20) NOT NULL DEFAULT 'activo' CHECK (estado IN ('activo', 'finalizado', 'inactivo')),
     activo BOOLEAN DEFAULT true
 );
 CREATE TABLE usuarios (

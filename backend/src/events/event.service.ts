@@ -1,11 +1,15 @@
 import { IEventRepository } from './event.repository.interface';
-import { EventRow, CreateEventDTO, UpdateEventDTO, PopularityReport } from './event.types';
+import { EventRow, CreateEventDTO, UpdateEventDTO, PopularityReport, EventoEstado } from './event.types';
 
 export class EventService {
   constructor(private readonly eventRepository: IEventRepository) {}
 
   async getAll(): Promise<EventRow[]> {
     return this.eventRepository.findAll();
+  }
+
+  async getAllPublic(): Promise<EventRow[]> {
+    return this.eventRepository.findAllPublic();
   }
 
   async getById(id: number): Promise<EventRow> {
@@ -32,8 +36,8 @@ export class EventService {
     return event;
   }
 
-  async patchActivo(id: number, activo: boolean): Promise<EventRow> {
-    const event = await this.eventRepository.patchActivo(id, activo);
+  async patchEstado(id: number, estado: EventoEstado): Promise<EventRow> {
+    const event = await this.eventRepository.patchEstado(id, estado);
 
     if (!event) {
       throw new NotFoundError('Evento no encontrado');

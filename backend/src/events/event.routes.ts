@@ -12,7 +12,7 @@ const eventRepository = new EventRepository(pool);
 const eventService = new EventService(eventRepository);
 const eventController = new EventController(eventService);
 
-// Public
+// Public - solo eventos activos
 router.get('/', eventController.getAll);
 router.get('/:id', eventController.getById);
 
@@ -30,7 +30,7 @@ router.post('/:id/save', authenticateToken, eventController.toggleSaved);
 // Admin CRUD
 router.post('/', authenticateToken, authorizeAdmin, eventController.create);
 router.put('/:id', authenticateToken, authorizeAdmin, eventController.update);
-router.patch('/:id', authenticateToken, authorizeAdmin, eventController.patchActivo);
+router.patch('/:id', authenticateToken, authorizeAdmin, eventController.patchEstado);
 router.delete('/:id', authenticateToken, authorizeAdmin, eventController.delete);
 
 export default router;

@@ -6,6 +6,7 @@ import {
   CreateEventDTO,
   UpdateEventDTO,
   PopularityReport,
+  EventoEstado,
 } from './event.types';
 import { EventNotFoundError } from '../utils/EventNotFoundError';
 
@@ -18,7 +19,7 @@ const EVENT_SELECT_QUERY = `
         e.valor,
         e.descripcion,
         e.imagen_url,
-        e.activo,
+        e.estado,
         COALESCE((
             SELECT json_agg(
                 json_build_object(
@@ -93,6 +94,11 @@ export class EventRepository implements IEventRepository {
     return result.rows;
   }
 
+  async findAllPublic(): Promise<EventRow[]> {
+    const result = await this.pool.query(`${EVENT_SELECT_QUERY} WHERE e.estado = 'activo' ORDER BY e.id DESC`);
+    return result.rows;
+  }
+
   async findById(id: number): Promise<EventRow | null> {
     const client = await this.pool.connect();
     try {
@@ -110,7 +116,7 @@ export class EventRepository implements IEventRepository {
       await client.query('BEGIN');
 
       const insertResult = await client.query(
-        `INSERT INTO eventos (nombre, categoria_id, fecha, valor, descripcion, imagen_url, activo)
+        `INSERT INTO eventos (nombre, categoria_id, fecha, valor, descripcion, imagen_url, estado)
                  VALUES ($1, $2, $3, $4, $5, $6, $7)
                  RETURNING id`,
         [
@@ -120,7 +126,7 @@ export class EventRepository implements IEventRepository {
           dto.valor,
           dto.descripcion,
           dto.imagen_url,
-          dto.activo,
+          dto.estado,
         ]
       );
 
@@ -151,7 +157,7 @@ export class EventRepository implements IEventRepository {
                      valor        = $4,
                      descripcion  = $5,
                      imagen_url   = $6,
-                     activo       = $7
+                     estado       = $7
                  WHERE id = $8
                  RETURNING id`,
         [
@@ -161,7 +167,7 @@ export class EventRepository implements IEventRepository {
           dto.valor,
           dto.descripcion,
           dto.imagen_url,
-          dto.activo,
+          dto.estado,
           id,
         ]
       );
@@ -184,10 +190,10 @@ export class EventRepository implements IEventRepository {
     }
   }
 
-  async patchActivo(id: number, activo: boolean): Promise<EventRow | null> {
+  async patchEstado(id: number, estado: EventoEstado): Promise<EventRow | null> {
     const result = await this.pool.query(
-      `UPDATE eventos SET activo = $1 WHERE id = $2 RETURNING id`,
-      [activo, id]
+      `UPDATE eventos SET estado = $1 WHERE id = $2 RETURNING id`,
+      [estado, id]
     );
 
     if (result.rowCount === 0) return null;

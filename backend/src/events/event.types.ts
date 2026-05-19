@@ -1,3 +1,5 @@
+export type EventoEstado = 'activo' | 'finalizado' | 'inactivo';
+
 export interface EventRow {
   id: number;
   nombre: string;
@@ -6,7 +8,8 @@ export interface EventRow {
   valor: number | null;
   descripcion: string | null;
   imagen_url: string | null;
-  activo: boolean;
+  estado: EventoEstado;
+  activo?: boolean; // Mantener opcional para compatibilidad temporal
   entradas: EventTicketTypeRow[];
 }
 
@@ -28,7 +31,7 @@ export interface CreateEventDTO {
   valor: number | null;
   descripcion: string | null;
   imagen_url: string | null;
-  activo: boolean;
+  estado: EventoEstado;
   entradas: EventTicketTypeInput[];
 }
 

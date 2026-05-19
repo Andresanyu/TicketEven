@@ -184,8 +184,9 @@ export default function EventFormModal({
                   value={form.estado}
                   onChange={(e) => onFormChange("estado", e.target.value)}
                 >
-                  <option value="true">Activo</option>
-                  <option value="false">Inactivo</option>
+                  <option value="activo">Activo</option>
+                  <option value="finalizado">Finalizado</option>
+                  <option value="inactivo">Inactivo</option>
                 </select>
                 <svg className="select-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <polyline points="6 9 12 15 18 9" />
