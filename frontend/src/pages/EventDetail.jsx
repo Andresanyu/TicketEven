@@ -411,7 +411,7 @@ function PurchaseModal({ entradas, eventName, eventoActivo, onClose, onSuccess }
                       <option value="">Seleccione una franquicia</option>
                       <option value="VISA">VISA</option>
                       <option value="MASTERCARD">MASTERCARD</option>
-                      <option value="NU">Nu</option>
+                      <option value="NU">NU</option>
                     </select>
                     {cardErrors.franquicia && <p style={errorTextStyle}>{cardErrors.franquicia}</p>}
                   </div>
@@ -441,7 +441,7 @@ function PurchaseModal({ entradas, eventName, eventoActivo, onClose, onSuccess }
 
                   <div style={{ display: "flex", gap: 12 }}>
                     <div style={{ flex: "0 0 140px" }}>
-                      <label style={fieldLabelStyle}>CVV</label>
+                      <label style={fieldLabelStyle}>{cardData.franquicia === "NU" ? "CSV" : "CVV"}</label>
                       <input
                         ref={cvvInputRef}
                         type="password"
