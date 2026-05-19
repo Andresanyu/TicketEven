@@ -30,6 +30,14 @@ export async function connectDatabase(): Promise<void> {
 
 export async function runSchemaMigrations(): Promise<void> {
   await pool.query(`
+    ALTER TABLE compras ADD COLUMN IF NOT EXISTS auth_code VARCHAR(50);
+  `);
+
+  await pool.query(`
+    ALTER TABLE compras ADD COLUMN IF NOT EXISTS tarjeta_enmascarada VARCHAR(20);
+  `);
+
+  await pool.query(`
     CREATE TABLE IF NOT EXISTS tipos_entrada (
       id SERIAL PRIMARY KEY,
       nombre VARCHAR(100) NOT NULL UNIQUE

@@ -1,7 +1,11 @@
 import { Response } from 'express';
-import { PurchaseService } from './purchase.service';
+import {
+  PaymentDeclinedError,
+  PaymentGatewayUnavailableError,
+  PurchaseService,
+} from './purchase.service';
 import { AuthRequest } from '../middlewares/auth';
-import { CreatePurchaseDTO } from './purchase.types';
+import { CreatePurchaseWithPaymentDTO } from './purchase.types';
 
 export class PurchaseController {
   constructor(private readonly purchaseService: PurchaseService) {}
@@ -19,6 +23,16 @@ export class PurchaseController {
       const purchase = await this.purchaseService.create(usuarioId, parsed.dto);
       res.status(201).json(purchase);
     } catch (err: any) {
+      if (err instanceof PaymentDeclinedError) {
+        res.status(402).json({ error: err.message });
+        return;
+      }
+
+      if (err instanceof PaymentGatewayUnavailableError) {
+        res.status(503).json({ error: 'El servicio de pagos no está disponible' });
+        return;
+      }
+
       const status = err.message === 'No hay suficiente aforo disponible.' ? 409 : 400;
       res.status(status).json({ error: err.message });
     }
@@ -66,8 +80,8 @@ export class PurchaseController {
   // Private helpers
   // -------------------------------------------------------------------------
 
-  private parseCreateBody(body: any): { dto: CreatePurchaseDTO } | { error: string } {
-    const { evento_tipo_entrada_id, cantidad } = body ?? {};
+  private parseCreateBody(body: any): { dto: CreatePurchaseWithPaymentDTO } | { error: string } {
+    const { evento_tipo_entrada_id, cantidad, tarjeta } = body ?? {};
 
     if (!evento_tipo_entrada_id) {
       return { error: 'El campo evento_tipo_entrada_id es requerido' };
@@ -83,10 +97,35 @@ export class PurchaseController {
       return { error: 'El campo cantidad debe ser un número entero mayor a 0' };
     }
 
+    if (!tarjeta || typeof tarjeta !== 'object') {
+      return { error: 'El campo tarjeta es requerido' };
+    }
+
+    const panNumber = String(tarjeta.pan_number ?? '');
+    const cvv = String(tarjeta.cvv ?? '');
+    const nombreTitular = String(tarjeta.nombre_titular ?? '').trim();
+
+    if (!/^\d{16}$/.test(panNumber)) {
+      return { error: 'El campo tarjeta.pan_number debe tener 16 dígitos numéricos' };
+    }
+
+    if (!/^\d{3}$/.test(cvv)) {
+      return { error: 'El campo tarjeta.cvv debe tener 3 dígitos numéricos' };
+    }
+
+    if (!nombreTitular) {
+      return { error: 'El campo tarjeta.nombre_titular es requerido' };
+    }
+
     return {
       dto: {
         evento_tipo_entrada_id: parsedEntradaId,
         cantidad: parsedCantidad,
+        tarjeta: {
+          pan_number: panNumber,
+          cvv,
+          nombre_titular: nombreTitular,
+        },
       },
     };
   }

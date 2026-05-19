@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useSearchParams, Link, useNavigate } from "react-router-dom";
 import "../../css/event_card.css";
 import api from "../services/api.js";
@@ -26,8 +26,20 @@ function formatPrice(value) {
 function PurchaseModal({ entradas, eventName, eventoActivo, onClose, onSuccess }) {
   const navigate = useNavigate();
   const [quantities, setQuantities] = useState({});
+  const [step, setStep] = useState(1);
+  const [cardData, setCardData] = useState({
+    pan_number: "",
+    cvv: "",
+    nombre_titular: "",
+    franquicia: "",
+  });
+  const [cardErrors, setCardErrors] = useState({});
   const [loading, setLoading]       = useState(false);
   const [feedback, setFeedback]     = useState(null);
+  const franquiciaRef = useRef(null);
+  const panInputRef = useRef(null);
+  const cvvInputRef = useRef(null);
+  const holderInputRef = useRef(null);
 
   useEffect(() => {
     const init = {};
@@ -44,19 +56,142 @@ function PurchaseModal({ entradas, eventName, eventoActivo, onClose, onSuccess }
     (s, ent) => s + (Number(quantities[ent.id] || 0)), 0
   );
 
-  const handleConfirm = async () => {
+  const firstSelectedEntry = (entradas || []).find((ent) => Number(quantities[ent.id] || 0) > 0) || null;
+  const selectedTypes = (entradas || []).filter((ent) => Number(quantities[ent.id] || 0) > 0);
+  const selectedTypeLabel =
+    selectedTypes.length === 1
+      ? selectedTypes[0].nombre
+      : selectedTypes.length > 1
+      ? `${selectedTypes.length} tipos de entrada`
+      : "Sin selección";
+
+  const resetModalState = () => {
+    setStep(1);
+    setCardData({ pan_number: "", cvv: "", nombre_titular: "", franquicia: "" });
+    setCardErrors({});
+    setFeedback(null);
+  };
+
+  const handleClose = () => {
+    resetModalState();
+    onClose();
+  };
+
+  const handleContinueToPayment = () => {
+    if (!Auth.isLoggedIn()) { navigate("/login"); return; }
+    if (!eventoActivo) {
+      setFeedback({ ok: false, msg: "El evento no está activo." });
+      return;
+    }
+    if (totalQty <= 0) return;
+    setFeedback(null);
+    setStep(2);
+  };
+
+  const validateCardData = () => {
+    const nextErrors = {};
+    const franquicia = String(cardData.franquicia || "").trim();
+    const cleanedPan = String(cardData.pan_number || "").replace(/\s+/g, "");
+    const cvv = String(cardData.cvv || "");
+    const holder = String(cardData.nombre_titular || "").trim();
+
+    if (!franquicia) {
+      nextErrors.franquicia = "Selecciona una franquicia";
+    }
+
+    if (!/^\d{16}$/.test(cleanedPan)) {
+      nextErrors.pan_number = "Número de tarjeta inválido";
+    }
+
+    if (!/^\d{3}$/.test(cvv)) {
+      nextErrors.cvv = "CVV inválido";
+    }
+
+    if (!holder) {
+      nextErrors.nombre_titular = "Ingresa el nombre del titular";
+    }
+
+    setCardErrors(nextErrors);
+
+    if (nextErrors.franquicia) {
+      franquiciaRef.current?.focus();
+      return false;
+    }
+    if (nextErrors.pan_number) {
+      panInputRef.current?.focus();
+      return false;
+    }
+    if (nextErrors.cvv) {
+      cvvInputRef.current?.focus();
+      return false;
+    }
+    if (nextErrors.nombre_titular) {
+      holderInputRef.current?.focus();
+      return false;
+    }
+
+    return true;
+  };
+
+  const handleBackToSelection = () => {
+    setFeedback(null);
+    setStep(1);
+  };
+
+  const handlePanChange = (value) => {
+    const digits = String(value || "").replace(/\D/g, "").slice(0, 16);
+    const formatted = digits.replace(/(\d{4})(?=\d)/g, "$1 ").trim();
+    setCardData((prev) => ({ ...prev, pan_number: formatted }));
+    if (cardErrors.pan_number) {
+      setCardErrors((prev) => ({ ...prev, pan_number: undefined }));
+    }
+  };
+
+  const handleCvvChange = (value) => {
+    const digits = String(value || "").replace(/\D/g, "").slice(0, 3);
+    setCardData((prev) => ({ ...prev, cvv: digits }));
+    if (cardErrors.cvv) {
+      setCardErrors((prev) => ({ ...prev, cvv: undefined }));
+    }
+  };
+
+  const handleHolderChange = (value) => {
+    setCardData((prev) => ({ ...prev, nombre_titular: value }));
+    if (cardErrors.nombre_titular) {
+      setCardErrors((prev) => ({ ...prev, nombre_titular: undefined }));
+    }
+  };
+
+  const handleFranquiciaChange = (value) => {
+    setCardData((prev) => ({ ...prev, franquicia: value }));
+    if (cardErrors.franquicia) {
+      setCardErrors((prev) => ({ ...prev, franquicia: undefined }));
+    }
+  };
+
+  const handlePay = async () => {
     if (!Auth.isLoggedIn()) { navigate("/login"); return; }
     if (!eventoActivo)      { setFeedback({ ok: false, msg: "El evento no está activo." }); return; }
     if (totalQty <= 0)       return;
+    if (!validateCardData()) return;
 
     setLoading(true);
+    setFeedback(null);
     try {
+      const payloadTarjeta = {
+        pan_number: String(cardData.pan_number || "").replace(/\s+/g, ""),
+        cvv: String(cardData.cvv || ""),
+        nombre_titular: String(cardData.nombre_titular || "").trim(),
+        franquicia: String(cardData.franquicia || ""),
+      };
+
       for (const ent of entradas) {
         const qty = Number(quantities[ent.id] || 0);
         if (!qty) continue;
         await purchaseService.createPurchase({
           evento_tipo_entrada_id: ent.id,
           cantidad: qty,
+          tarjeta: payloadTarjeta,
         });
       }
       setFeedback({
@@ -66,6 +201,10 @@ function PurchaseModal({ entradas, eventName, eventoActivo, onClose, onSuccess }
       onSuccess();
     } catch (err) {
       const msg =
+        err?.status === 503
+          ? "El servicio de pagos no está disponible en este momento. Intenta de nuevo más tarde."
+          :
+        err?.status === 402 ? (err?.data?.error ?? err?.message ?? "Pago rechazado") :
         err?.status === 403 ? "El evento no está activo." :
         err?.status === 409 ? "No hay suficiente aforo disponible." :
         err?.status === 401 ? "Debes iniciar sesión para comprar." :
@@ -76,11 +215,39 @@ function PurchaseModal({ entradas, eventName, eventoActivo, onClose, onSuccess }
     }
   };
 
+  const inputBaseStyle = {
+    background: "var(--bg-card-2)",
+    border: "1px solid var(--border)",
+    borderRadius: 8,
+    padding: "10px 14px",
+    color: "var(--text-primary)",
+    fontFamily: "'DM Sans', sans-serif",
+    fontSize: 14,
+    width: "100%",
+    outline: "none",
+  };
+
+  const fieldLabelStyle = {
+    fontSize: 11,
+    fontWeight: 600,
+    letterSpacing: "0.5px",
+    textTransform: "uppercase",
+    color: "var(--text-muted)",
+    marginBottom: 6,
+    display: "block",
+  };
+
+  const errorTextStyle = {
+    fontSize: 12,
+    color: "var(--red)",
+    marginTop: 4,
+  };
+
   return (
-    <div className="modal-overlay" onClick={(e) => e.target === e.currentTarget && onClose()}>
+    <div className="modal-overlay" onClick={(e) => e.target === e.currentTarget && handleClose()}>
       <div className="modal">
 
-        {feedback ? (
+        {feedback?.ok ? (
           <>
             <div className="modal-feedback">
               <div className={`modal-feedback-icon ${feedback.ok ? "success" : "error"}`}>
@@ -99,84 +266,219 @@ function PurchaseModal({ entradas, eventName, eventoActivo, onClose, onSuccess }
               <p className="modal-feedback-title">{feedback.ok ? "¡Compra exitosa!" : "Error en la compra"}</p>
               <p className="modal-feedback-msg">{feedback.msg}</p>
             </div>
-            <button className="btn-confirm" onClick={onClose}>Cerrar</button>
+            <button className="btn-confirm" onClick={handleClose}>Cerrar</button>
           </>
         ) : (
           <>
             <div>
-              <p className="modal-title">Confirmar compra</p>
+              <p className="modal-title">{step === 1 ? "Confirmar compra" : "Datos de pago"}</p>
               <p className="modal-subtitle">{eventName}</p>
             </div>
 
-            <div className="modal-entries">
-              <p className="modal-qty-label">Selecciona tus entradas</p>
-
-              {(entradas || []).map((entrada) => {
-                const cap = Math.min(Number(entrada.aforo || 0), 10);
-                const qty = Number(quantities[entrada.id] || 0);
-                const sinAforo = entrada.aforo === 0;
-
-                return (
-                  <div
-                    key={entrada.id}
-                    className={`modal-entry-option${sinAforo ? " disabled" : ""}`}
-                  >
-                    <div className="entry-option-left">
-                      <span className="entry-option-name">{entrada.nombre}</span>
-                      <span className="entry-option-aforo">
-                        {sinAforo ? "Sin disponibilidad" : `${entrada.aforo} disponibles`}
-                      </span>
-                    </div>
-
-                    <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                      <span className="entry-option-price">{formatPrice(entrada.precio)}</span>
-
-                      <div className="qty-control">
-                        <button
-                          className="qty-btn"
-                          onClick={() =>
-                            setQuantities((prev) => ({
-                              ...prev,
-                              [entrada.id]: Math.max(0, (Number(prev[entrada.id] || 0) - 1)),
-                            }))
-                          }
-                          disabled={qty <= 0 || sinAforo}
-                        >−</button>
-                        <span className="qty-value">{qty}</span>
-                        <button
-                          className="qty-btn"
-                          onClick={() =>
-                            setQuantities((prev) => ({
-                              ...prev,
-                              [entrada.id]: Math.min(cap, (Number(prev[entrada.id] || 0) + 1)),
-                            }))
-                          }
-                          disabled={qty >= cap || sinAforo}
-                        >+</button>
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-
-            {totalQty > 0 && (
-              <div className="modal-total">
-                <span className="modal-total-label">Total a pagar</span>
-                <span className="modal-total-value">{formatPrice(total)}</span>
+            {feedback && !feedback.ok && (
+              <div className="modal-feedback" style={{ marginBottom: 8 }}>
+                <div className="modal-feedback-icon error">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <circle cx="12" cy="12" r="10" />
+                    <line x1="12" y1="8" x2="12" y2="12" />
+                    <line x1="12" y1="16" x2="12.01" y2="16" />
+                  </svg>
+                </div>
+                <p className="modal-feedback-title">Error en la compra</p>
+                <p className="modal-feedback-msg">{feedback.msg}</p>
               </div>
             )}
 
-            <div className="modal-actions">
-              <button className="btn-cancel" onClick={onClose}>Cancelar</button>
-              <button
-                className="btn-confirm"
-                onClick={handleConfirm}
-                disabled={loading || totalQty <= 0 || !eventoActivo}
-              >
-                {loading ? "Procesando…" : "Confirmar compra"}
-              </button>
-            </div>
+            {step === 1 ? (
+              <>
+                <div className="modal-entries">
+                  <p className="modal-qty-label">Selecciona tus entradas</p>
+
+                  {(entradas || []).map((entrada) => {
+                    const cap = Math.min(Number(entrada.aforo || 0), 10);
+                    const qty = Number(quantities[entrada.id] || 0);
+                    const sinAforo = entrada.aforo === 0;
+
+                    return (
+                      <div
+                        key={entrada.id}
+                        className={`modal-entry-option${sinAforo ? " disabled" : ""}`}
+                      >
+                        <div className="entry-option-left">
+                          <span className="entry-option-name">{entrada.nombre}</span>
+                          <span className="entry-option-aforo">
+                            {sinAforo ? "Sin disponibilidad" : `${entrada.aforo} disponibles`}
+                          </span>
+                        </div>
+
+                        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                          <span className="entry-option-price">{formatPrice(entrada.precio)}</span>
+
+                          <div className="qty-control">
+                            <button
+                              className="qty-btn"
+                              onClick={() =>
+                                setQuantities((prev) => ({
+                                  ...prev,
+                                  [entrada.id]: Math.max(0, (Number(prev[entrada.id] || 0) - 1)),
+                                }))
+                              }
+                              disabled={qty <= 0 || sinAforo}
+                            >−</button>
+                            <span className="qty-value">{qty}</span>
+                            <button
+                              className="qty-btn"
+                              onClick={() =>
+                                setQuantities((prev) => ({
+                                  ...prev,
+                                  [entrada.id]: Math.min(cap, (Number(prev[entrada.id] || 0) + 1)),
+                                }))
+                              }
+                              disabled={qty >= cap || sinAforo}
+                            >+</button>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {totalQty > 0 && (
+                  <div className="modal-total">
+                    <span className="modal-total-label">Total a pagar</span>
+                    <span className="modal-total-value">{formatPrice(total)}</span>
+                  </div>
+                )}
+
+                <div className="modal-actions">
+                  <button className="btn-cancel" onClick={handleClose}>Cancelar</button>
+                  <button
+                    className="btn-confirm"
+                    onClick={handleContinueToPayment}
+                    disabled={loading || totalQty <= 0 || !eventoActivo}
+                  >
+                    Continuar al pago
+                  </button>
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="modal-total" style={{ alignItems: "flex-start", gap: 6 }}>
+                  <span className="modal-total-label">
+                    Tipo: {selectedTypeLabel}   Cantidad: {totalQty}
+                  </span>
+                  <span className="modal-total-value">Total: {formatPrice(total)}</span>
+                </div>
+
+                <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+                  <div>
+                    <label style={fieldLabelStyle}>Franquicia</label>
+                    <select
+                      ref={franquiciaRef}
+                      value={cardData.franquicia}
+                      onChange={(e) => handleFranquiciaChange(e.target.value)}
+                      style={{
+                        ...inputBaseStyle,
+                        borderColor: cardErrors.franquicia ? "var(--red)" : "var(--border)",
+                      }}
+                      onFocus={(e) => {
+                        if (!cardErrors.franquicia) e.currentTarget.style.borderColor = "var(--accent)";
+                      }}
+                      onBlur={(e) => {
+                        e.currentTarget.style.borderColor = cardErrors.franquicia ? "var(--red)" : "var(--border)";
+                      }}
+                    >
+                      <option value="">Seleccione una franquicia</option>
+                      <option value="VISA">VISA</option>
+                      <option value="MASTERCARD">MASTERCARD</option>
+                    </select>
+                    {cardErrors.franquicia && <p style={errorTextStyle}>{cardErrors.franquicia}</p>}
+                  </div>
+
+                  <div>
+                    <label style={fieldLabelStyle}>Número de tarjeta</label>
+                    <input
+                      ref={panInputRef}
+                      type="text"
+                      maxLength={19}
+                      value={cardData.pan_number}
+                      onChange={(e) => handlePanChange(e.target.value)}
+                      placeholder="4500 1234 5678 9012"
+                      style={{
+                        ...inputBaseStyle,
+                        borderColor: cardErrors.pan_number ? "var(--red)" : "var(--border)",
+                      }}
+                      onFocus={(e) => {
+                        if (!cardErrors.pan_number) e.currentTarget.style.borderColor = "var(--accent)";
+                      }}
+                      onBlur={(e) => {
+                        e.currentTarget.style.borderColor = cardErrors.pan_number ? "var(--red)" : "var(--border)";
+                      }}
+                    />
+                    {cardErrors.pan_number && <p style={errorTextStyle}>{cardErrors.pan_number}</p>}
+                  </div>
+
+                  <div style={{ display: "flex", gap: 12 }}>
+                    <div style={{ flex: "0 0 140px" }}>
+                      <label style={fieldLabelStyle}>CVV</label>
+                      <input
+                        ref={cvvInputRef}
+                        type="password"
+                        maxLength={3}
+                        value={cardData.cvv}
+                        onChange={(e) => handleCvvChange(e.target.value)}
+                        placeholder="123"
+                        style={{
+                          ...inputBaseStyle,
+                          borderColor: cardErrors.cvv ? "var(--red)" : "var(--border)",
+                        }}
+                        onFocus={(e) => {
+                          if (!cardErrors.cvv) e.currentTarget.style.borderColor = "var(--accent)";
+                        }}
+                        onBlur={(e) => {
+                          e.currentTarget.style.borderColor = cardErrors.cvv ? "var(--red)" : "var(--border)";
+                        }}
+                      />
+                      {cardErrors.cvv && <p style={errorTextStyle}>{cardErrors.cvv}</p>}
+                    </div>
+                    <div style={{ flex: 1 }}></div>
+                  </div>
+
+                  <div>
+                    <label style={fieldLabelStyle}>Nombre en la tarjeta</label>
+                    <input
+                      ref={holderInputRef}
+                      type="text"
+                      value={cardData.nombre_titular}
+                      onChange={(e) => handleHolderChange(e.target.value)}
+                      placeholder="Como aparece en la tarjeta"
+                      style={{
+                        ...inputBaseStyle,
+                        borderColor: cardErrors.nombre_titular ? "var(--red)" : "var(--border)",
+                      }}
+                      onFocus={(e) => {
+                        if (!cardErrors.nombre_titular) e.currentTarget.style.borderColor = "var(--accent)";
+                      }}
+                      onBlur={(e) => {
+                        e.currentTarget.style.borderColor = cardErrors.nombre_titular ? "var(--red)" : "var(--border)";
+                      }}
+                    />
+                    {cardErrors.nombre_titular && <p style={errorTextStyle}>{cardErrors.nombre_titular}</p>}
+                  </div>
+                </div>
+
+                <div className="modal-actions">
+                  <button className="btn-cancel" onClick={handleBackToSelection}>← Volver</button>
+                  <button
+                    className="btn-confirm"
+                    onClick={handlePay}
+                    disabled={loading || totalQty <= 0 || !eventoActivo || !firstSelectedEntry}
+                  >
+                    {loading ? "Procesando..." : `Pagar ${formatPrice(total)}`}
+                  </button>
+                </div>
+              </>
+            )}
           </>
         )}
       </div>
