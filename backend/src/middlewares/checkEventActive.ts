@@ -16,7 +16,7 @@ export const checkEventActive = async (
     }
 
     const result = await pool.query(
-      `SELECT e.activo 
+      `SELECT e.estado 
        FROM eventos_tipos_entrada ete
        JOIN eventos e ON e.id = ete.evento_id
        WHERE ete.id = $1`,
@@ -28,10 +28,18 @@ export const checkEventActive = async (
       return;
     }
 
-    if (!result.rows[0].activo) {
-      res.status(403).json({
-        error: 'El evento no está activo. No se pueden comprar boletas.',
-      });
+    const estado = result.rows[0].estado;
+
+    if (estado !== 'activo') {
+      if (estado === 'finalizado') {
+        res.status(403).json({
+          error: 'El evento ya finalizó. No se pueden comprar boletas.',
+        });
+      } else {
+        res.status(403).json({
+          error: 'El evento no está activo. No se pueden comprar boletas.',
+        });
+      }
       return;
     }
 

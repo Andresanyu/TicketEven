@@ -27,8 +27,16 @@ export default function EventsTable({ events, loading, onEdit, onDelete }) {
         <tbody id="evTbody">
           {events.map((ev) => {
             const fecha = formatFecha(ev.fecha);
-            const statusCls = ev.activo ? "badge-active" : "badge-inactive";
-            const statusText = ev.activo ? "Activo" : "Inactivo";
+            let statusCls = "badge-active";
+            let statusText = "Activo";
+            
+            if (ev.estado === "finalizado") {
+              statusCls = "badge-finished";
+              statusText = "Finalizado";
+            } else if (ev.estado === "inactivo") {
+              statusCls = "badge-inactive";
+              statusText = "Inactivo";
+            }
 
             return (
               <tr key={ev.id} className="ev-row" data-id={ev.id} data-name={ev.nombre}>

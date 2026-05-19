@@ -139,7 +139,7 @@ export default function PublicEvents() {
       try {
         const events = await api.get("/events");
         const mapped = events
-          .filter((e) => e.activo !== false)
+          .filter((e) => e.estado === 'activo')
           .map(mapEvent);
         setAllEvents(mapped);
       } catch (err) {

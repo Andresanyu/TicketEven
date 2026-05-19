@@ -571,7 +571,9 @@ export default function EventDetail() {
   const precioRaw    = event ? event.valor ?? event.precio ?? null : null;
   const desc         = event ? event.descripcion ?? "Sin descripción." : "";
   const entradas     = event?.entradas ?? [];
-  const eventoActivo = event?.activo === true;
+  const eventoActivo = event?.estado === 'activo';
+  const eventoFinalizado = event?.estado === 'finalizado';
+  const eventoInactivo = event?.estado === 'inactivo';
 
   return (
     <>
@@ -700,7 +702,22 @@ export default function EventDetail() {
                 </button>
               )}
 
-              {!eventoActivo && (
+              {eventoFinalizado && (
+                <div style={{
+                  padding: "12px 16px",
+                  background: "rgba(245,166,35,.08)",
+                  border: "1px solid rgba(245,166,35,.2)",
+                  borderRadius: "10px",
+                  fontSize: "13px",
+                  color: "#f5a623",
+                  textAlign: "center",
+                  marginBottom: "4px",
+                }}>
+                  Este evento ya finalizó
+                </div>
+              )}
+
+              {eventoInactivo && (
                 <div style={{
                   padding: "12px 16px",
                   background: "rgba(224,92,92,.08)",
@@ -709,6 +726,7 @@ export default function EventDetail() {
                   fontSize: "13px",
                   color: "#e05c5c",
                   textAlign: "center",
+                  marginBottom: "4px",
                 }}>
                   Este evento no está disponible
                 </div>

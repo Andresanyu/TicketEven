@@ -307,6 +307,7 @@ a { text-decoration: none; color: inherit; }
 }
 .badge-active  { background: rgba(198,241,53,.1); color: var(--accent);     border: 1px solid rgba(198,241,53,.2); }
 .badge-inactive{ background: rgba(74,79,66,.2);   color: var(--text-muted); border: 1px solid var(--border); }
+.badge-finished { background: rgba(245,166,35,.1); color: #f5a623; border: 1px solid rgba(245,166,35,.2); }
 
 /* Botones ícono */
 .btn-icon {

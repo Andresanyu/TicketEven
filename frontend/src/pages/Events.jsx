@@ -41,7 +41,7 @@ function normalizeEvent(raw) {
     valor:       raw?.valor == null ? null : Number(raw.valor),
     descripcion: String(raw?.descripcion ?? "").trim(),
     imagen_url:  String(raw?.imagen_url ?? "").trim(),
-    activo:      raw?.activo !== false,
+    estado:      String(raw?.estado ?? "activo"),
     entradas: entradasRaw
       .map((e) => ({
         tipo_entrada_id: Number(e?.tipo_entrada_id),
@@ -243,7 +243,7 @@ export default function Events() {
         hora:        split.time,
         categoria:   catId,
         imagen:      eventData.imagen_url || "",
-        estado:      String(eventData.activo),
+        estado:      eventData.estado || "activo",
       });
       // entradasList already set below
       setEntradasList(
@@ -297,7 +297,7 @@ export default function Events() {
       fecha:        form.fecha ? `${form.fecha}T${form.hora || "00:00"}:00` : null,
       descripcion:  form.descripcion.trim() || null,
       imagen_url:   form.imagen.trim() || null,
-      activo:       form.estado === "true",
+      estado:       form.estado || "activo",
       entradas:     entradasList.map((e) => ({
         tipo_entrada_id: e.tipo_entrada_id,
         aforo:           e.aforo,
@@ -349,17 +349,17 @@ export default function Events() {
   }
 
   // ─────────────────────────────────────────────────────────
-  // INACTIVAR EVENTO
+  // CAMBIAR ESTADO DEL EVENTO
   // ─────────────────────────────────────────────────────────
-  async function disableEvent(eventId) {
+  async function changeEventStatus(eventId) {
     openConfirmModal("El evento se marcará como inactivo y dejará de mostrarse como activo.", async () => {
       try {
-        await api.patch(`/events/${eventId}`, { activo: false }, Auth.authOptions());
+        await api.patch(`/events/${eventId}`, { estado: "inactivo" }, Auth.authOptions());
         showNotification("El evento ha sido inactivado");
         await loadEvents();
       } catch (err) {
         console.error(err);
-        showNotification(err?.message || "No fue posible inactivar el evento.", true);
+        showNotification(err?.message || "No fue posible cambiar el estado del evento.", true);
       }
     });
   }
@@ -475,7 +475,7 @@ export default function Events() {
           events={filtered}
           loading={loading}
           onEdit={openEditModal}
-          onDelete={disableEvent}
+          onDelete={changeEventStatus}
         />
 
       </div>

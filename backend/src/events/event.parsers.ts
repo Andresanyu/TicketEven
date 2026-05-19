@@ -1,4 +1,4 @@
-import { EventTicketTypeInput } from './event.types';
+import { EventTicketTypeInput, EventoEstado } from './event.types';
 
 export interface ParseEntradasResult {
   entradas: EventTicketTypeInput[] | null;
@@ -70,4 +70,13 @@ export function parseValor(value: unknown): number | null {
   const parsed = Number(value);
   if (Number.isNaN(parsed)) return NaN;
   return parsed;
+}
+
+export function parseEstado(value: unknown): EventoEstado | null {
+  if (value === undefined || value === null) return null;
+  const str = String(value).trim().toLowerCase();
+  if (str === 'activo' || str === 'finalizado' || str === 'inactivo') {
+    return str as EventoEstado;
+  }
+  return null;
 }

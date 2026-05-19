@@ -86,4 +86,40 @@ export async function runSchemaMigrations(): Promise<void> {
     ALTER TABLE eventos
     DROP COLUMN IF EXISTS contador_interes
   `);
+
+  // Migración: agregar columna estado si no existe
+  await pool.query(`
+    ALTER TABLE eventos ADD COLUMN IF NOT EXISTS estado VARCHAR(20) NOT NULL DEFAULT 'activo';
+  `);
+
+  // Migrar datos existentes: activo=true → 'activo', activo=false → 'inactivo'
+  await pool.query(`
+    UPDATE eventos 
+    SET estado = CASE WHEN activo = true THEN 'activo' ELSE 'inactivo' END 
+    WHERE estado = 'activo' AND activo IS NOT NULL;
+  `);
+
+  // Agregar constraint si no existe
+  await pool.query(`
+    ALTER TABLE eventos DROP CONSTRAINT IF EXISTS eventos_estado_check;
+  `);
+
+  await pool.query(`
+    ALTER TABLE eventos ADD CONSTRAINT eventos_estado_check 
+    CHECK (estado IN ('activo', 'finalizado', 'inactivo'));
+  `);
+}
+
+export async function checkAndUpdateExpiredEvents(): Promise<void> {
+  try {
+    await pool.query(`
+      UPDATE eventos
+      SET estado = 'finalizado'
+      WHERE estado = 'activo'
+        AND fecha IS NOT NULL
+        AND fecha < NOW();
+    `);
+  } catch (err) {
+    console.error('Error updating expired events:', err);
+  }
 }
