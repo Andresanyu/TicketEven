@@ -35,6 +35,7 @@ function PurchaseModal({ entradas, eventName, eventoActivo, onClose, onSuccess }
   });
   const [cardErrors, setCardErrors] = useState({});
   const [loading, setLoading]       = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
   const [feedback, setFeedback]     = useState(null);
   const franquiciaRef = useRef(null);
   const panInputRef = useRef(null);
@@ -70,6 +71,7 @@ function PurchaseModal({ entradas, eventName, eventoActivo, onClose, onSuccess }
     setCardData({ pan_number: "", cvv: "", nombre_titular: "", franquicia: "" });
     setCardErrors({});
     setFeedback(null);
+    setIsProcessing(false);
   };
 
   const handleClose = () => {
@@ -175,8 +177,11 @@ function PurchaseModal({ entradas, eventName, eventoActivo, onClose, onSuccess }
     if (totalQty <= 0)       return;
     if (!validateCardData()) return;
 
+    // Control de duplicidad: deshabilitar botón
+    setIsProcessing(true);
     setLoading(true);
     setFeedback(null);
+    
     try {
       const payloadTarjeta = {
         pan_number: String(cardData.pan_number || "").replace(/\s+/g, ""),
@@ -194,6 +199,8 @@ function PurchaseModal({ entradas, eventName, eventoActivo, onClose, onSuccess }
           tarjeta: payloadTarjeta,
         });
       }
+      
+      // Éxito: mantener isProcessing en true para deshabilitar volver atrás
       setFeedback({
         ok: true,
         msg: `Compraste ${totalQty} entrada(s) para ${eventName}. ¡Disfruta el evento!`,
@@ -210,6 +217,9 @@ function PurchaseModal({ entradas, eventName, eventoActivo, onClose, onSuccess }
         err?.status === 401 ? "Debes iniciar sesión para comprar." :
         err?.data?.error ?? "No se pudo completar la compra. Intenta de nuevo.";
       setFeedback({ ok: false, msg });
+      
+      // Error: re-habilitar botón
+      setIsProcessing(false);
     } finally {
       setLoading(false);
     }
@@ -244,7 +254,15 @@ function PurchaseModal({ entradas, eventName, eventoActivo, onClose, onSuccess }
   };
 
   return (
-    <div className="modal-overlay" onClick={(e) => e.target === e.currentTarget && handleClose()}>
+    <div 
+      className="modal-overlay" 
+      onClick={(e) => {
+        // No permitir cerrar haciendo clic fuera si la compra fue exitosa
+        if (e.target === e.currentTarget && !feedback?.ok) {
+          handleClose();
+        }
+      }}
+    >
       <div className="modal">
 
         {feedback?.ok ? (
@@ -468,13 +486,13 @@ function PurchaseModal({ entradas, eventName, eventoActivo, onClose, onSuccess }
                 </div>
 
                 <div className="modal-actions">
-                  <button className="btn-cancel" onClick={handleBackToSelection}>← Volver</button>
+                  <button className="btn-cancel" onClick={handleBackToSelection} disabled={isProcessing}>← Volver</button>
                   <button
                     className="btn-confirm"
                     onClick={handlePay}
-                    disabled={loading || totalQty <= 0 || !eventoActivo || !firstSelectedEntry}
+                    disabled={loading || isProcessing || totalQty <= 0 || !eventoActivo || !firstSelectedEntry}
                   >
-                    {loading ? "Procesando..." : `Pagar ${formatPrice(total)}`}
+                    {isProcessing ? "Procesando..." : `Pagar ${formatPrice(total)}`}
                   </button>
                 </div>
               </>

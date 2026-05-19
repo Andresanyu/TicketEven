@@ -8,12 +8,17 @@ export async function sendPaymentToGateway(payload: {
   tarjeta: CardDataDTO;
 }): Promise<PaymentGatewayResponse> {
   try {
+    const payloadWithEmpresa = {
+      ...payload,
+      empresa_id: 1001,
+    };
+
     const response = await fetch(`${PAYMENT_GATEWAY_URL}/api/v1/pay`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify(payload),
+      body: JSON.stringify(payloadWithEmpresa),
     });
 
     const data = (await response.json()) as PaymentGatewayResponse;
