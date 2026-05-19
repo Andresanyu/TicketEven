@@ -10,7 +10,13 @@ import {
 export class PurchaseRepository implements IPurchaseRepository {
   constructor(private readonly pool: Pool) {}
 
-  async create(usuarioId: number, dto: CreatePurchaseDTO, total: number): Promise<PurchaseRow> {
+  async create(
+    usuarioId: number,
+    dto: CreatePurchaseDTO,
+    total: number,
+    authCode?: string,
+    tarjetaEnmascarada?: string
+  ): Promise<PurchaseRow> {
     const client = await this.pool.connect();
     try {
       await client.query('BEGIN');
@@ -29,10 +35,17 @@ export class PurchaseRepository implements IPurchaseRepository {
       }
 
       const purchaseResult = await client.query(
-        `INSERT INTO compras (usuario_id, evento_tipo_entrada_id, cantidad, total)
-         VALUES ($1, $2, $3, $4)
-         RETURNING id, usuario_id, evento_tipo_entrada_id, cantidad, total, fecha_compra, estado`,
-        [usuarioId, dto.evento_tipo_entrada_id, dto.cantidad, total]
+        `INSERT INTO compras (
+           usuario_id,
+           evento_tipo_entrada_id,
+           cantidad,
+           total,
+           auth_code,
+           tarjeta_enmascarada
+         )
+         VALUES ($1, $2, $3, $4, $5, $6)
+         RETURNING id, usuario_id, evento_tipo_entrada_id, cantidad, total, fecha_compra, estado, auth_code, tarjeta_enmascarada`,
+        [usuarioId, dto.evento_tipo_entrada_id, dto.cantidad, total, authCode, tarjetaEnmascarada]
       );
 
       await client.query('COMMIT');
@@ -49,7 +62,7 @@ export class PurchaseRepository implements IPurchaseRepository {
     const result = await this.pool.query(
       `SELECT 
          c.id, c.usuario_id, c.evento_tipo_entrada_id, c.cantidad,
-         c.total, c.fecha_compra, c.estado,
+        c.total, c.fecha_compra, c.estado, c.auth_code, c.tarjeta_enmascarada,
          e.nombre AS evento_nombre,
          te.nombre AS tipo_entrada_nombre,
          ete.precio AS precio_unitario
@@ -75,7 +88,7 @@ export class PurchaseRepository implements IPurchaseRepository {
     const result = await this.pool.query(
       `SELECT 
         c.id, c.usuario_id, c.evento_tipo_entrada_id, c.cantidad,
-        c.total, c.fecha_compra, c.estado,
+        c.total, c.fecha_compra, c.estado, c.auth_code, c.tarjeta_enmascarada,
         e.nombre AS evento_nombre,
         e.fecha  AS fecha_evento,
         te.nombre AS tipo_entrada_nombre,

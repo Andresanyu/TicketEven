@@ -6,6 +6,7 @@ export const purchaseService = {
     const payload = {
       evento_tipo_entrada_id: Number(purchaseData?.evento_tipo_entrada_id),
       cantidad: Number(purchaseData?.cantidad),
+      ...(purchaseData?.tarjeta && { tarjeta: purchaseData.tarjeta }),
     };
 
     return api.post("/purchases", payload, Auth.authOptions());
