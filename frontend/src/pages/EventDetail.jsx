@@ -4,6 +4,7 @@ import "../../css/event_card.css";
 import api from "../services/api.js";
 import { Auth } from "../services/auth.js";
 import purchaseService from "../services/purchaseService.js";
+import { useIaResponseSocket } from "../hooks/useIaResponseSocket.js";
 
 function formatDate(isoString) {
   if (!isoString) return "Sin fecha";
@@ -25,6 +26,15 @@ function formatPrice(value) {
 // ── Modal de compra ──────────────────────────────────────────────────────────
 function PurchaseModal({ entradas, eventName, eventoActivo, onClose, onSuccess }) {
   const navigate = useNavigate();
+  const [feedback, setFeedback]     = useState(null);
+  const paymentFailed = feedback !== null && feedback.ok === false;
+  const {
+    iaMessage,
+    isLoading: iaLoading,
+    isConnected: iaConnected,
+    connectionLabel: iaConnectionLabel,
+    resetIaMessage,
+  } = useIaResponseSocket(paymentFailed);
   const [quantities, setQuantities] = useState({});
   const [step, setStep] = useState(1);
   const [cardData, setCardData] = useState({
@@ -36,7 +46,6 @@ function PurchaseModal({ entradas, eventName, eventoActivo, onClose, onSuccess }
   const [cardErrors, setCardErrors] = useState({});
   const [loading, setLoading]       = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [feedback, setFeedback]     = useState(null);
   const franquiciaRef = useRef(null);
   const panInputRef = useRef(null);
   const cvvInputRef = useRef(null);
@@ -72,6 +81,7 @@ function PurchaseModal({ entradas, eventName, eventoActivo, onClose, onSuccess }
     setCardErrors({});
     setFeedback(null);
     setIsProcessing(false);
+    resetIaMessage();
   };
 
   const handleClose = () => {
@@ -139,6 +149,7 @@ function PurchaseModal({ entradas, eventName, eventoActivo, onClose, onSuccess }
   const handleBackToSelection = () => {
     setFeedback(null);
     setStep(1);
+    resetIaMessage();
   };
 
   const handlePanChange = (value) => {
@@ -254,6 +265,15 @@ function PurchaseModal({ entradas, eventName, eventoActivo, onClose, onSuccess }
     marginTop: 4,
   };
 
+  const showAiPanel = feedback !== null && feedback.ok === false && (iaMessage || iaLoading);
+  const modalStyle = {
+    maxWidth: showAiPanel ? "820px" : "460px",
+    display: showAiPanel ? "grid" : "block",
+    gridTemplateColumns: showAiPanel ? "1fr 1fr" : "1fr",
+    gap: showAiPanel ? "32px" : "0",
+    transition: "max-width 0.35s ease, grid-template-columns 0.35s ease",
+  };
+
   return (
     <div 
       className="modal-overlay" 
@@ -264,8 +284,7 @@ function PurchaseModal({ entradas, eventName, eventoActivo, onClose, onSuccess }
         }
       }}
     >
-      <div className="modal">
-
+      <div className="modal" style={modalStyle}>
         {feedback?.ok ? (
           <>
             <div className="modal-feedback">
@@ -287,15 +306,10 @@ function PurchaseModal({ entradas, eventName, eventoActivo, onClose, onSuccess }
             </div>
             <button className="btn-confirm" onClick={handleClose}>Cerrar</button>
           </>
-        ) : (
+        ) : feedback && !feedback.ok ? (
           <>
-            <div>
-              <p className="modal-title">{step === 1 ? "Confirmar compra" : "Datos de pago"}</p>
-              <p className="modal-subtitle">{eventName}</p>
-            </div>
-
-            {feedback && !feedback.ok && (
-              <div className="modal-feedback" style={{ marginBottom: 8 }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
+              <div className="modal-feedback">
                 <div className="modal-feedback-icon error">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                     <circle cx="12" cy="12" r="10" />
@@ -306,11 +320,102 @@ function PurchaseModal({ entradas, eventName, eventoActivo, onClose, onSuccess }
                 <p className="modal-feedback-title">Error en la compra</p>
                 <p className="modal-feedback-msg">{feedback.msg}</p>
               </div>
+
+              <div className="modal-actions">
+                <button className="btn-cancel" onClick={handleBackToSelection}>
+                  ← Reintentar
+                </button>
+                <button className="btn-cancel" onClick={handleClose}>
+                  Cerrar
+                </button>
+              </div>
+            </div>
+
+            {showAiPanel && (
+              <div
+                style={{
+                  background: "rgba(198,241,53,0.06)",
+                  border: "1px solid rgba(198,241,53,0.25)",
+                  borderRadius: "12px",
+                  padding: "20px",
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: "12px",
+                  minHeight: "140px",
+                }}
+              >
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "8px",
+                    fontSize: "10px",
+                    fontWeight: 700,
+                    letterSpacing: "1.2px",
+                    textTransform: "uppercase",
+                    color: "var(--accent-dim)",
+                  }}
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <circle cx="12" cy="12" r="10" />
+                    <path d="M12 8v4l3 3" />
+                  </svg>
+                  Asistente IA en vivo
+                  <span
+                    style={{
+                      width: 7,
+                      height: 7,
+                      borderRadius: "50%",
+                      background: iaLoading ? "var(--text-muted)" : "var(--accent)",
+                      animation: iaLoading ? "pulse 1.2s ease-in-out infinite" : "none",
+                      marginLeft: "auto",
+                    }}
+                  />
+                </div>
+
+                <div
+                  style={{
+                    fontSize: "11px",
+                    color: "var(--text-muted)",
+                    textTransform: "uppercase",
+                    letterSpacing: "0.8px",
+                  }}
+                >
+                  {iaConnected ? iaConnectionLabel : "Reconectando..."}
+                </div>
+
+                {iaLoading && !iaMessage && (
+                  <div style={{ color: "var(--text-muted)", fontSize: "13px" }}>
+                    <span>⏳</span> Generando consejo personalizado…
+                  </div>
+                )}
+
+                {iaMessage && (
+                  <p
+                    style={{
+                      fontSize: "14px",
+                      lineHeight: 1.65,
+                      color: "var(--text-primary)",
+                      margin: 0,
+                      whiteSpace: "pre-wrap",
+                    }}
+                  >
+                    {iaMessage}
+                  </p>
+                )}
+              </div>
             )}
+          </>
+        ) : (
+          <>
+            <div>
+              <p className="modal-title">{step === 1 ? "Confirmar compra" : "Datos de pago"}</p>
+              <p className="modal-subtitle">{eventName}</p>
+            </div>
 
             {step === 1 ? (
               <>
-                <div className="modal-entries">
+                <div className="modal-entries" style={{ gap: "14px" }}>
                   <p className="modal-qty-label">Selecciona tus entradas</p>
 
                   {(entradas || []).map((entrada) => {
@@ -322,6 +427,7 @@ function PurchaseModal({ entradas, eventName, eventoActivo, onClose, onSuccess }
                       <div
                         key={entrada.id}
                         className={`modal-entry-option${sinAforo ? " disabled" : ""}`}
+                        style={{ padding: "18px 16px" }}
                       >
                         <div className="entry-option-left">
                           <span className="entry-option-name">{entrada.nombre}</span>
@@ -389,7 +495,7 @@ function PurchaseModal({ entradas, eventName, eventoActivo, onClose, onSuccess }
                   <span className="modal-total-value">Total: {formatPrice(total)}</span>
                 </div>
 
-                <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+                <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
 
                   <div>
                     <label style={fieldLabelStyle}>Franquicia</label>
