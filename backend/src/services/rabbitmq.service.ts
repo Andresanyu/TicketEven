@@ -17,6 +17,7 @@ export interface PaymentEventData {
 
 let connection: any = null;
 let channel: any = null;
+let io: any = null;
 let reconnectTimer: ReturnType<typeof setTimeout> | null = null;
 let initializationPromise: Promise<void> | null = null;
 let shuttingDown = false;
@@ -33,6 +34,16 @@ function logError(message: string, error: unknown): void {
 function prettyPrint(label: string, payload: QueuePayload): void {
   console.log(`[RabbitMQ][${label}] Mensaje recibido:`);
   console.log(JSON.stringify(payload, null, 2));
+}
+
+function emitAIResponse(payload: QueuePayload): void {
+  if (!io) {
+    log('Socket.io no está inicializado todavía. Se omitió el emit en tiempo real.');
+    return;
+  }
+
+  io.emit('ia_response', payload);
+  log('Evento ia_response emitido a todos los clientes conectados.', payload);
 }
 
 function parseJson(raw: string): QueuePayload | null {
@@ -53,12 +64,19 @@ async function consumeAIResults(message: any): Promise<void> {
 
   if (parsed) {
     prettyPrint(AI_RESULTS_QUEUE, parsed);
+    emitAIResponse(parsed);
   } else {
     console.log(`[RabbitMQ][${AI_RESULTS_QUEUE}] Mensaje no JSON:`);
     console.log(raw);
+    emitAIResponse({ raw_message: raw });
   }
 
   channel.ack(message);
+}
+
+export function setSocketServer(socketServer: any): void {
+  io = socketServer;
+  log('Socket.io registrado en el servicio RabbitMQ.');
 }
 
 async function connect(): Promise<void> {
