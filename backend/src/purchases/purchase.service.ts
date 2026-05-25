@@ -7,6 +7,7 @@ import {
   PurchaseDetailRow,
   PurchaseWithQR,
 } from './purchase.types';
+import logger from '../utils/logger';
 
 export class PaymentDeclinedError extends Error {
   constructor(message: string) {
@@ -34,32 +35,63 @@ export class PurchaseService {
 
     const total = precio * dto.cantidad;
 
-    let paymentResponse;
+    const pendingPurchase = await this.repo.createPending(usuarioId, dto, total);
+
     try {
-      paymentResponse = await sendPaymentToGateway({
-        id_reserva: dto.evento_tipo_entrada_id,
+      logger.info('Created PENDIENTE purchase', {
+        usuarioId,
+        purchaseId: pendingPurchase.id,
+        evento_tipo_entrada_id: dto.evento_tipo_entrada_id,
+        cantidad: dto.cantidad,
+        total,
+      });
+    } catch (e) {
+      // non-fatal
+    }
+    try {
+      const paymentResponse = await sendPaymentToGateway({
+        id_reserva: pendingPurchase.id,
         monto: total,
         tarjeta: dto.tarjeta,
       });
+      if (paymentResponse.status === 'DECLINED') {
+        await this.repo.updateEstado(pendingPurchase.id, 'RECHAZADO');
+        throw new PaymentDeclinedError('Pago rechazado: ' + (paymentResponse.reason ?? 'Sin detalle'));
+      }
+      try {
+        logger.result('Orquestador response', {
+          purchaseId: pendingPurchase.id,
+          status: paymentResponse.status,
+          auth_code: paymentResponse.auth_code,
+        });
+      } catch (e) {}
+
+      const paidPurchase = await this.repo.updateEstado(
+        pendingPurchase.id,
+        'PAGADO',
+        paymentResponse.auth_code,
+        paymentResponse.tarjeta_enmascarada
+      );
+
+      return paidPurchase ?? pendingPurchase;
     } catch (err: any) {
+      try {
+        logger.error('Error processing payment', { purchaseId: pendingPurchase.id, error: err?.message, stack: err?.stack });
+      } catch (e) {}
+
+      await this.repo.updateEstado(pendingPurchase.id, 'RECHAZADO');
+
+      if (err instanceof PaymentDeclinedError) {
+        throw err;
+      }
+
       // Si es un error de validación (400: medio de pago no soportado, etc), propagarlo tal cual
       if (err?.message && !err.message.startsWith('Error de red')) {
         throw err;
       }
+
       throw new PaymentGatewayUnavailableError('Error de red al conectar con el servicio de pagos.');
     }
-
-    if (paymentResponse.status === 'DECLINED') {
-      throw new PaymentDeclinedError('Pago rechazado: ' + (paymentResponse.reason ?? 'Sin detalle'));
-    }
-
-    return this.repo.create(
-      usuarioId,
-      dto,
-      total,
-      paymentResponse.auth_code,
-      paymentResponse.tarjeta_enmascarada
-    );
   }
 
   getByUser(usuarioId: number): Promise<PurchaseDetailRow[]> {

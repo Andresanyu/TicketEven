@@ -3,16 +3,21 @@ import {
   CreatePurchaseDTO,
   PurchaseDetailRow,
   PurchaseWithQR,
+  PurchaseRow as PurchaseRecord,
 } from './purchase.types';
 
 export interface IPurchaseRepository {
-  create(
+  createPending(
     usuarioId: number,
     dto: CreatePurchaseDTO,
     total: number,
+  ): Promise<PurchaseRow>;
+  updateEstado(
+    purchaseId: number,
+    estado: PurchaseRecord['estado'],
     authCode?: string,
     tarjetaEnmascarada?: string
-  ): Promise<PurchaseRow>;
+  ): Promise<PurchaseRow | null>;
   findByUser(usuarioId: number): Promise<PurchaseDetailRow[]>;
   findById(id: number): Promise<Omit<PurchaseWithQR, 'qr_code'> | null>;
   findPrecioByEntradaId(eventoTipoEntradaId: number): Promise<number | null>; // 👈

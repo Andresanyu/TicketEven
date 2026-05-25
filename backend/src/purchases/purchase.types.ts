@@ -5,7 +5,7 @@ export interface PurchaseRow {
   cantidad: number;
   total: number;
   fecha_compra: Date;
-  estado: 'completada' | 'cancelada';
+  estado: 'PENDIENTE' | 'PAGADO' | 'RECHAZADO';
   auth_code?: string;
   tarjeta_enmascarada?: string;
 }
