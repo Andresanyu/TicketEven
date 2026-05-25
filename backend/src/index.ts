@@ -3,6 +3,7 @@ dotenv.config();
 
 import app from './app';
 import { connectDatabase, runSchemaMigrations, checkAndUpdateExpiredEvents } from './config/database';
+import { closeRabbitMQ, initializeRabbitMQ } from './services/rabbitmq.service';
 
 const PORT = process.env.PORT || 3001;
 
@@ -10,6 +11,7 @@ async function bootstrap() {
   try {
     await connectDatabase();
     await runSchemaMigrations();
+    void initializeRabbitMQ();
     
     // Ejecutar verificación inicial de eventos expirados
     await checkAndUpdateExpiredEvents();
@@ -25,5 +27,19 @@ async function bootstrap() {
     process.exit(1);
   }
 }
+
+async function shutdown(signal: string) {
+  console.log(`Recibida señal ${signal}. Cerrando RabbitMQ...`);
+  await closeRabbitMQ();
+  process.exit(0);
+}
+
+process.on('SIGINT', () => {
+  void shutdown('SIGINT');
+});
+
+process.on('SIGTERM', () => {
+  void shutdown('SIGTERM');
+});
 
 bootstrap();

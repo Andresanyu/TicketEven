@@ -1,0 +1,29 @@
+# Dependencies
+**/node_modules/
+node_modules/
+
+# Environment files
+.env
+**/.env
+.env.*
+**/.env.*
+
+# Build output
+**/dist/
+**/build/
+
+# Logs
+*.log
+**/*.log
+
+# OS files
+.DS_Store
+Thumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# Editor files
+.vscode/
+.idea/
+*.swp
+*.swo

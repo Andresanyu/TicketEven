@@ -8,6 +8,7 @@ import {
   PurchaseWithQR,
 } from './purchase.types';
 import logger from '../utils/logger';
+import { publishPaymentEvent } from '../services/rabbitmq.service';
 
 export class PaymentDeclinedError extends Error {
   constructor(message: string) {
@@ -56,6 +57,12 @@ export class PurchaseService {
       });
       if (paymentResponse.status === 'DECLINED') {
         await this.repo.updateEstado(pendingPurchase.id, 'RECHAZADO');
+        await this.safePublishEvent({
+          id_reserva: pendingPurchase.id,
+          estado: 'RECHAZADO',
+          codigo_error: paymentResponse.reason ?? 'DECLINED',
+          tipo_evento: 'Pago Fallido',
+        });
         throw new PaymentDeclinedError('Pago rechazado: ' + (paymentResponse.reason ?? 'Sin detalle'));
       }
       try {
@@ -73,6 +80,13 @@ export class PurchaseService {
         paymentResponse.tarjeta_enmascarada
       );
 
+      await this.safePublishEvent({
+        id_reserva: pendingPurchase.id,
+        estado: 'PAGADO',
+        codigo_error: null,
+        tipo_evento: 'Pago Exitoso',
+      });
+
       return paidPurchase ?? pendingPurchase;
     } catch (err: any) {
       try {
@@ -80,6 +94,15 @@ export class PurchaseService {
       } catch (e) {}
 
       await this.repo.updateEstado(pendingPurchase.id, 'RECHAZADO');
+
+      await this.safePublishEvent({
+        id_reserva: pendingPurchase.id,
+        estado: 'RECHAZADO',
+        codigo_error: err?.message ?? 'ERROR_DESCONOCIDO',
+        tipo_evento: err?.message?.startsWith('Error de red')
+          ? 'Timeout'
+          : 'Pago Fallido',
+      });
 
       if (err instanceof PaymentDeclinedError) {
         throw err;
@@ -116,5 +139,21 @@ export class PurchaseService {
     });
 
     return { ...purchase, qr_code };
+  }
+
+  private async safePublishEvent(eventData: {
+    id_reserva: number;
+    estado: string;
+    codigo_error: string | null;
+    tipo_evento: string;
+  }): Promise<void> {
+    try {
+      await publishPaymentEvent(eventData);
+    } catch (error) {
+      logger.error('No se pudo publicar el evento de pago en RabbitMQ', {
+        eventData,
+        error: error instanceof Error ? error.message : String(error),
+      });
+    }
   }
 }
