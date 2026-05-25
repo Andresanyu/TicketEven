@@ -38,6 +38,28 @@ export async function runSchemaMigrations(): Promise<void> {
   `);
 
   await pool.query(`
+    ALTER TABLE compras ALTER COLUMN estado SET DEFAULT 'PENDIENTE';
+  `);
+
+  await pool.query(`
+    UPDATE compras
+    SET estado = CASE
+      WHEN estado = 'completada' THEN 'PAGADO'
+      WHEN estado = 'cancelada' THEN 'RECHAZADO'
+      ELSE estado
+    END;
+  `);
+
+  await pool.query(`
+    ALTER TABLE compras DROP CONSTRAINT IF EXISTS compras_estado_check;
+  `);
+
+  await pool.query(`
+    ALTER TABLE compras ADD CONSTRAINT compras_estado_check
+    CHECK (estado IN ('PENDIENTE', 'PAGADO', 'RECHAZADO'));
+  `);
+
+  await pool.query(`
     CREATE TABLE IF NOT EXISTS tipos_entrada (
       id SERIAL PRIMARY KEY,
       nombre VARCHAR(100) NOT NULL UNIQUE

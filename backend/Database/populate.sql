@@ -81,13 +81,13 @@ ON CONFLICT (evento_id, tipo_entrada_id) DO NOTHING;
 -- evento_tipo_entrada_id sigue el orden del insert anterior
 -- ete id 1 = evento 1 General, id 2 = evento 1 VIP, id 3 = evento 2 General, etc.
 INSERT INTO compras (usuario_id, evento_tipo_entrada_id, cantidad, total, estado) VALUES
-(1, 1,  2, 90000,  'completada'),  -- Juan: 2x General Concierto Rock
-(1, 2,  1, 90000,  'completada'),  -- Juan: 1x VIP Concierto Rock
-(2, 1,  3, 135000, 'completada'),  -- María: 3x General Concierto Rock
-(2, 3,  2, 70000,  'completada'),  -- María: 2x General Teatro Hamlet
-(3, 2,  1, 90000,  'completada'),  -- Carlos: 1x VIP Concierto Rock
-(3, 4,  1, 20000,  'completada'),  -- Carlos: 1x Estudiante Teatro Hamlet
-(1, 6,  2, 20000,  'completada'),  -- Juan: 2x General Microfútbol
-(2, 11, 1, 20000,  'completada'),  -- María: 1x General Tech Meetup
-(1, 13, 2, 50000,  'completada'),  -- Juan: 2x General Stand Up
-(3, 19, 1, 30000,  'cancelada');   -- Carlos: 1x General Musical Infantil (cancelada)
+(1, 1,  2, 90000,  'PAGADO'),      -- Juan: 2x General Concierto Rock
+(1, 2,  1, 90000,  'PAGADO'),      -- Juan: 1x VIP Concierto Rock
+(2, 1,  3, 135000, 'PAGADO'),      -- María: 3x General Concierto Rock
+(2, 3,  2, 70000,  'PAGADO'),      -- María: 2x General Teatro Hamlet
+(3, 2,  1, 90000,  'PAGADO'),      -- Carlos: 1x VIP Concierto Rock
+(3, 4,  1, 20000,  'PAGADO'),      -- Carlos: 1x Estudiante Teatro Hamlet
+(1, 6,  2, 20000,  'PAGADO'),      -- Juan: 2x General Microfútbol
+(2, 11, 1, 20000,  'PAGADO'),      -- María: 1x General Tech Meetup
+(1, 13, 2, 50000,  'PAGADO'),      -- Juan: 2x General Stand Up
+(3, 19, 1, 30000,  'RECHAZADO');   -- Carlos: 1x General Musical Infantil (rechazada)

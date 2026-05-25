@@ -13,7 +13,7 @@ const CAPACITY_REPORT_QUERY = `
   JOIN tipos_entrada te ON te.id = ete.tipo_entrada_id
   LEFT JOIN compras c
     ON c.evento_tipo_entrada_id = ete.id
-   AND c.estado = 'completada'
+   AND c.estado = 'PAGADO'
   WHERE ete.evento_id = $1
   GROUP BY te.nombre, ete.aforo, ete.precio
 `;

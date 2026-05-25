@@ -5,6 +5,7 @@ import {
   PurchaseService,
 } from './purchase.service';
 import { AuthRequest } from '../middlewares/auth';
+import logger from '../utils/logger';
 import { CreatePurchaseWithPaymentDTO } from './purchase.types';
 
 export class PurchaseController {
@@ -20,9 +21,18 @@ export class PurchaseController {
     }
 
     try {
+      logger.info('Purchase request received', { usuarioId, dto: parsed.dto });
+    } catch (e) {
+      // non-fatal logging failure
+    }
+
+    try {
       const purchase = await this.purchaseService.create(usuarioId, parsed.dto);
       res.status(201).json(purchase);
     } catch (err: any) {
+      try {
+        logger.error('Purchase processing error in controller', { usuarioId, error: err?.message, stack: err?.stack });
+      } catch (e) {}
       if (err instanceof PaymentDeclinedError) {
         res.status(402).json({ error: err.message });
         return;

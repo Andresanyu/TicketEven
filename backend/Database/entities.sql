@@ -47,7 +47,7 @@ CREATE TABLE compras (
     cantidad INTEGER NOT NULL CHECK (cantidad > 0),
     total NUMERIC NOT NULL,
     fecha_compra TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    estado VARCHAR(20) NOT NULL DEFAULT 'completada' CHECK (estado IN ('completada', 'cancelada'))
+    estado VARCHAR(20) NOT NULL DEFAULT 'PENDIENTE' CHECK (estado IN ('PENDIENTE', 'PAGADO', 'RECHAZADO'))
 );
 CREATE INDEX idx_compras_usuario_id ON compras(usuario_id);
 CREATE INDEX idx_compras_evento_tipo_entrada_id ON compras(evento_tipo_entrada_id);
