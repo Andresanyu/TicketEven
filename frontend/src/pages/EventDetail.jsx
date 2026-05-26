@@ -29,7 +29,9 @@ function PurchaseModal({ entradas, eventName, eventoActivo, onClose, onSuccess }
   const [feedback, setFeedback]     = useState(null);
   const paymentFailed = feedback !== null && feedback.ok === false;
   const {
+    iaPayload,
     iaMessage,
+    successMessage,
     isLoading: iaLoading,
     isConnected: iaConnected,
     connectionLabel: iaConnectionLabel,
@@ -65,6 +67,9 @@ function PurchaseModal({ entradas, eventName, eventoActivo, onClose, onSuccess }
   const totalQty = (entradas || []).reduce(
     (s, ent) => s + (Number(quantities[ent.id] || 0)), 0
   );
+
+  const isSuccessAiResponse = iaPayload?.estado === 'aprobado' || iaPayload?.tipo_evento === 'pago_exitoso';
+  const showSuccessAiBanner = feedback?.ok === true && (successMessage || isSuccessAiResponse);
 
   const firstSelectedEntry = (entradas || []).find((ent) => Number(quantities[ent.id] || 0) > 0) || null;
   const selectedTypes = (entradas || []).filter((ent) => Number(quantities[ent.id] || 0) > 0);
@@ -304,6 +309,49 @@ function PurchaseModal({ entradas, eventName, eventoActivo, onClose, onSuccess }
               <p className="modal-feedback-title">{feedback.ok ? "¡Compra exitosa!" : "Error en la compra"}</p>
               <p className="modal-feedback-msg">{feedback.msg}</p>
             </div>
+
+            {showSuccessAiBanner && (
+              <div
+                style={{
+                  borderRadius: "12px",
+                  border: "1px solid rgba(198,241,53,.24)",
+                  background: "linear-gradient(180deg, rgba(198,241,53,.12), rgba(198,241,53,.06))",
+                  padding: "16px 18px",
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: "8px",
+                }}
+              >
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "8px",
+                    color: "var(--accent-dim)",
+                    fontSize: "10px",
+                    fontWeight: 700,
+                    letterSpacing: "1.2px",
+                    textTransform: "uppercase",
+                  }}
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <circle cx="12" cy="12" r="10" />
+                    <path d="M12 8v4l3 3" />
+                  </svg>
+                  Asistente IA en vivo
+                </div>
+                <p style={{ margin: 0, color: "var(--text-primary)", fontSize: 14, lineHeight: 1.65, whiteSpace: "pre-wrap" }}>
+                  {successMessage || iaMessage}
+                </p>
+                {iaPayload?.nombre_usuario || iaPayload?.nombre_evento ? (
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: 8, fontSize: 11, color: "var(--text-secondary)" }}>
+                    {iaPayload?.nombre_usuario ? <span style={{ padding: "5px 9px", borderRadius: 999, background: "rgba(17,18,16,.55)", border: "1px solid rgba(255,255,255,.05)" }}>Cliente: {iaPayload.nombre_usuario}</span> : null}
+                    {iaPayload?.nombre_evento ? <span style={{ padding: "5px 9px", borderRadius: 999, background: "rgba(17,18,16,.55)", border: "1px solid rgba(255,255,255,.05)" }}>Evento: {iaPayload.nombre_evento}</span> : null}
+                  </div>
+                ) : null}
+              </div>
+            )}
+
             <button className="btn-confirm" onClick={handleClose}>Cerrar</button>
           </>
         ) : feedback && !feedback.ok ? (

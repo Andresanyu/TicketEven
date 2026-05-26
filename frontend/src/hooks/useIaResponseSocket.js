@@ -2,7 +2,9 @@ import { useEffect, useMemo, useState } from 'react';
 import { getSocketConnection } from '../services/socketClient.js';
 
 export function useIaResponseSocket(paymentFailed = false) {
+  const [iaPayload, setIaPayload] = useState(null);
   const [iaMessage, setIaMessage] = useState(null);
+  const [successMessage, setSuccessMessage] = useState(null);
   const [isConnected, setIsConnected] = useState(false);
   const [isLoading, setIsLoading] = useState(Boolean(paymentFailed));
 
@@ -26,7 +28,12 @@ export function useIaResponseSocket(paymentFailed = false) {
     };
 
     const handleAIResponse = (payload) => {
-      setIaMessage(payload?.respuesta ?? payload?.message ?? '');
+      const responseText = payload?.respuesta ?? payload?.message ?? '';
+      setIaPayload(payload ?? null);
+      setIaMessage(responseText);
+      if (payload?.estado === 'aprobado' || payload?.tipo_evento === 'pago_exitoso') {
+        setSuccessMessage(responseText);
+      }
       setIsLoading(false);
     };
 
@@ -51,7 +58,9 @@ export function useIaResponseSocket(paymentFailed = false) {
 
   useEffect(() => {
     if (paymentFailed) {
+      setIaPayload(null);
       setIaMessage(null);
+      setSuccessMessage(null);
       setIsLoading(true);
     } else {
       setIsLoading(false);
@@ -65,12 +74,16 @@ export function useIaResponseSocket(paymentFailed = false) {
   }, [isConnected, isLoading]);
 
   return {
+    iaPayload,
     iaMessage,
+    successMessage,
     isLoading,
     isConnected,
     connectionLabel,
     resetIaMessage: () => {
+      setIaPayload(null);
       setIaMessage(null);
+      setSuccessMessage(null);
       setIsLoading(false);
     },
   };
