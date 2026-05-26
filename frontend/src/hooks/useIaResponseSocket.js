@@ -8,6 +8,7 @@ export function useIaResponseSocket(paymentFailed = false) {
   const [isConnected, setIsConnected] = useState(false);
   const [isLoading, setIsLoading] = useState(Boolean(paymentFailed));
 
+  // 1. Efecto principal: Conexión y escucha de mensajes
   useEffect(() => {
     const socket = getSocketConnection();
 
@@ -28,12 +29,17 @@ export function useIaResponseSocket(paymentFailed = false) {
     };
 
     const handleAIResponse = (payload) => {
+      // 🔴 CHIVATO (Console log) para ver si llega el mensaje
+      console.log("⚡ [Socket] Mensaje de IA recibido en frontend:", payload); 
+
       const responseText = payload?.respuesta ?? payload?.message ?? '';
       setIaPayload(payload ?? null);
       setIaMessage(responseText);
+      
       if (payload?.estado === 'aprobado' || payload?.tipo_evento === 'pago_exitoso') {
         setSuccessMessage(responseText);
       }
+      
       setIsLoading(false);
     };
 
@@ -56,12 +62,18 @@ export function useIaResponseSocket(paymentFailed = false) {
     };
   }, []);
 
+  // 2. Efecto secundario: Manejo del modal de error (Protegido contra borrado accidental)
   useEffect(() => {
     if (paymentFailed) {
-      setIaPayload(null);
-      setIaMessage(null);
-      setSuccessMessage(null);
-      setIsLoading(true);
+      // 🔴 PROTECCIÓN: Solo reiniciar la carga si la IA no ha respondido todavía
+      setIaPayload((prevPayload) => {
+        if (!prevPayload) {
+          setIaMessage(null);
+          setSuccessMessage(null);
+          setIsLoading(true);
+        }
+        return prevPayload;
+      });
     } else {
       setIsLoading(false);
     }
