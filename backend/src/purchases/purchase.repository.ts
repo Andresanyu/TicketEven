@@ -6,6 +6,7 @@ import {
   PurchaseDetailRow,
   PurchaseWithQR,
   PurchaseRow as PurchaseRecord,
+  PurchaseSuccessNotificationData,
 } from './purchase.types';
 
 export class PurchaseRepository implements IPurchaseRepository {
@@ -151,6 +152,22 @@ export class PurchaseRepository implements IPurchaseRepository {
       WHERE c.id = $1`,
       [id]
     );
+    return result.rows[0] ?? null;
+  }
+
+  async findSuccessNotificationData(purchaseId: number): Promise<PurchaseSuccessNotificationData | null> {
+    const result = await this.pool.query(
+      `SELECT
+         u.nombre AS nombre_usuario,
+         e.nombre AS nombre_evento
+       FROM compras c
+       JOIN usuarios u ON u.id = c.usuario_id
+       JOIN eventos_tipos_entrada ete ON ete.id = c.evento_tipo_entrada_id
+       JOIN eventos e ON e.id = ete.evento_id
+       WHERE c.id = $1`,
+      [purchaseId]
+    );
+
     return result.rows[0] ?? null;
   }
 }

@@ -3,6 +3,7 @@ import {
   CreatePurchaseDTO,
   PurchaseDetailRow,
   PurchaseWithQR,
+  PurchaseSuccessNotificationData,
   PurchaseRow as PurchaseRecord,
 } from './purchase.types';
 
@@ -20,5 +21,6 @@ export interface IPurchaseRepository {
   ): Promise<PurchaseRow | null>;
   findByUser(usuarioId: number): Promise<PurchaseDetailRow[]>;
   findById(id: number): Promise<Omit<PurchaseWithQR, 'qr_code'> | null>;
+  findSuccessNotificationData(purchaseId: number): Promise<PurchaseSuccessNotificationData | null>;
   findPrecioByEntradaId(eventoTipoEntradaId: number): Promise<number | null>; // 👈
 }

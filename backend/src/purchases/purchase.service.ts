@@ -80,11 +80,17 @@ export class PurchaseService {
         paymentResponse.tarjeta_enmascarada
       );
 
+      const successNotificationData = await this.repo.findSuccessNotificationData(
+        paidPurchase?.id ?? pendingPurchase.id
+      );
+
       await this.safePublishEvent({
         id_reserva: pendingPurchase.id,
-        estado: 'PAGADO',
+        estado: 'aprobado',
         codigo_error: null,
-        tipo_evento: 'Pago Exitoso',
+        tipo_evento: 'pago_exitoso',
+        nombre_usuario: successNotificationData?.nombre_usuario ?? '',
+        nombre_evento: successNotificationData?.nombre_evento ?? '',
       });
 
       return paidPurchase ?? pendingPurchase;
@@ -146,6 +152,8 @@ export class PurchaseService {
     estado: string;
     codigo_error: string | null;
     tipo_evento: string;
+    nombre_usuario?: string;
+    nombre_evento?: string;
   }): Promise<void> {
     try {
       await publishPaymentEvent(eventData);

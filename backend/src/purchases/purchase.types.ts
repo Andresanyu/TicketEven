@@ -43,3 +43,8 @@ export interface PurchaseWithQR extends PurchaseDetailRow {
   qr_code: string; // base64 data URL
   fecha_evento: Date | null;
 }
+
+export interface PurchaseSuccessNotificationData {
+  nombre_usuario: string;
+  nombre_evento: string;
+}
