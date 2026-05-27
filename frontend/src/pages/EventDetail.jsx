@@ -5,6 +5,7 @@ import api from "../services/api.js";
 import { Auth } from "../services/auth.js";
 import purchaseService from "../services/purchaseService.js";
 import { useIaResponseSocket } from "../hooks/useIaResponseSocket.js";
+import { getSocketConnection } from "../services/socketClient.js";
 
 function formatDate(isoString) {
   if (!isoString) return "Sin fecha";
@@ -23,20 +24,39 @@ function formatPrice(value) {
   }).format(value);
 }
 
+function normalizeSocketText(payload) {
+  if (typeof payload === 'string') {
+    return payload.trim();
+  }
+
+  if (!payload || typeof payload !== 'object') {
+    return '';
+  }
+
+  return String(
+    payload.mensaje ??
+      payload.message ??
+      payload.texto ??
+      payload.text ??
+      payload.estado_mensaje ??
+      payload.step ??
+      ''
+  ).trim();
+}
+
 // ── Modal de compra ──────────────────────────────────────────────────────────
 function PurchaseModal({ entradas, eventName, eventoActivo, onClose, onSuccess }) {
   const navigate = useNavigate();
+  const [transactionOpen, setTransactionOpen] = useState(false);
+  const [transactionText, setTransactionText] = useState('');
+  const [transactionPhase, setTransactionPhase] = useState('idle');
+  const [transactionPayload, setTransactionPayload] = useState(null);
   const [feedback, setFeedback]     = useState(null);
-  const paymentFailed = feedback !== null && feedback.ok === false;
   const {
     iaPayload,
     iaMessage,
-    successMessage,
-    isLoading: iaLoading,
-    isConnected: iaConnected,
-    connectionLabel: iaConnectionLabel,
     resetIaMessage,
-  } = useIaResponseSocket(paymentFailed);
+  } = useIaResponseSocket(transactionOpen);
   const [quantities, setQuantities] = useState({});
   const [step, setStep] = useState(1);
   const [cardData, setCardData] = useState({
@@ -59,6 +79,42 @@ function PurchaseModal({ entradas, eventName, eventoActivo, onClose, onSuccess }
     setQuantities(init);
   }, [entradas]);
 
+  useEffect(() => {
+    const socket = getSocketConnection();
+
+    const handlePaymentStep = (payload) => {
+      if (!transactionOpen) {
+        return;
+      }
+
+      const nextText = normalizeSocketText(payload);
+      if (nextText) {
+        setTransactionText(nextText);
+      }
+    };
+
+    socket.on('payment_step', handlePaymentStep);
+
+    return () => {
+      socket.off('payment_step', handlePaymentStep);
+    };
+  }, [transactionOpen]);
+
+  useEffect(() => {
+    if (!transactionOpen || !iaPayload) {
+      return;
+    }
+
+    const finalText = String(iaMessage ?? iaPayload?.respuesta ?? iaPayload?.message ?? '').trim();
+    if (finalText) {
+      setTransactionText(finalText);
+    }
+    setTransactionPayload(iaPayload);
+    setTransactionPhase('final');
+    setLoading(false);
+    setIsProcessing(false);
+  }, [transactionOpen, iaPayload, iaMessage]);
+
   const total = (entradas || []).reduce((sum, ent) => {
     const q = Number(quantities[ent.id] || 0);
     return sum + (Number(ent.precio || 0) * q);
@@ -68,8 +124,9 @@ function PurchaseModal({ entradas, eventName, eventoActivo, onClose, onSuccess }
     (s, ent) => s + (Number(quantities[ent.id] || 0)), 0
   );
 
-  const isSuccessAiResponse = iaPayload?.estado === 'aprobado' || iaPayload?.tipo_evento === 'pago_exitoso';
-  const showSuccessAiBanner = feedback?.ok === true && (successMessage || isSuccessAiResponse);
+  const isSuccessAiResponse = String(transactionPayload?.estado ?? iaPayload?.estado ?? '').toLowerCase() === 'aprobado' || String(transactionPayload?.tipo_evento ?? iaPayload?.tipo_evento ?? '').toLowerCase() === 'pago_exitoso';
+  const isFinalTransaction = transactionPhase === 'final';
+  const isFailedTransaction = isFinalTransaction && !isSuccessAiResponse;
 
   const firstSelectedEntry = (entradas || []).find((ent) => Number(quantities[ent.id] || 0) > 0) || null;
   const selectedTypes = (entradas || []).filter((ent) => Number(quantities[ent.id] || 0) > 0);
@@ -85,7 +142,12 @@ function PurchaseModal({ entradas, eventName, eventoActivo, onClose, onSuccess }
     setCardData({ pan_number: "", cvv: "", nombre_titular: "", franquicia: "" });
     setCardErrors({});
     setFeedback(null);
+    setTransactionOpen(false);
+    setTransactionText('');
+    setTransactionPhase('idle');
+    setTransactionPayload(null);
     setIsProcessing(false);
+    setLoading(false);
     resetIaMessage();
   };
 
@@ -198,6 +260,10 @@ function PurchaseModal({ entradas, eventName, eventoActivo, onClose, onSuccess }
     setIsProcessing(true);
     setLoading(true);
     setFeedback(null);
+    setTransactionOpen(true);
+    setTransactionPhase('loading');
+    setTransactionPayload(null);
+    setTransactionText('El pago está siendo procesado por la pasarela de pagos.');
     
     try {
       const payloadTarjeta = {
@@ -217,26 +283,9 @@ function PurchaseModal({ entradas, eventName, eventoActivo, onClose, onSuccess }
         });
       }
       
-      // Éxito: mantener isProcessing en true para deshabilitar volver atrás
-      setFeedback({
-        ok: true,
-        msg: `Compraste ${totalQty} entrada(s) para ${eventName}. ¡Disfruta el evento!`,
-      });
       onSuccess();
     } catch (err) {
-      const msg =
-        err?.status === 503
-          ? "El servicio de pagos no está disponible en este momento. Intenta de nuevo más tarde."
-          : err?.message ?? "No se pudo completar la compra. Intenta de nuevo.";
-        err?.status === 402 ? (err?.data?.error ?? err?.message ?? "Pago rechazado") :
-        err?.status === 403 ? "El evento no está activo." :
-        err?.status === 409 ? "No hay suficiente aforo disponible." :
-        err?.status === 401 ? "Debes iniciar sesión para comprar." :
-        err?.data?.error ?? err?.message ?? "No se pudo completar la compra. Intenta de nuevo.";
-      setFeedback({ ok: false, msg });
-      
-      // Error: re-habilitar botón
-      setIsProcessing(false);
+      console.error('Pago HTTP rechazado o indisponible; la UI esperará el evento final del socket.', err);
     } finally {
       setLoading(false);
     }
@@ -270,94 +319,146 @@ function PurchaseModal({ entradas, eventName, eventoActivo, onClose, onSuccess }
     marginTop: 4,
   };
 
-  const showAiPanel = feedback !== null && feedback.ok === false && (iaMessage || iaLoading);
+  const transactionIsSuccess = isSuccessAiResponse;
+  const transactionIsFinal = transactionPhase === 'final';
+  const transactionIsFailure = transactionIsFinal && !transactionIsSuccess;
   const modalStyle = {
-    maxWidth: showAiPanel ? "820px" : "460px",
-    display: showAiPanel ? "grid" : "block",
-    gridTemplateColumns: showAiPanel ? "1fr 1fr" : "1fr",
-    gap: showAiPanel ? "32px" : "0",
-    transition: "max-width 0.35s ease, grid-template-columns 0.35s ease",
+    maxWidth: transactionOpen ? '620px' : '460px',
+    transition: 'max-width 0.35s ease',
+  };
+
+  const transactionCardStyle = {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: 18,
+    padding: 24,
+    borderRadius: 18,
+    border: transactionIsSuccess
+      ? '1px solid rgba(198,241,53,0.28)'
+      : transactionIsFailure
+      ? '1px solid rgba(247,113,113,0.3)'
+      : '1px solid rgba(255,255,255,0.08)',
+    background: transactionIsSuccess
+      ? 'linear-gradient(180deg, rgba(198,241,53,0.10), rgba(198,241,53,0.05))'
+      : transactionIsFailure
+      ? 'linear-gradient(180deg, rgba(247,113,113,0.12), rgba(247,113,113,0.05))'
+      : 'rgba(255,255,255,0.03)',
+  };
+
+  const transactionIconStyle = {
+    width: 44,
+    height: 44,
+    borderRadius: '50%',
+    display: 'inline-flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    flex: '0 0 auto',
+    color: transactionIsSuccess ? 'var(--accent)' : transactionIsFailure ? 'var(--red)' : 'var(--text-primary)',
+    border: transactionIsSuccess
+      ? '1px solid rgba(198,241,53,0.35)'
+      : transactionIsFailure
+      ? '1px solid rgba(247,113,113,0.35)'
+      : '1px solid rgba(255,255,255,0.10)',
+    background: transactionIsSuccess
+      ? 'rgba(198,241,53,0.08)'
+      : transactionIsFailure
+      ? 'rgba(247,113,113,0.08)'
+      : 'rgba(255,255,255,0.04)',
   };
 
   return (
-    <div 
-      className="modal-overlay" 
+    <div
+      className="modal-overlay"
       onClick={(e) => {
-        // No permitir cerrar haciendo clic fuera si la compra fue exitosa
-        if (e.target === e.currentTarget && !feedback?.ok) {
+        if (e.target === e.currentTarget && (!transactionOpen || transactionIsFinal)) {
           handleClose();
         }
       }}
     >
       <div className="modal" style={modalStyle}>
-        {feedback?.ok ? (
-          <>
-            <div className="modal-feedback">
-              <div className={`modal-feedback-icon ${feedback.ok ? "success" : "error"}`}>
-                {feedback.ok ? (
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+        {transactionOpen ? (
+          <div style={transactionCardStyle}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+              <span style={transactionIconStyle}>
+                {transactionIsSuccess ? (
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" width="22" height="22">
                     <polyline points="20 6 9 17 4 12" />
                   </svg>
-                ) : (
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                ) : transactionIsFailure ? (
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="22" height="22">
                     <circle cx="12" cy="12" r="10" />
                     <line x1="12" y1="8" x2="12" y2="12" />
                     <line x1="12" y1="16" x2="12.01" y2="16" />
                   </svg>
+                ) : (
+                  <span
+                    className="transaction-spinner"
+                    style={{
+                      width: 18,
+                      height: 18,
+                      borderRadius: '50%',
+                      border: '2px solid currentColor',
+                      borderTopColor: 'transparent',
+                      display: 'inline-block',
+                    }}
+                  />
                 )}
-              </div>
-              <p className="modal-feedback-title">{feedback.ok ? "¡Compra exitosa!" : "Error en la compra"}</p>
-              <p className="modal-feedback-msg">{feedback.msg}</p>
-            </div>
+              </span>
 
-            {showSuccessAiBanner && (
-              <div
-                style={{
-                  borderRadius: "12px",
-                  border: "1px solid rgba(198,241,53,.24)",
-                  background: "linear-gradient(180deg, rgba(198,241,53,.12), rgba(198,241,53,.06))",
-                  padding: "16px 18px",
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: "8px",
-                }}
-              >
-                <div
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                <p
                   style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "8px",
-                    color: "var(--accent-dim)",
-                    fontSize: "10px",
+                    margin: 0,
+                    fontSize: 11,
                     fontWeight: 700,
-                    letterSpacing: "1.2px",
-                    textTransform: "uppercase",
+                    letterSpacing: '1.2px',
+                    textTransform: 'uppercase',
+                    color: transactionIsSuccess ? 'var(--accent-dim)' : transactionIsFailure ? 'var(--red)' : 'var(--text-muted)',
                   }}
                 >
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <circle cx="12" cy="12" r="10" />
-                    <path d="M12 8v4l3 3" />
-                  </svg>
-                  Asistente IA en vivo
-                </div>
-                <p style={{ margin: 0, color: "var(--text-primary)", fontSize: 14, lineHeight: 1.65, whiteSpace: "pre-wrap" }}>
-                  {successMessage || iaMessage}
+                  {transactionIsSuccess ? 'Pago aprobado' : transactionIsFailure ? 'Pago rechazado' : 'Procesando pago'}
                 </p>
-                {iaPayload?.nombre_usuario || iaPayload?.nombre_evento ? (
-                  <div style={{ display: "flex", flexWrap: "wrap", gap: 8, fontSize: 11, color: "var(--text-secondary)" }}>
-                    {iaPayload?.nombre_usuario ? <span style={{ padding: "5px 9px", borderRadius: 999, background: "rgba(17,18,16,.55)", border: "1px solid rgba(255,255,255,.05)" }}>Cliente: {iaPayload.nombre_usuario}</span> : null}
-                    {iaPayload?.nombre_evento ? <span style={{ padding: "5px 9px", borderRadius: 999, background: "rgba(17,18,16,.55)", border: "1px solid rgba(255,255,255,.05)" }}>Evento: {iaPayload.nombre_evento}</span> : null}
-                  </div>
-                ) : null}
+                <p style={{ margin: 0, color: 'var(--text-secondary)', fontSize: 13 }}>
+                  {eventName}
+                </p>
+              </div>
+            </div>
+
+            <p
+              style={{
+                margin: 0,
+                color: 'var(--text-primary)',
+                fontSize: 15,
+                lineHeight: 1.7,
+                whiteSpace: 'pre-wrap',
+              }}
+            >
+                  {transactionText || 'El pago está siendo procesado por la pasarela de pagos.'}
+            </p>
+
+            {transactionIsFinal ? (
+              <div className="modal-actions">
+                <button className="btn-confirm" onClick={handleClose}>
+                  Cerrar
+                </button>
+              </div>
+            ) : (
+              <div className="modal-actions">
+                <button className="btn-confirm" disabled>
+                  Procesando...
+                </button>
               </div>
             )}
-
-            <button className="btn-confirm" onClick={handleClose}>Cerrar</button>
-          </>
-        ) : feedback && !feedback.ok ? (
+          </div>
+        ) : (
           <>
-            <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
-              <div className="modal-feedback">
+            <div>
+              <p className="modal-title">{step === 1 ? "Confirmar compra" : "Datos de pago"}</p>
+              <p className="modal-subtitle">{eventName}</p>
+            </div>
+
+            {feedback && !feedback.ok && (
+              <div className="modal-feedback" style={{ marginBottom: 8 }}>
                 <div className="modal-feedback-icon error">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                     <circle cx="12" cy="12" r="10" />
@@ -365,101 +466,10 @@ function PurchaseModal({ entradas, eventName, eventoActivo, onClose, onSuccess }
                     <line x1="12" y1="16" x2="12.01" y2="16" />
                   </svg>
                 </div>
-                <p className="modal-feedback-title">Error en la compra</p>
+                <p className="modal-feedback-title">No se puede continuar</p>
                 <p className="modal-feedback-msg">{feedback.msg}</p>
               </div>
-
-              <div className="modal-actions">
-                <button className="btn-cancel" onClick={handleBackToSelection}>
-                  ← Reintentar
-                </button>
-                <button className="btn-cancel" onClick={handleClose}>
-                  Cerrar
-                </button>
-              </div>
-            </div>
-
-            {showAiPanel && (
-              <div
-                style={{
-                  background: "rgba(198,241,53,0.06)",
-                  border: "1px solid rgba(198,241,53,0.25)",
-                  borderRadius: "12px",
-                  padding: "20px",
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: "12px",
-                  minHeight: "140px",
-                }}
-              >
-                <div
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "8px",
-                    fontSize: "10px",
-                    fontWeight: 700,
-                    letterSpacing: "1.2px",
-                    textTransform: "uppercase",
-                    color: "var(--accent-dim)",
-                  }}
-                >
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <circle cx="12" cy="12" r="10" />
-                    <path d="M12 8v4l3 3" />
-                  </svg>
-                  Asistente IA en vivo
-                  <span
-                    style={{
-                      width: 7,
-                      height: 7,
-                      borderRadius: "50%",
-                      background: iaLoading ? "var(--text-muted)" : "var(--accent)",
-                      animation: iaLoading ? "pulse 1.2s ease-in-out infinite" : "none",
-                      marginLeft: "auto",
-                    }}
-                  />
-                </div>
-
-                <div
-                  style={{
-                    fontSize: "11px",
-                    color: "var(--text-muted)",
-                    textTransform: "uppercase",
-                    letterSpacing: "0.8px",
-                  }}
-                >
-                  {iaConnected ? iaConnectionLabel : "Reconectando..."}
-                </div>
-
-                {iaLoading && !iaMessage && (
-                  <div style={{ color: "var(--text-muted)", fontSize: "13px" }}>
-                    <span>⏳</span> Generando consejo personalizado…
-                  </div>
-                )}
-
-                {iaMessage && (
-                  <p
-                    style={{
-                      fontSize: "14px",
-                      lineHeight: 1.65,
-                      color: "var(--text-primary)",
-                      margin: 0,
-                      whiteSpace: "pre-wrap",
-                    }}
-                  >
-                    {iaMessage}
-                  </p>
-                )}
-              </div>
             )}
-          </>
-        ) : (
-          <>
-            <div>
-              <p className="modal-title">{step === 1 ? "Confirmar compra" : "Datos de pago"}</p>
-              <p className="modal-subtitle">{eventName}</p>
-            </div>
 
             {step === 1 ? (
               <>

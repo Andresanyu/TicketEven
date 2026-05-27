@@ -822,6 +822,15 @@ a { text-decoration: none; color: inherit; }
   50% { opacity: 0.4; transform: scale(0.85); }
 }
 
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.transaction-spinner {
+  animation: spin 0.9s linear infinite;
+}
+
 .modal {
   transition: max-width 0.35s ease;
 }

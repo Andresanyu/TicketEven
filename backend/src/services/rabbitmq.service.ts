@@ -46,6 +46,16 @@ function emitAIResponse(payload: QueuePayload): void {
   log('Evento ia_response emitido a todos los clientes conectados.', payload);
 }
 
+export function emitPaymentStep(step: string): void {
+  if (!io) {
+    log('Socket.io no está inicializado todavía. Se omitió el emit payment_step.');
+    return;
+  }
+
+  io.emit('payment_step', step);
+  log('Evento payment_step emitido a todos los clientes conectados.', { step });
+}
+
 function parseJson(raw: string): QueuePayload | null {
   try {
     return JSON.parse(raw) as QueuePayload;
