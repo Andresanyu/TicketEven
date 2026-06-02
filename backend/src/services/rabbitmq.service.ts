@@ -12,6 +12,8 @@ export interface PaymentEventData {
   estado: string;
   codigo_error: string | null;
   tipo_evento: string;
+  nombre_usuario?: string; // Nueva propiedad
+  nombre_evento?: string;  // Nueva propiedad
   [key: string]: unknown;
 }
 

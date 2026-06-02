@@ -27,15 +27,16 @@ function formatPrice(value) {
 function PurchaseModal({ entradas, eventName, eventoActivo, onClose, onSuccess }) {
   const navigate = useNavigate();
   const [feedback, setFeedback]     = useState(null);
-  const paymentFailed = feedback !== null && feedback.ok === false;
+  const paymentFailed  = feedback !== null && feedback.ok === false;
   const paymentSuccess = feedback !== null && feedback.ok === true;
+  const paymentSettled = paymentFailed || paymentSuccess;
   const {
     iaMessage,
     isLoading: iaLoading,
     isConnected: iaConnected,
     connectionLabel: iaConnectionLabel,
     resetIaMessage,
-  } = useIaResponseSocket(paymentFailed || paymentSuccess);
+    } = useIaResponseSocket(paymentSettled);
   const [quantities, setQuantities] = useState({});
   const [step, setStep] = useState(1);
   const [cardData, setCardData] = useState({
@@ -47,6 +48,14 @@ function PurchaseModal({ entradas, eventName, eventoActivo, onClose, onSuccess }
   const [cardErrors, setCardErrors] = useState({});
   const [loading, setLoading]       = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
+  const STEPS = [
+    { id: 1, label: "Enviando datos al gateway" },
+    { id: 2, label: "Procesando pago"           },
+    { id: 3, label: "Verificando disponibilidad"},
+    { id: 4, label: "Finalizando reserva"        },
+  ];
+  const [currentStep, setCurrentStep] = useState(0);
+  const [stepStatus, setStepStatus]   = useState({});
   const franquiciaRef = useRef(null);
   const panInputRef = useRef(null);
   const cvvInputRef = useRef(null);
@@ -148,9 +157,11 @@ function PurchaseModal({ entradas, eventName, eventoActivo, onClose, onSuccess }
   };
 
   const handleBackToSelection = () => {
-    setFeedback(null);
-    setStep(1);
     resetIaMessage();
+    setFeedback(null);
+    setCurrentStep(0);
+    setStepStatus({});
+    setStep(2);   // vuelve al formulario de pago, no al paso 1
   };
 
   const handlePanChange = (value) => {
@@ -184,25 +195,50 @@ function PurchaseModal({ entradas, eventName, eventoActivo, onClose, onSuccess }
     }
   };
 
-  const handlePay = async () => {
-    if (!Auth.isLoggedIn()) { navigate("/login"); return; }
-    if (!eventoActivo)      { setFeedback({ ok: false, msg: "El evento no está activo." }); return; }
-    if (totalQty <= 0)       return;
-    if (!validateCardData()) return;
-
-    // Control de duplicidad: deshabilitar botón
-    setIsProcessing(true);
-    setLoading(true);
-    setFeedback(null);
-    
+  const runStep = async (stepId, fn) => {
+    setCurrentStep(stepId);
+    setStepStatus((prev) => ({ ...prev, [stepId]: "active" }));
+    await new Promise((r) => setTimeout(r, 1000));
     try {
-      const payloadTarjeta = {
-        pan_number: String(cardData.pan_number || "").replace(/\s+/g, ""),
-        cvv: String(cardData.cvv || ""),
-        nombre_titular: String(cardData.nombre_titular || "").trim(),
-        franquicia: String(cardData.franquicia || ""),
-      };
+      const result = await fn();
+      setStepStatus((prev) => ({ ...prev, [stepId]: "done" }));
+      return result;
+    } catch (err) {
+      setStepStatus((prev) => ({ ...prev, [stepId]: "error" }));
+      throw err;
+    }
+  };
 
+const handlePay = async () => {
+  if (!Auth.isLoggedIn()) { navigate("/login"); return; }
+  if (!eventoActivo)      { setFeedback({ ok: false, msg: null }); return; }
+  if (totalQty <= 0)      return;
+  if (!validateCardData()) return;
+
+  resetIaMessage();
+
+  setIsProcessing(true);
+  setLoading(true);
+  setFeedback(null);
+  setCurrentStep(0);
+  setStepStatus({});
+
+  const payloadTarjeta = {
+    pan_number:     String(cardData.pan_number    || "").replace(/\s+/g, ""),
+    cvv:            String(cardData.cvv           || ""),
+    nombre_titular: String(cardData.nombre_titular|| "").trim(),
+    franquicia:     String(cardData.franquicia    || ""),
+  };
+
+  try {
+    // Paso 1 — construir y enviar payload
+    await runStep(1, () => Promise.resolve());
+
+    // Paso 2 — gateway procesa el pago
+    await runStep(2, () => Promise.resolve());
+
+    // Paso 3 — verificar aforo (llamada real)
+    await runStep(3, async () => {
       for (const ent of entradas) {
         const qty = Number(quantities[ent.id] || 0);
         if (!qty) continue;
@@ -212,19 +248,20 @@ function PurchaseModal({ entradas, eventName, eventoActivo, onClose, onSuccess }
           tarjeta: payloadTarjeta,
         });
       }
-      
-      // Éxito: mantener isProcessing en true para deshabilitar volver atrás
-      setFeedback({ ok: true, msg: null });
-      onSuccess();
-    } catch (err) {
-      setFeedback({ ok: false, msg: null });
-      
-      // Error: re-habilitar botón
-      setIsProcessing(false);
-    } finally {
-      setLoading(false);
-    }
-  };
+    });
+
+    // Paso 4 — confirmar reserva
+    await runStep(4, () => Promise.resolve());
+
+    setFeedback({ ok: true, msg: null });
+    onSuccess();
+  } catch (err) {
+    setFeedback({ ok: false, msg: null });
+    setIsProcessing(false);
+  } finally {
+    setLoading(false);
+  }
+};
 
   const inputBaseStyle = {
     background: "var(--bg-card-2)",
@@ -254,7 +291,7 @@ function PurchaseModal({ entradas, eventName, eventoActivo, onClose, onSuccess }
     marginTop: 4,
   };
 
-  const showAiPanel = feedback !== null && (iaMessage || iaLoading);
+  const showAiPanel = feedback !== null;
   const modalStyle = {
     maxWidth: showAiPanel ? "820px" : "460px",
     display: showAiPanel ? "grid" : "block",
@@ -288,64 +325,64 @@ function PurchaseModal({ entradas, eventName, eventoActivo, onClose, onSuccess }
               <button className="btn-confirm" onClick={handleClose}>Cerrar</button>
             </div>
 
-            {(iaMessage || iaLoading) && (
+            <div
+              style={{
+                background: "rgba(198,241,53,0.06)",
+                border: "1px solid rgba(198,241,53,0.25)",
+                borderRadius: "12px",
+                padding: "20px",
+                display: "flex",
+                flexDirection: "column",
+                gap: "12px",
+                minHeight: "140px",
+              }}
+            >
               <div
                 style={{
-                  background: "rgba(198,241,53,0.06)",
-                  border: "1px solid rgba(198,241,53,0.25)",
-                  borderRadius: "12px",
-                  padding: "20px",
                   display: "flex",
-                  flexDirection: "column",
-                  gap: "12px",
-                  minHeight: "140px",
+                  alignItems: "center",
+                  gap: "8px",
+                  fontSize: "10px",
+                  fontWeight: 700,
+                  letterSpacing: "1.2px",
+                  textTransform: "uppercase",
+                  color: "var(--accent-dim)",
                 }}
               >
-                <div
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <circle cx="12" cy="12" r="10" />
+                  <path d="M12 8v4l3 3" />
+                </svg>
+                Asistente IA en vivo
+                <span
                   style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "8px",
-                    fontSize: "10px",
-                    fontWeight: 700,
-                    letterSpacing: "1.2px",
-                    textTransform: "uppercase",
-                    color: "var(--accent-dim)",
+                    width: 7, height: 7,
+                    borderRadius: "50%",
+                    background: iaLoading ? "var(--text-muted)" : "var(--accent)",
+                    animation: iaLoading ? "pulse 1.2s ease-in-out infinite" : "none",
+                    marginLeft: "auto",
                   }}
-                >
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <circle cx="12" cy="12" r="10" />
-                    <path d="M12 8v4l3 3" />
-                  </svg>
-                  Asistente IA en vivo
-                  <span
-                    style={{
-                      width: 7, height: 7,
-                      borderRadius: "50%",
-                      background: iaLoading ? "var(--text-muted)" : "var(--accent)",
-                      animation: iaLoading ? "pulse 1.2s ease-in-out infinite" : "none",
-                      marginLeft: "auto",
-                    }}
-                  />
-                </div>
-
-                <div style={{ fontSize: "11px", color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.8px" }}>
-                  {iaConnected ? iaConnectionLabel : "Reconectando..."}
-                </div>
-
-                {iaLoading && !iaMessage && (
-                  <div style={{ color: "var(--text-muted)", fontSize: "13px" }}>
-                    <span>⏳</span> Generando mensaje personalizado…
-                  </div>
-                )}
-
-                {iaMessage && (
-                  <p style={{ fontSize: "14px", lineHeight: 1.65, color: "var(--text-primary)", margin: 0, whiteSpace: "pre-wrap" }}>
-                    {iaMessage}
-                  </p>
-                )}
+                />
               </div>
-            )}
+
+              <div style={{ fontSize: "11px", color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.8px" }}>
+                {iaConnected ? iaConnectionLabel : "Reconectando..."}
+              </div>
+
+              {!iaMessage && (
+                <div style={{ color: "var(--text-muted)", fontSize: "13px", display: "flex", alignItems: "center", gap: "8px" }}>
+                  <div style={{ width: 12, height: 12, borderRadius: "50%", border: "2px solid var(--text-muted)", borderTopColor: "transparent", animation: "spin 0.7s linear infinite", flexShrink: 0 }} />
+                  Esperando respuesta del asistente…
+                </div>
+              )}
+
+              {iaMessage && (
+                <p style={{ fontSize: "14px", lineHeight: 1.65, color: "var(--text-primary)", margin: 0, whiteSpace: "pre-wrap" }}>
+                  {iaMessage}
+                </p>
+              )}
+            </div>
+
           </>
         ) : feedback && !feedback.ok ? (
           <>
@@ -634,6 +671,46 @@ function PurchaseModal({ entradas, eventName, eventoActivo, onClose, onSuccess }
                     {cardErrors.nombre_titular && <p style={errorTextStyle}>{cardErrors.nombre_titular}</p>}
                   </div>
                 </div>
+
+                {isProcessing && (
+                  <div style={{ display: "flex", flexDirection: "column", gap: "10px", margin: "8px 0" }}>
+                    {STEPS.map((s) => {
+                      const status    = stepStatus[s.id];
+                      const isActive  = currentStep === s.id && status === "active";
+                      const isDone    = status === "done";
+                      const isError   = status === "error";
+                      const isPending = !status;
+                      return (
+                        <div
+                          key={s.id}
+                          style={{
+                            display: "flex", alignItems: "center", gap: "12px",
+                            padding: "10px 14px", borderRadius: "8px",
+                            background: isActive ? "rgba(198,241,53,0.06)" : isDone ? "rgba(198,241,53,0.03)" : isError ? "rgba(224,92,92,0.08)" : "transparent",
+                            border: `1px solid ${isActive ? "rgba(198,241,53,0.25)" : isDone ? "rgba(198,241,53,0.10)" : isError ? "rgba(224,92,92,0.25)" : "transparent"}`,
+                            transition: "all 0.3s ease",
+                            opacity: isPending ? 0.35 : 1,
+                          }}
+                        >
+                          <div style={{ flexShrink: 0, width: 20, height: 20, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                            {isActive  && <div style={{ width: 14, height: 14, borderRadius: "50%", border: "2px solid var(--accent)", borderTopColor: "transparent", animation: "spin 0.7s linear infinite" }} />}
+                            {isDone    && <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" strokeWidth="2.5"><polyline points="20 6 9 17 4 12"/></svg>}
+                            {isError   && <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#e05c5c" strokeWidth="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>}
+                            {isPending && <div style={{ width: 8, height: 8, borderRadius: "50%", background: "var(--text-muted)" }} />}
+                          </div>
+                          <span style={{
+                            fontSize: "13px",
+                            color: isError ? "#e05c5c" : isActive || isDone ? "var(--text-primary)" : "var(--text-muted)",
+                            fontWeight: isActive ? 500 : 400,
+                            transition: "color 0.3s ease",
+                          }}>
+                            {s.label}
+                          </span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
 
                 <div className="modal-actions">
                   <button className="btn-cancel" onClick={handleBackToSelection} disabled={isProcessing}>← Volver</button>

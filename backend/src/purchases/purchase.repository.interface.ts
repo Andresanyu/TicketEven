@@ -20,5 +20,7 @@ export interface IPurchaseRepository {
   ): Promise<PurchaseRow | null>;
   findByUser(usuarioId: number): Promise<PurchaseDetailRow[]>;
   findById(id: number): Promise<Omit<PurchaseWithQR, 'qr_code'> | null>;
-  findPrecioByEntradaId(eventoTipoEntradaId: number): Promise<number | null>; // 👈
+  findPrecioByEntradaId(eventoTipoEntradaId: number): Promise<number | null>;
+  // 👇 Nueva firma agregada
+  getContextData(usuarioId: number, eventoTipoEntradaId: number): Promise<{ nombre_usuario: string; nombre_evento: string } | null>;
 }
