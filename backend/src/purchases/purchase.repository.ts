@@ -135,6 +135,24 @@ export class PurchaseRepository implements IPurchaseRepository {
     return result.rowCount === 0 ? null : Number(result.rows[0].precio);
   }
 
+  // 👇 Nuevo método implementado
+  async getContextData(usuarioId: number, eventoTipoEntradaId: number): Promise<{ nombre_usuario: string; nombre_evento: string } | null> {
+    const result = await this.pool.query(
+      `SELECT 
+         (SELECT nombre FROM usuarios WHERE id = $1) AS nombre_usuario,
+         (SELECT e.nombre FROM eventos e JOIN eventos_tipos_entrada ete ON e.id = ete.evento_id WHERE ete.id = $2) AS nombre_evento`,
+      [usuarioId, eventoTipoEntradaId]
+    );
+    
+    // Si no encuentra los datos, retornamos valores por defecto seguros
+    if (result.rowCount === 0) return null;
+    
+    return {
+      nombre_usuario: result.rows[0].nombre_usuario ?? 'Usuario',
+      nombre_evento: result.rows[0].nombre_evento ?? 'el evento'
+    };
+  }
+
   async findById(id: number): Promise<Omit<PurchaseWithQR, 'qr_code'> | null> {
     const result = await this.pool.query(
       `SELECT 

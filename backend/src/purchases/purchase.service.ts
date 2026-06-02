@@ -35,6 +35,10 @@ export class PurchaseService {
     }
 
     const total = precio * dto.cantidad;
+    
+    const contextData = await this.repo.getContextData(usuarioId, dto.evento_tipo_entrada_id);
+    const nombreUsuario = contextData?.nombre_usuario || 'Usuario';
+    const nombreEvento = contextData?.nombre_evento || 'el evento';
 
     const pendingPurchase = await this.repo.createPending(usuarioId, dto, total);
 
@@ -57,11 +61,14 @@ export class PurchaseService {
       });
       if (paymentResponse.status === 'DECLINED') {
         await this.repo.updateEstado(pendingPurchase.id, 'RECHAZADO');
+        // 👇 2. Agregamos los nombres al evento de rechazo
         await this.safePublishEvent({
           id_reserva: pendingPurchase.id,
           estado: 'RECHAZADO',
           codigo_error: paymentResponse.reason ?? 'DECLINED',
           tipo_evento: 'Pago Fallido',
+          nombre_usuario: nombreUsuario,
+          nombre_evento: nombreEvento
         });
         throw new PaymentDeclinedError('Pago rechazado: ' + (paymentResponse.reason ?? 'Sin detalle'));
       }
@@ -85,6 +92,8 @@ export class PurchaseService {
         estado: 'PAGADO',
         codigo_error: null,
         tipo_evento: 'Pago Exitoso',
+        nombre_usuario: nombreUsuario,
+        nombre_evento: nombreEvento
       });
 
       return paidPurchase ?? pendingPurchase;
@@ -102,6 +111,8 @@ export class PurchaseService {
         tipo_evento: err?.message?.startsWith('Error de red')
           ? 'Timeout'
           : 'Pago Fallido',
+        nombre_usuario: nombreUsuario,
+        nombre_evento: nombreEvento
       });
 
       if (err instanceof PaymentDeclinedError) {
@@ -146,6 +157,8 @@ export class PurchaseService {
     estado: string;
     codigo_error: string | null;
     tipo_evento: string;
+    nombre_usuario: string;
+    nombre_evento: string;
   }): Promise<void> {
     try {
       await publishPaymentEvent(eventData);
