@@ -47,6 +47,20 @@ export class PurchaseService {
     return brand || 'Tarjeta';
   }
 
+  private maskCardNumber(panNumber: string): string {
+    const digits = String(panNumber ?? '').replace(/\D/g, '');
+
+    if (!digits) {
+      return '************';
+    }
+
+    if (digits.length <= 4) {
+      return digits;
+    }
+
+    return `${'*'.repeat(Math.max(0, digits.length - 4))}${digits.slice(-4)}`;
+  }
+
   async create(usuarioId: number, dto: CreatePurchaseWithPaymentDTO): Promise<PurchaseRow> {
     const precio = await this.repo.findPrecioByEntradaId(dto.evento_tipo_entrada_id);
 
@@ -96,10 +110,29 @@ export class PurchaseService {
     // Step 6 (explicit): Execute the real payment here — ONLY HERE may network/card errors occur
     let paymentResponse;
     try {
+      logger.info('[APLICACIÓN -> PASARELA] Enviando solicitud de cobro. Datos: {monto, id_usuario, tarjeta_marca}', {
+        monto: total,
+        id_usuario: usuarioId,
+        tarjeta_marca: cardBrand,
+        tarjeta_pan_enmascarada: this.maskCardNumber(dto.tarjeta.pan_number),
+        tarjeta_titular: dto.tarjeta.nombre_titular,
+        tarjeta_cvv: '[OMITIDO]',
+      });
+
       paymentResponse = await sendPaymentToGateway({
         id_reserva: pendingPurchase.id,
         monto: total,
         tarjeta: dto.tarjeta,
+      });
+
+      logger.info('[PASARELA -> APLICACIÓN] Respuesta de cobro recibida. Datos: {status, auth_code, reason, tarjeta_enmascarada}', {
+        id_reserva: pendingPurchase.id,
+        status: paymentResponse.status,
+        auth_code: paymentResponse.auth_code ?? null,
+        reason: paymentResponse.reason ?? null,
+        tarjeta_enmascarada: paymentResponse.tarjeta_enmascarada
+          ? this.maskCardNumber(paymentResponse.tarjeta_enmascarada)
+          : null,
       });
     } catch (error: any) {
       // On network/gateway errors, mark as rejected, publish event and rethrow a specific error
