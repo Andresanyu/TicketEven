@@ -28,13 +28,14 @@ function PurchaseModal({ entradas, eventName, eventoActivo, onClose, onSuccess }
   const navigate = useNavigate();
   const [feedback, setFeedback]     = useState(null);
   const paymentFailed = feedback !== null && feedback.ok === false;
+  const paymentSuccess = feedback !== null && feedback.ok === true;
   const {
     iaMessage,
     isLoading: iaLoading,
     isConnected: iaConnected,
     connectionLabel: iaConnectionLabel,
     resetIaMessage,
-  } = useIaResponseSocket(paymentFailed);
+  } = useIaResponseSocket(paymentFailed || paymentSuccess);
   const [quantities, setQuantities] = useState({});
   const [step, setStep] = useState(1);
   const [cardData, setCardData] = useState({
@@ -213,22 +214,10 @@ function PurchaseModal({ entradas, eventName, eventoActivo, onClose, onSuccess }
       }
       
       // Éxito: mantener isProcessing en true para deshabilitar volver atrás
-      setFeedback({
-        ok: true,
-        msg: `Compraste ${totalQty} entrada(s) para ${eventName}. ¡Disfruta el evento!`,
-      });
+      setFeedback({ ok: true, msg: null });
       onSuccess();
     } catch (err) {
-      const msg =
-        err?.status === 503
-          ? "El servicio de pagos no está disponible en este momento. Intenta de nuevo más tarde."
-          : err?.message ?? "No se pudo completar la compra. Intenta de nuevo.";
-        err?.status === 402 ? (err?.data?.error ?? err?.message ?? "Pago rechazado") :
-        err?.status === 403 ? "El evento no está activo." :
-        err?.status === 409 ? "No hay suficiente aforo disponible." :
-        err?.status === 401 ? "Debes iniciar sesión para comprar." :
-        err?.data?.error ?? err?.message ?? "No se pudo completar la compra. Intenta de nuevo.";
-      setFeedback({ ok: false, msg });
+      setFeedback({ ok: false, msg: null });
       
       // Error: re-habilitar botón
       setIsProcessing(false);
@@ -265,7 +254,7 @@ function PurchaseModal({ entradas, eventName, eventoActivo, onClose, onSuccess }
     marginTop: 4,
   };
 
-  const showAiPanel = feedback !== null && feedback.ok === false && (iaMessage || iaLoading);
+  const showAiPanel = feedback !== null && (iaMessage || iaLoading);
   const modalStyle = {
     maxWidth: showAiPanel ? "820px" : "460px",
     display: showAiPanel ? "grid" : "block",
@@ -287,24 +276,76 @@ function PurchaseModal({ entradas, eventName, eventoActivo, onClose, onSuccess }
       <div className="modal" style={modalStyle}>
         {feedback?.ok ? (
           <>
-            <div className="modal-feedback">
-              <div className={`modal-feedback-icon ${feedback.ok ? "success" : "error"}`}>
-                {feedback.ok ? (
+            <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
+              <div className="modal-feedback">
+                <div className="modal-feedback-icon success">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                     <polyline points="20 6 9 17 4 12" />
                   </svg>
-                ) : (
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                </div>
+                <p className="modal-feedback-title">¡Compra exitosa!</p>
+              </div>
+              <button className="btn-confirm" onClick={handleClose}>Cerrar</button>
+            </div>
+
+            {(iaMessage || iaLoading) && (
+              <div
+                style={{
+                  background: "rgba(198,241,53,0.06)",
+                  border: "1px solid rgba(198,241,53,0.25)",
+                  borderRadius: "12px",
+                  padding: "20px",
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: "12px",
+                  minHeight: "140px",
+                }}
+              >
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "8px",
+                    fontSize: "10px",
+                    fontWeight: 700,
+                    letterSpacing: "1.2px",
+                    textTransform: "uppercase",
+                    color: "var(--accent-dim)",
+                  }}
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                     <circle cx="12" cy="12" r="10" />
-                    <line x1="12" y1="8" x2="12" y2="12" />
-                    <line x1="12" y1="16" x2="12.01" y2="16" />
+                    <path d="M12 8v4l3 3" />
                   </svg>
+                  Asistente IA en vivo
+                  <span
+                    style={{
+                      width: 7, height: 7,
+                      borderRadius: "50%",
+                      background: iaLoading ? "var(--text-muted)" : "var(--accent)",
+                      animation: iaLoading ? "pulse 1.2s ease-in-out infinite" : "none",
+                      marginLeft: "auto",
+                    }}
+                  />
+                </div>
+
+                <div style={{ fontSize: "11px", color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.8px" }}>
+                  {iaConnected ? iaConnectionLabel : "Reconectando..."}
+                </div>
+
+                {iaLoading && !iaMessage && (
+                  <div style={{ color: "var(--text-muted)", fontSize: "13px" }}>
+                    <span>⏳</span> Generando mensaje personalizado…
+                  </div>
+                )}
+
+                {iaMessage && (
+                  <p style={{ fontSize: "14px", lineHeight: 1.65, color: "var(--text-primary)", margin: 0, whiteSpace: "pre-wrap" }}>
+                    {iaMessage}
+                  </p>
                 )}
               </div>
-              <p className="modal-feedback-title">{feedback.ok ? "¡Compra exitosa!" : "Error en la compra"}</p>
-              <p className="modal-feedback-msg">{feedback.msg}</p>
-            </div>
-            <button className="btn-confirm" onClick={handleClose}>Cerrar</button>
+            )}
           </>
         ) : feedback && !feedback.ok ? (
           <>
@@ -318,7 +359,7 @@ function PurchaseModal({ entradas, eventName, eventoActivo, onClose, onSuccess }
                   </svg>
                 </div>
                 <p className="modal-feedback-title">Error en la compra</p>
-                <p className="modal-feedback-msg">{feedback.msg}</p>
+                {feedback.msg && <p className="modal-feedback-msg">{feedback.msg}</p>}
               </div>
 
               <div className="modal-actions">
